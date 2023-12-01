@@ -11,6 +11,9 @@ from pprint import pprint
 from argparse import ArgumentParser
 from dataclasses import dataclass
 
+from tomlkit.toml_file import TOMLFile
+import tomlkit
+
 
 def parse_args():
     """Parse command line arguments."""
@@ -61,6 +64,12 @@ def parse_args():
         "--watch",
         action="store_true",
         help="Continuously upload code as files in the source directories change.",
+    )
+    upload_parser.add_argument(
+        "--save-preset",
+        type=str,
+        default="",
+        help="Save the selected device and source directory set as a preset that can be later recalled using --preset.",
     )
 
     subparsers.add_parser("connect", help="Connect to device's serial console.")
@@ -190,6 +199,11 @@ class Cli:
         self.fuzzy = args.fuzzy
         self.source_dirs = getattr(args, "source_dir", None)
         self.watch = getattr(args, "watch", None)
+        self.save_preset = getattr(args, "save_preset", "")
+
+        presets_path = Path("presets.toml")
+        presets_path.touch(exist_ok=True)
+        self.presets_file = TOMLFile(presets_path)
 
         self.matching_devices = [
             d for d in all_devices() if self.device_matches_filter(d)
@@ -328,6 +342,18 @@ class Cli:
         """upload subcommand."""
         print("Uploading to device: ")
         pprint(self.device)
+        if self.save_preset:
+            name = self.save_preset
+            presets = self.presets_file.read()
+            preset = presets.get(name, tomlkit.table())
+
+            preset["vendor"] = self.device.vendor
+            preset["model"] = self.device.model
+            preset["serial"] = self.device.serial
+            preset["source_dirs"] = [str(d.resolve()) for d in self.source_dirs]
+
+            presets[name] = preset
+            self.presets_file.write(presets)
         self.upload()
 
         if self.watch:

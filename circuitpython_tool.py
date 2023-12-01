@@ -351,6 +351,7 @@ class Cli:
             preset["model"] = self.device.model
             preset["serial"] = self.device.serial
             preset["source_dirs"] = [str(d.resolve()) for d in self.source_dirs]
+            preset["source_dirs"].multiline(True)
 
             presets[name] = preset
             self.presets_file.write(presets)

@@ -246,16 +246,6 @@ class Cli:
         """Mountpoint of current device."""
         return mount_if_needed(self.device.partition_path)
 
-    def all_source_paths(self):
-        """Generator that recursively yields all source paths (both files and directories)."""
-        for source_dir in self.source_dirs:
-            yield source_dir
-            for parent, subdirs, files in source_dir.walk():
-                for subdir in subdirs:
-                    yield parent / subdir
-                for file in files:
-                    yield parent / file
-
     def walk_sources(self):
         """Generator that yields tuples of (top-level source directory, descendant path)."""
         for root in self.source_dirs:

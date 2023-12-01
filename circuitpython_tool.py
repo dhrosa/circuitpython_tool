@@ -279,26 +279,8 @@ class Cli:
         }
         commands[self.command]()
 
-    def list_command(self):
-        """list subcommand."""
-        print("Matching devices:")
-        pprint(self.matching_devices)
-
-    def connect_command(self):
-        """connect subcommand."""
-        print("Launching minicom for ")
-        pprint(device)
-        execlp("minicom", "minicom", "-D", device.serial_path)
-
-    def upload_command(self):
-        """upload subcommand."""
-        print("Uploading to device: ")
-        pprint(self.device)
-        self.upload()
-
-        if not self.watch:
-            return
-
+    def upload_watch(self):
+        """Implements --watch flag for continuously uploading code."""
         from inotify_simple import INotify, flags
 
         watcher = INotify()
@@ -321,6 +303,8 @@ class Cli:
 
         while True:
             need_upload = False
+            # Use a small read_delay to coalesce short bursts of events (e.g.
+            # copying multiple files from another location).
             for event in watcher.read(read_delay=100):
                 source_dir = descriptor_to_path[event.wd]
                 path = source_dir / event.name
@@ -328,6 +312,26 @@ class Cli:
                 need_upload = True
             if need_upload:
                 self.upload()
+
+    def list_command(self):
+        """list subcommand."""
+        print("Matching devices:")
+        pprint(self.matching_devices)
+
+    def connect_command(self):
+        """connect subcommand."""
+        print("Launching minicom for ")
+        pprint(device)
+        execlp("minicom", "minicom", "-D", device.serial_path)
+
+    def upload_command(self):
+        """upload subcommand."""
+        print("Uploading to device: ")
+        pprint(self.device)
+        self.upload()
+
+        if self.watch:
+            self.upload_watch()
 
 
 if __name__ == "__main__":

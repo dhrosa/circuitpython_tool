@@ -224,9 +224,8 @@ class Cli:
             case []:
                 exit("No CircuitPython devices found.")
             case _:
-                pprint(devices)
+                pprint(self.matching_devices)
                 exit("Ambiguous choice of CircuitPython device.")
-        return devices[0]
 
     @cached_property
     def mountpoint(self):

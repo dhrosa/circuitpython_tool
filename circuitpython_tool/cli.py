@@ -384,8 +384,3 @@ class Cli:
 
     def preset_upload_command(self):
         self.upload_command()
-
-
-if __name__ == "__main__":
-    cli = Cli(parse_args())
-    cli.run()

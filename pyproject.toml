@@ -1,0 +1,18 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "circuitpython-tool"
+version = "0.1.0"
+description = 'TODO'
+requires-python = ">=3.12"
+license = "MIT"
+keywords = []
+authors = [
+  { name = "Diony Rosa", email = "dhrosa+dev@gmail.com" },
+]
+dependencies = ["tomlkit"]
+
+[project.scripts]
+circuitpython-tool = "circuitpython_tool:main"

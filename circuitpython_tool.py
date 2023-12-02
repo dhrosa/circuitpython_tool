@@ -71,6 +71,9 @@ def parse_args():
         default="",
         help="Save the selected device and source directory set as a preset that can be later recalled using --preset.",
     )
+    # Ensure these attributes are set even if the upload command isn't
+    # specified.
+    parser.set_defaults(source_dir=[], watch=True, save_preset="")
 
     subparsers.add_parser("connect", help="Connect to device's serial console.")
 
@@ -197,9 +200,9 @@ class Cli:
         self.model = args.model
         self.serial = args.serial
         self.fuzzy = args.fuzzy
-        self.source_dirs = getattr(args, "source_dir", None)
-        self.watch = getattr(args, "watch", None)
-        self.save_preset = getattr(args, "save_preset", "")
+        self.source_dirs = args.source_dir
+        self.watch = args.watch
+        self.save_preset = args.save_preset
 
         presets_path = Path("presets.toml")
         presets_path.touch(exist_ok=True)

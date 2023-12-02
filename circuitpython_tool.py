@@ -45,6 +45,12 @@ def parse_args():
         default="",
         help="Filter to devices whose vendor, model, or serial contains this string.",
     )
+    filter_group.add_argument(
+        "--preset",
+        type=str,
+        default="",
+        dest="preset_name",
+    )
 
     # Subcommand parsers.
     subparsers = parser.add_subparsers(required=True, dest="command")
@@ -69,11 +75,17 @@ def parse_args():
         "--save-preset",
         type=str,
         default="",
-        help="Save the selected device and source directory set as a preset that can be later recalled using --preset.",
+        help="Save the selected device and source directory set as a preset that can be later recalled using preset_upload.",
     )
     # Ensure these attributes are set even if the upload command isn't
     # specified.
-    parser.set_defaults(source_dir=[], watch=True, save_preset="")
+    parser.set_defaults(source_dir=[], watch=False, save_preset="")
+
+    preset_upload_parser = subparsers.add_parser(
+        "preset_upload",
+        help="Similar to the 'upload' command, but using parameters from a preset.",
+    )
+    preset_upload_parser.add_argument("preset_name", type=str)
 
     subparsers.add_parser("connect", help="Connect to device's serial console.")
 
@@ -200,6 +212,7 @@ class Cli:
         self.model = args.model
         self.serial = args.serial
         self.fuzzy = args.fuzzy
+        self.preset_name = args.preset_name
         self.source_dirs = args.source_dir
         self.watch = args.watch
         self.save_preset = args.save_preset
@@ -207,6 +220,9 @@ class Cli:
         presets_path = Path("presets.toml")
         presets_path.touch(exist_ok=True)
         self.presets_file = TOMLFile(presets_path)
+
+        if self.preset_name:
+            self.load_preset()
 
         self.matching_devices = [
             d for d in all_devices() if self.device_matches_filter(d)
@@ -249,6 +265,18 @@ class Cli:
         """Mountpoint of current device."""
         return mount_if_needed(self.device.partition_path)
 
+    def load_preset(self):
+        presets = self.presets_file.read()
+        preset = presets.get(self.preset_name, None)
+        if preset is None:
+            exit(
+                f"Can't find preset '{self.preset_name}'. Valid choices: {list(presets.keys())}"
+            )
+        self.vendor = preset["vendor"]
+        self.model = preset["model"]
+        self.serial = preset["serial"]
+        self.source_dirs = [Path(d) for d in preset["source_dirs"]]
+
     def walk_sources(self):
         """Generator that yields tuples of (top-level source directory, descendant path)."""
         for root in self.source_dirs:
@@ -281,8 +309,9 @@ class Cli:
         """Main entry point."""
         commands = {
             "list": self.list_command,
-            "upload": self.upload_command,
             "connect": self.connect_command,
+            "upload": self.upload_command,
+            "preset_upload": self.preset_upload_command,
         }
         commands[self.command]()
 
@@ -352,6 +381,9 @@ class Cli:
 
         if self.watch:
             self.upload_watch()
+
+    def preset_upload_command(self):
+        self.upload_command()
 
 
 if __name__ == "__main__":

@@ -7,32 +7,32 @@ def parse_args():
     parser = ArgumentParser()
 
     # Common flags between subcommands.
-    filter_group = parser.add_mutually_exclusive_group()
-    filter_group.add_argument(
+    filter_parser = ArgumentParser(add_help=False)
+    filter_parser.add_argument(
         "--vendor",
         type=str,
         default="",
         help="Filter to devices whose vendor contains this string.",
     )
-    filter_group.add_argument(
+    filter_parser.add_argument(
         "--model",
         type=str,
         default="",
         help="Filter to devices whose model contains this string.",
     )
-    filter_group.add_argument(
+    filter_parser.add_argument(
         "--serial",
         type=str,
         default="",
         help="Filter to devices whose serial contains this string.",
     )
-    filter_group.add_argument(
+    filter_parser.add_argument(
         "--fuzzy",
         type=str,
         default="",
         help="Filter to devices whose vendor, model, or serial contains this string.",
     )
-    filter_group.add_argument(
+    filter_parser.add_argument(
         "--preset",
         type=str,
         default="",
@@ -43,20 +43,26 @@ def parse_args():
     subparsers = parser.add_subparsers(required=True, dest="command")
 
     subparsers.add_parser(
-        "list", help="List all CircuitPython devices matching the requested filters."
+        "list",
+        help="List all CircuitPython devices matching the requested filters.",
+        parents=[filter_parser],
     )
 
-    upload_parser = subparsers.add_parser("upload", help="Upload code to device.")
+    watch_parser = ArgumentParser(add_help=False)
+    watch_parser.add_argument(
+        "--watch",
+        action="store_true",
+        help="Continuously upload code as files in the source directories change.",
+    )
+
+    upload_parser = subparsers.add_parser(
+        "upload", parents=[filter_parser, watch_parser], help="Upload code to device."
+    )
     upload_parser.add_argument(
         "source_dir",
         type=Path,
         nargs="+",
         help="Source directory to copy.",
-    )
-    upload_parser.add_argument(
-        "--watch",
-        action="store_true",
-        help="Continuously upload code as files in the source directories change.",
     )
     upload_parser.add_argument(
         "--save-preset",
@@ -70,6 +76,7 @@ def parse_args():
 
     preset_upload_parser = subparsers.add_parser(
         "preset_upload",
+        parents=[watch_parser],
         help="Similar to the 'upload' command, but using parameters from a preset.",
     )
     preset_upload_parser.add_argument("preset_name", type=str)

@@ -9,6 +9,7 @@ from pprint import pprint
 
 from .device import Device, all_devices
 from .presets import Preset, PresetDatabase
+from .fs import walk_all, watch_all
 
 
 class Cli:
@@ -84,13 +85,7 @@ class Cli:
 
     def walk_sources(self):
         """Generator that yields tuples of (top-level source directory, descendant path)."""
-        for root in self.source_dirs:
-            yield root, root
-            for parent, subdirs, files in root.walk():
-                for subdir in subdirs:
-                    yield root, parent / subdir
-                for file in files:
-                    yield root, parent / file
+        return walk_all(self.source_dirs)
 
     def upload(self):
         """Copy all source files onto the device."""
@@ -120,40 +115,6 @@ class Cli:
         }
         commands[self.command]()
 
-    def upload_watch(self):
-        """Implements --watch flag for continuously uploading code."""
-        from inotify_simple import INotify, flags
-
-        watcher = INotify()
-
-        # Maps inotify descriptors to source directories.
-        descriptor_to_path = {}
-        for _, source_dir in self.walk_sources():
-            if not source_dir.is_dir():
-                continue
-            print(f"Watching source directory {source_dir} for changes.")
-            descriptor = watcher.add_watch(
-                source_dir,
-                flags.CREATE
-                | flags.MODIFY
-                | flags.ATTRIB
-                | flags.DELETE
-                | flags.DELETE_SELF,
-            )
-            descriptor_to_path[descriptor] = source_dir
-
-        while True:
-            need_upload = False
-            # Use a small read_delay to coalesce short bursts of events (e.g.
-            # copying multiple files from another location).
-            for event in watcher.read(read_delay=100):
-                source_dir = descriptor_to_path[event.wd]
-                path = source_dir / event.name
-                print(f"{path} modified.")
-                need_upload = True
-            if need_upload:
-                self.upload()
-
     def list_command(self):
         """list subcommand."""
         print("Matching devices:")
@@ -174,11 +135,16 @@ class Cli:
                 vendor=self.device.vendor,
                 model=self.device.model,
                 serial=self.device.serial,
+                source_dirs=self.source_dirs,
             )
         self.upload()
 
-        if self.watch:
-            self.upload_watch()
+        if not self.watch:
+            return
+
+        for modified_paths in watch_all(self.source_dirs):
+            print(f"Modified paths: {[str(p) for p in modified_paths]}")
+            self.upload()
 
     def preset_upload_command(self):
         self.upload_command()

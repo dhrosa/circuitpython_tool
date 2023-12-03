@@ -110,6 +110,7 @@ class Cli:
         commands = {
             "list": self.list_command,
             "connect": self.connect_command,
+            "preset_connect": self.connect_command,
             "upload": self.upload_command,
             "preset_upload": self.preset_upload_command,
         }
@@ -123,8 +124,8 @@ class Cli:
     def connect_command(self):
         """connect subcommand."""
         print("Launching minicom for ")
-        pprint(device)
-        execlp("minicom", "minicom", "-D", device.serial_path)
+        pprint(self.device)
+        execlp("minicom", "minicom", "-D", self.device.serial_path)
 
     def upload_command(self):
         """upload subcommand."""

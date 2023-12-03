@@ -48,15 +48,13 @@ def parse_args():
     parser = ArgumentParser()
 
     # Subcommand parsers.
-    subparsers = parser.add_subparsers(required=True, dest="command")
+    subparsers = parser.add_subparsers(title="commands", required=True, dest="command")
 
     subparsers.add_parser(
         "list",
         help="List all CircuitPython devices matching the requested filters.",
     )
-    upload_parser = subparsers.add_parser(
-        "upload", help="Upload code to device."
-    )
+    upload_parser = subparsers.add_parser("upload", help="Upload code to device.")
     add_filter_args(upload_parser)
     add_watch_arg(upload_parser)
     upload_parser.add_argument(
@@ -71,9 +69,6 @@ def parse_args():
         default="",
         help="Save the selected device and source directory set as a preset that can be later recalled using preset_upload.",
     )
-    # Ensure these attributes are set even if the upload command isn't
-    # specified.
-    parser.set_defaults(source_dir=[], watch=False, save_preset="")
 
     preset_upload_parser = subparsers.add_parser(
         "preset_upload",
@@ -82,6 +77,27 @@ def parse_args():
     add_watch_arg(preset_upload_parser)
     preset_upload_parser.add_argument("preset_name", type=str)
 
-    subparsers.add_parser("connect", help="Connect to device's serial console.")
+    connect_parser = subparsers.add_parser(
+        "connect", help="Connect to device's serial console."
+    )
+    add_filter_args(connect_parser)
+
+    preset_connect_parser = subparsers.add_parser(
+        "preset_connect",
+        help="Similar to the 'connect' command, but using parameters from a preset.",
+    )
+    preset_connect_parser.add_argument("preset_name", type=str)
+
+    # Ensure these attributes are set even if the relevant commands aren't specified.
+    parser.set_defaults(
+        source_dir=[],
+        watch=False,
+        save_preset="",
+        vendor="",
+        model="",
+        serial="",
+        fuzzy="",
+        preset_name="",
+    )
 
     return parser.parse_args()

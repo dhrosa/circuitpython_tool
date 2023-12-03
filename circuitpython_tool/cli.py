@@ -1,5 +1,3 @@
-#! /usr/bin/env python3
-
 import subprocess
 from pathlib import Path
 import shutil

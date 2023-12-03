@@ -112,7 +112,7 @@ class Cli:
             "connect": self.connect_command,
             "preset_connect": self.connect_command,
             "upload": self.upload_command,
-            "preset_upload": self.preset_upload_command,
+            "preset_upload": self.upload_command,
         }
         commands[self.command]()
 
@@ -146,6 +146,3 @@ class Cli:
         for modified_paths in watch_all(self.source_dirs):
             print(f"Modified paths: {[str(p) for p in modified_paths]}")
             self.upload()
-
-    def preset_upload_command(self):
-        self.upload_command()

@@ -2,42 +2,50 @@ from argparse import ArgumentParser
 from pathlib import Path
 
 
-def parse_args():
-    """Parse command line arguments."""
-    parser = ArgumentParser()
-
-    # Common flags between subcommands.
-    filter_parser = ArgumentParser(add_help=False)
-    filter_parser.add_argument(
+def add_filter_args(parser):
+    parser.add_argument(
         "--vendor",
         type=str,
         default="",
         help="Filter to devices whose vendor contains this string.",
     )
-    filter_parser.add_argument(
+    parser.add_argument(
         "--model",
         type=str,
         default="",
         help="Filter to devices whose model contains this string.",
     )
-    filter_parser.add_argument(
+    parser.add_argument(
         "--serial",
         type=str,
         default="",
         help="Filter to devices whose serial contains this string.",
     )
-    filter_parser.add_argument(
+    parser.add_argument(
         "--fuzzy",
         type=str,
         default="",
         help="Filter to devices whose vendor, model, or serial contains this string.",
     )
-    filter_parser.add_argument(
+    parser.add_argument(
         "--preset",
         type=str,
         default="",
         dest="preset_name",
     )
+
+
+def add_watch_arg(parser):
+    parser.add_argument(
+        "--watch",
+        action="store_true",
+        help="Continuously upload code as files in the source directories change.",
+    )
+
+
+def parse_args():
+    """Parse command line arguments."""
+    parser = ArgumentParser()
 
     # Subcommand parsers.
     subparsers = parser.add_subparsers(required=True, dest="command")
@@ -45,19 +53,12 @@ def parse_args():
     subparsers.add_parser(
         "list",
         help="List all CircuitPython devices matching the requested filters.",
-        parents=[filter_parser],
     )
-
-    watch_parser = ArgumentParser(add_help=False)
-    watch_parser.add_argument(
-        "--watch",
-        action="store_true",
-        help="Continuously upload code as files in the source directories change.",
-    )
-
     upload_parser = subparsers.add_parser(
-        "upload", parents=[filter_parser, watch_parser], help="Upload code to device."
+        "upload", help="Upload code to device."
     )
+    add_filter_args(upload_parser)
+    add_watch_arg(upload_parser)
     upload_parser.add_argument(
         "source_dir",
         type=Path,
@@ -76,9 +77,9 @@ def parse_args():
 
     preset_upload_parser = subparsers.add_parser(
         "preset_upload",
-        parents=[watch_parser],
         help="Similar to the 'upload' command, but using parameters from a preset.",
     )
+    add_watch_arg(preset_upload_parser)
     preset_upload_parser.add_argument("preset_name", type=str)
 
     subparsers.add_parser("connect", help="Connect to device's serial console.")

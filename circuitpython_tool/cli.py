@@ -7,10 +7,8 @@ from functools import cached_property
 
 from pprint import pprint
 
-from tomlkit.toml_file import TOMLFile
-import tomlkit
-
 from .device import Device, all_devices
+from .presets import Preset, PresetDatabase
 
 
 class Cli:
@@ -27,10 +25,7 @@ class Cli:
         self.watch = args.watch
         self.save_preset = args.save_preset
 
-        presets_path = Path("presets.toml")
-        presets_path.touch(exist_ok=True)
-        self.presets_file = TOMLFile(presets_path)
-
+        self.preset_db = PresetDatabase()
         if self.preset_name:
             self.load_preset()
 
@@ -76,16 +71,16 @@ class Cli:
         return self.device.mount_if_needed()
 
     def load_preset(self):
-        presets = self.presets_file.read()
-        preset = presets.get(self.preset_name, None)
-        if preset is None:
+        try:
+            preset = self.preset_db[self.preset_name]
+        except KeyError:
             exit(
-                f"Can't find preset '{self.preset_name}'. Valid choices: {list(presets.keys())}"
+                f"Can't find preset '{self.preset_name}'. Valid choices: {list(self.preset_db.keys())}"
             )
-        self.vendor = preset["vendor"]
-        self.model = preset["model"]
-        self.serial = preset["serial"]
-        self.source_dirs = [Path(d) for d in preset["source_dirs"]]
+        self.vendor = preset.vendor
+        self.model = preset.model
+        self.serial = preset.serial
+        self.source_dirs = preset.source_dirs
 
     def walk_sources(self):
         """Generator that yields tuples of (top-level source directory, descendant path)."""
@@ -175,18 +170,11 @@ class Cli:
         print("Uploading to device: ")
         pprint(self.device)
         if self.save_preset:
-            name = self.save_preset
-            presets = self.presets_file.read()
-            preset = presets.get(name, tomlkit.table())
-
-            preset["vendor"] = self.device.vendor
-            preset["model"] = self.device.model
-            preset["serial"] = self.device.serial
-            preset["source_dirs"] = [str(d.resolve()) for d in self.source_dirs]
-            preset["source_dirs"].multiline(True)
-
-            presets[name] = preset
-            self.presets_file.write(presets)
+            self.preset_db[self.save_preset] = Preset(
+                vendor=self.device.vendor,
+                model=self.device.model,
+                serial=self.device.serial,
+            )
         self.upload()
 
         if self.watch:

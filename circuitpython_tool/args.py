@@ -73,6 +73,7 @@ def parse_args():
     )
     upload_parser.add_argument(
         "--save-preset",
+        dest="new_preset_name",
         type=str,
         default="",
         help="Save the selected device and source directory set as a preset that can be later recalled using preset_upload.",
@@ -100,7 +101,7 @@ def parse_args():
     parser.set_defaults(
         source_dir=[],
         watch=False,
-        save_preset="",
+        new_preset_name="",
         vendor="",
         model="",
         serial="",

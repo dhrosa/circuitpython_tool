@@ -24,7 +24,7 @@ class Cli:
         self.preset_name = args.preset_name
         self.source_dirs = args.source_dir
         self.watch = args.watch
-        self.save_preset = args.save_preset
+        self.new_preset_name = args.new_preset_name
 
         self.preset_db = PresetDatabase()
         if self.preset_name:
@@ -131,8 +131,8 @@ class Cli:
         """upload subcommand."""
         print("Uploading to device: ")
         pprint(self.device)
-        if self.save_preset:
-            self.preset_db[self.save_preset] = Preset(
+        if self.new_preset_name:
+            self.preset_db[self.new_preset_name] = Preset(
                 vendor=self.device.vendor,
                 model=self.device.model,
                 serial=self.device.serial,

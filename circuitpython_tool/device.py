@@ -35,7 +35,7 @@ class Device:
 
     def get_mountpoint(self):
         """Find mountpoint. Returns empty string if not mounted."""
-        args = f"lsblk {partition_path} --output mountpoint --noheadings".split()
+        args = f"lsblk {self.partition_path} --output mountpoint --noheadings".split()
         return run(args).strip()
 
     def mount_if_needed(self):
@@ -44,10 +44,10 @@ class Device:
         if mountpoint:
             return mountpoint
         mount_stdout = run(
-            f"udisksctl mount --block-device {partition_path} --options noatime".split()
+            f"udisksctl mount --block-device {self.partition_path} --options noatime".split()
         )
         print(f"udisksctl: {mount_stdout}")
-        mountpoint = get_mountpoint(partition_path)
+        mountpoint = self.get_mountpoint(partition_path)
         if mountpoint:
             return mountpoint
         exit(f"{partition_path} somehow not mounted.")

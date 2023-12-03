@@ -5,30 +5,35 @@ from pathlib import Path
 def add_filter_args(parser):
     parser.add_argument(
         "--vendor",
+        "-v",
         type=str,
         default="",
         help="Filter to devices whose vendor contains this string.",
     )
     parser.add_argument(
         "--model",
+        "-m",
         type=str,
         default="",
         help="Filter to devices whose model contains this string.",
     )
     parser.add_argument(
         "--serial",
+        "-s",
         type=str,
         default="",
         help="Filter to devices whose serial contains this string.",
     )
     parser.add_argument(
         "--fuzzy",
+        "-f",
         type=str,
         default="",
         help="Filter to devices whose vendor, model, or serial contains this string.",
     )
     parser.add_argument(
         "--preset",
+        "-p",
         type=str,
         default="",
         dest="preset_name",
@@ -38,6 +43,7 @@ def add_filter_args(parser):
 def add_watch_arg(parser):
     parser.add_argument(
         "--watch",
+        "-w",
         action="store_true",
         help="Continuously upload code as files in the source directories change.",
     )
@@ -50,10 +56,12 @@ def parse_args():
     # Subcommand parsers.
     subparsers = parser.add_subparsers(title="commands", required=True, dest="command")
 
-    subparsers.add_parser(
+    list_parser = subparsers.add_parser(
         "list",
         help="List all CircuitPython devices matching the requested filters.",
     )
+    add_filter_args(list_parser)
+
     upload_parser = subparsers.add_parser("upload", help="Upload code to device.")
     add_filter_args(upload_parser)
     add_watch_arg(upload_parser)

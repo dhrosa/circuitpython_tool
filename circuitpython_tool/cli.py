@@ -11,6 +11,9 @@ from .device import Device, all_devices
 from .presets import Preset, PresetDatabase
 from .fs import walk_all, watch_all
 
+from rich.console import Console
+from rich.table import Table
+
 
 class Cli:
     """Application logic and shared state."""
@@ -118,8 +121,28 @@ class Cli:
 
     def list_command(self):
         """list subcommand."""
-        print("Matching devices:")
-        pprint(self.matching_devices)
+        table = Table(title="CircuitPython Devices")
+        for column_name in (
+            "Vendor",
+            "Model",
+            "Serial",
+            "Partition Path",
+            "Serial Path",
+        ):
+            # Make sure full paths are rendered even if terminal is too small.
+            table.add_column(column_name, overflow="fold")
+
+        for device in self.matching_devices:
+            table.add_row(
+                device.vendor,
+                device.model,
+                device.serial,
+                str(device.partition_path),
+                str(device.serial_path),
+            )
+
+        console = Console()
+        console.print(table, overflow="fold")
 
     def connect_command(self):
         """connect subcommand."""

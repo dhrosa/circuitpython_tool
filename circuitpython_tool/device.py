@@ -28,10 +28,10 @@ class Device:
     serial: str
 
     # Path to partition device.
-    partition_path: str = None
+    partition_path: Path = None
 
     # Path to serial device.
-    serial_path: str = None
+    serial_path: Path = None
 
     def get_mountpoint(self):
         """Find mountpoint. Returns empty string if not mounted."""
@@ -100,7 +100,7 @@ def all_devices():
         ):
             continue
         device = find_or_add_device(info)
-        device.partition_path = str(path)
+        device.partition_path = path
 
     # Find serial devices.
     for path in Path("/dev/serial/by-id/").iterdir():
@@ -108,6 +108,6 @@ def all_devices():
         if info is None:
             continue
         device = find_or_add_device(info)
-        device.serial_path = str(path)
+        device.serial_path = path
 
     return devices

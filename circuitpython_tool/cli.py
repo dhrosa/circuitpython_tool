@@ -126,14 +126,13 @@ class Cli:
 
     def run(self):
         """Main entry point."""
-        commands = {
-            "list": self.list_command,
-            "connect": self.connect_command,
-            "preset_connect": self.connect_command,
-            "upload": self.upload_command,
-            "preset_upload": self.upload_command,
-        }
-        commands[self.command]()
+        match self.command:
+            case "list":
+                self.list_command()
+            case "connect" | "preset_connect":
+                self.connect_command()
+            case "upload" | "preset_upload":
+                self.upload_command()
 
     def list_command(self):
         """list subcommand."""

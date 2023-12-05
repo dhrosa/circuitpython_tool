@@ -2,6 +2,9 @@ from dataclasses import dataclass
 import subprocess
 from pathlib import Path
 from sys import exit
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 def run(args):
@@ -10,11 +13,11 @@ def run(args):
     try:
         process.check_returncode()
     except subprocess.CalledProcessError as e:
-        print(f"{args[0]} exited with status {process.returncode}")
+        logger.error(f"{args[0]} exited with status {process.returncode}")
         if process.stdout:
-            print(f"stdout:\n{process.stdout}")
+            logger.error(f"stdout:\n{process.stdout}")
         if process.stderr:
-            print(f"stderr:\n{process.stderr}")
+            logger.error(f"stderr:\n{process.stderr}")
         raise
     return process.stdout
 
@@ -46,7 +49,7 @@ class Device:
         mount_stdout = run(
             f"udisksctl mount --block-device {self.partition_path} --options noatime".split()
         )
-        print(f"udisksctl: {mount_stdout}")
+        logger.info(f"udisksctl: {mount_stdout}")
         mountpoint = self.get_mountpoint(partition_path)
         if mountpoint:
             return mountpoint

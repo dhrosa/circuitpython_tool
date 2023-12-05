@@ -1,5 +1,8 @@
 from pathlib import Path
 from inotify_simple import INotify, flags
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 def walk_all(roots: list[Path]):
@@ -21,7 +24,7 @@ def watch_all(roots: list[Path]):
     for _, path in walk_all(roots):
         if not path.is_dir():
             continue
-        print(f"Watching directory {str(path)} changes.")
+        logger.info(f"Watching directory {str(path)} changes.")
         descriptor = watcher.add_watch(
             path,
             flags.CREATE

@@ -4,8 +4,7 @@ import shutil
 from sys import exit
 from os import execlp
 from functools import cached_property
-
-from pprint import pprint
+from contextlib import suppress
 
 from .device import Device, all_devices
 from .presets import Preset, PresetDatabase
@@ -13,12 +12,29 @@ from .fs import walk_all, watch_all
 
 from rich.console import Console
 from rich.table import Table
+from rich import get_console
+from rich import traceback
+from rich import print
+
+import logging
+from rich.logging import RichHandler
+
+traceback.install(show_locals=True)
+logging.basicConfig(
+    level="NOTSET",
+    format="%(message)s",
+    datefmt="[%X]",
+    handlers=[RichHandler(rich_tracebacks=True)],
+)
+logger = logging.getLogger(__name__)
 
 
 class Cli:
     """Application logic and shared state."""
 
     def __init__(self, args):
+        self.console = get_console()
+
         self.command = args.command
         self.vendor = args.vendor
         self.model = args.model
@@ -66,7 +82,7 @@ class Cli:
             case []:
                 exit("No CircuitPython devices found.")
             case _:
-                pprint(self.matching_devices)
+                print(self.matching_devices)
                 exit("Ambiguous choice of CircuitPython device.")
 
     @cached_property
@@ -104,9 +120,9 @@ class Cli:
                 dest_mtime = dest.stat().st_mtime
                 if source_mtime == dest_mtime:
                     continue
-            print(f"Copying {source_dir / rel_path}")
+            logger.info(f"Copying {source_dir / rel_path}")
             shutil.copy2(source, dest)
-        print("Upload complete")
+        logger.info("Upload complete")
 
     def run(self):
         """Main entry point."""
@@ -147,13 +163,13 @@ class Cli:
     def connect_command(self):
         """connect subcommand."""
         print("Launching minicom for ")
-        pprint(self.device)
+        print(self.device)
         execlp("minicom", "minicom", "-D", self.device.serial_path)
 
     def upload_command(self):
         """upload subcommand."""
         print("Uploading to device: ")
-        pprint(self.device)
+        print(self.device)
         if self.new_preset_name:
             self.preset_db[self.new_preset_name] = Preset(
                 vendor=self.device.vendor,
@@ -162,10 +178,15 @@ class Cli:
                 source_dirs=self.source_dirs,
             )
         self.upload()
-
         if not self.watch:
             return
 
-        for modified_paths in watch_all(self.source_dirs):
-            print(f"Modified paths: {[str(p) for p in modified_paths]}")
-            self.upload()
+        events = iter(watch_all(self.source_dirs))
+
+        with suppress(KeyboardInterrupt):
+            while True:
+                with self.console.status("Waiting for file modification."):
+                    modified_paths = next(events)
+                logger.info(f"Modified paths: {[str(p) for p in modified_paths]}")
+                with self.console.status("Uploading to device."):
+                    self.upload()

@@ -69,7 +69,7 @@ class PresetDatabase:
         entry["serial"] = preset.serial
         entry["source_dirs"] = [str(p) for p in preset.source_dirs]
 
-        config = self.file.read()
+        config = self.read()
         config[name] = entry
         self.write(config)
 

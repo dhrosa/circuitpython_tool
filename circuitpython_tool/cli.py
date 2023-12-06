@@ -29,6 +29,15 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
+def render_preset(preset):
+    table = Table("Property", "Value")
+    table.add_row("Vendor", preset.vendor)
+    table.add_row("Model", preset.model)
+    table.add_row("Serial", preset.serial)
+    table.add_row("Source Dirs", "\n".join(str(p) for p in preset.source_dirs))
+    return table
+
+
 class Cli:
     """Application logic and shared state."""
 
@@ -129,6 +138,8 @@ class Cli:
                 self.upload_command()
             case "preset_list":
                 self.preset_list_command()
+            case "preset_save":
+                self.preset_save_command()
             case _:
                 raise NotImplementedError(self.command)
 
@@ -159,13 +170,28 @@ class Cli:
 
     def preset_list_command(self):
         """preset list command."""
-        table = Table("Name", "Vendor", "Model", "Serial", "Source Directories")
-        table.title = "Presets"
+        table = Table("Preset Name", "Vendor", "Model", "Serial", "Source Directories")
         for name, preset in self.preset_db.items():
             table.add_row(
-                name, preset.vendor, preset.model, preset.model, preset.serial, ""
+                name,
+                preset.vendor,
+                preset.model,
+                preset.serial,
+                "\n".join(str(p) for p in preset.source_dirs),
             )
-        self.console.print(table)
+        print(table)
+
+    def preset_save_command(self):
+        """preset save command."""
+        preset = Preset(
+            vendor=self.device.vendor,
+            model=self.device.model,
+            serial=self.device.serial,
+            source_dirs=self.source_dirs,
+        )
+        self.console.print(f"Saving new preset: [blue]{self.new_preset_name}")
+        print(render_preset(preset))
+        self.preset_db[self.new_preset_name] = preset
 
     def connect_command(self):
         """connect subcommand."""

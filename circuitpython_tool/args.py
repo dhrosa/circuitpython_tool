@@ -110,6 +110,21 @@ def parse_args():
     )
     add_fake_arg(preset_list_parser)
 
+    preset_save_parser = subparsers.add_parser(
+        "preset_save", help="List existing presets."
+    )
+    preset_save_parser.add_argument(
+        "new_preset_name", type=str, help="Name of preset to save."
+    )
+    add_fake_arg(preset_save_parser)
+    add_filter_args(preset_save_parser)
+    preset_save_parser.add_argument(
+        "source_dir",
+        type=Path,
+        nargs="+",
+        help="Source directory to copy.",
+    )
+
     # Ensure these attributes are set even if the relevant commands aren't specified.
     parser.set_defaults(
         source_dir=[],

@@ -33,15 +33,6 @@ def add_filter_args(parser):
     )
 
 
-def add_watch_arg(parser):
-    parser.add_argument(
-        "--watch",
-        "-w",
-        action="store_true",
-        help="Continuously upload code as files in the source directories change.",
-    )
-
-
 def parse_args():
     """Parse command line arguments."""
     parser = ArgumentParser()
@@ -49,15 +40,16 @@ def parse_args():
     # Subcommand parsers.
     subparsers = parser.add_subparsers(title="commands", required=True, dest="command")
 
-    list_parser = subparsers.add_parser(
-        "list",
-        help="List all CircuitPython devices matching the requested filters.",
-    )
-    add_filter_args(list_parser)
+    subparsers.add_parser("devices", help="List all connected CircuitPython devices.")
 
     upload_parser = subparsers.add_parser("upload", help="Upload code to device.")
-    add_watch_arg(upload_parser)
     upload_parser.add_argument("preset_name", type=str)
+    upload_parser.add_argument(
+        "--watch",
+        "-w",
+        action="store_true",
+        help="Continuously upload code as files in the source directories change.",
+    )
 
     connect_parser = subparsers.add_parser(
         "connect", help="Connect to device's serial console."

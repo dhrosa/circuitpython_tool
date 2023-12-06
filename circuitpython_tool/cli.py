@@ -127,8 +127,8 @@ class Cli:
     def run(self):
         """Main entry point."""
         match self.command:
-            case "list":
-                self.list_command()
+            case "devices":
+                self.devices_command()
             case "connect" | "preset_connect":
                 self.connect_command()
             case "upload":
@@ -140,8 +140,8 @@ class Cli:
             case _:
                 raise NotImplementedError(self.command)
 
-    def list_command(self):
-        """list subcommand."""
+    def devices_command(self):
+        """devices subcommand."""
         table = Table(title="CircuitPython Devices")
         for column_name in (
             "Vendor",

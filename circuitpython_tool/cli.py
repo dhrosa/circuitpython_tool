@@ -6,7 +6,7 @@ from os import execlp
 from functools import cached_property
 from contextlib import suppress
 
-from .device import Device, all_devices, fake_devices
+from .device import Device, all_devices
 from .presets import Preset, PresetDatabase
 from .fs import walk_all, watch_all
 
@@ -57,12 +57,9 @@ class Cli:
         if self.preset_name:
             self.load_preset()
 
-        if args.fake_device_count:
-            devices = fake_devices(args.fake_device_count)
-        else:
-            devices = all_devices()
-
-        self.matching_devices = [d for d in devices if self.device_matches_filter(d)]
+        self.matching_devices = [
+            d for d in all_devices() if self.device_matches_filter(d)
+        ]
 
     def device_matches_filter(self, device):
         """Predicate for devices matching requested filter."""

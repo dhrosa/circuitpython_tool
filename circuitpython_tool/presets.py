@@ -67,7 +67,7 @@ class PresetDatabase:
         entry["vendor"] = preset.vendor
         entry["model"] = preset.model
         entry["serial"] = preset.serial
-        entry["source_dirs"] = [str(p) for p in preset.source_dirs]
+        entry["source_dirs"] = [str(p.resolve()) for p in preset.source_dirs]
 
         config = self.read()
         config[name] = entry

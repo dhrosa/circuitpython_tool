@@ -134,7 +134,7 @@ class Cli:
                 self.list_command()
             case "connect" | "preset_connect":
                 self.connect_command()
-            case "upload" | "preset_upload":
+            case "upload":
                 self.upload_command()
             case "preset_list":
                 self.preset_list_command()

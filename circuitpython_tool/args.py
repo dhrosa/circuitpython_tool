@@ -67,42 +67,14 @@ def parse_args():
 
     upload_parser = subparsers.add_parser("upload", help="Upload code to device.")
     add_fake_arg(upload_parser)
-    add_filter_args(upload_parser)
     add_watch_arg(upload_parser)
-    upload_parser.add_argument(
-        "source_dir",
-        type=Path,
-        nargs="+",
-        help="Source directory to copy.",
-    )
-    upload_parser.add_argument(
-        "--save-preset",
-        dest="new_preset_name",
-        type=str,
-        default="",
-        help="Save the selected device and source directory set as a preset that can be later recalled using preset_upload.",
-    )
-
-    preset_upload_parser = subparsers.add_parser(
-        "preset_upload",
-        help="Similar to the 'upload' command, but using parameters from a preset.",
-    )
-    add_fake_arg(preset_upload_parser)
-    add_watch_arg(preset_upload_parser)
-    preset_upload_parser.add_argument("preset_name", type=str)
+    upload_parser.add_argument("preset_name", type=str)
 
     connect_parser = subparsers.add_parser(
         "connect", help="Connect to device's serial console."
     )
     add_fake_arg(connect_parser)
-    add_filter_args(connect_parser)
-
-    preset_connect_parser = subparsers.add_parser(
-        "preset_connect",
-        help="Similar to the 'connect' command, but using parameters from a preset.",
-    )
-    add_fake_arg(preset_connect_parser)
-    preset_connect_parser.add_argument("preset_name", type=str)
+    connect_parser.add_argument("preset_name", type=str)
 
     # New-style commands.
     preset_list_parser = subparsers.add_parser(

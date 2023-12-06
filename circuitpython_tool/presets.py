@@ -3,6 +3,10 @@ import tomlkit
 from dataclasses import dataclass
 from pathlib import Path
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 
 @dataclass
 class Preset:
@@ -12,18 +16,40 @@ class Preset:
     source_dirs: list[Path]
 
 
+def presets_path():
+    """Search for existing presets file.
+
+    Starts searching in the current directory, and then continues to iterate
+    through parent directories. If no existing file is found, a path to
+    (non-existing) config file in current directory is returned.
+    """
+    start_dir = Path.cwd()
+    name = "presets.toml"
+    candidates = [d / name for d in (start_dir, *start_dir.parents)]
+    for path in candidates:
+        logger.debug(f"Trying presets file candidate: {path}")
+        if path.exists():
+            logger.info(f"Using presets file: {path}")
+            return path
+    fallback = candidates[0]
+    logger.info(f"No existing presets file found. Will use {fallback}")
+    return fallback
+
+
 class PresetDatabase:
     def __init__(self):
-        path = Path("presets.toml")
-        if not path.exists():
-            path.touch()
-        self.file = TOMLFile(path)
+        self.path = presets_path()
+
+    def file(self):
+        return TOMLFile(self.path)
 
     def read(self):
-        return self.file.read()
+        if self.path.exists():
+            return self.file().read()
+        return tomlkit.TOMLDocument()
 
     def write(self, config):
-        self.file.write(config)
+        self.file().write(config)
 
     def __getitem__(self, name):
         config = self.read()

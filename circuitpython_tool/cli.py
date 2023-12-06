@@ -71,8 +71,7 @@ class Cli:
             )
         )
 
-    @cached_property
-    def device(self):
+    def distinct_device(self):
         """
         Returns the single device matching our filter. If there isn't strictly one device, we exit the process with an error.
         """
@@ -84,11 +83,6 @@ class Cli:
             case _:
                 print(self.matching_devices)
                 exit("Ambiguous choice of CircuitPython device.")
-
-    @cached_property
-    def mountpoint(self):
-        """Mountpoint of current device."""
-        return self.device.mount_if_needed()
 
     def load_preset(self):
         try:
@@ -106,13 +100,13 @@ class Cli:
         """Generator that yields tuples of (top-level source directory, descendant path)."""
         return walk_all(self.source_dirs)
 
-    def upload(self):
+    def upload(self, mountpoint):
         """Copy all source files onto the device."""
         for source_dir, source in self.walk_sources():
             if source.name[0] == "." or source.is_dir():
                 continue
             rel_path = source.relative_to(source_dir)
-            dest = self.mountpoint / rel_path
+            dest = mountpoint / rel_path
             dest.parent.mkdir(parents=True, exist_ok=True)
             if dest.exists():
                 # Round source timestamp to 2s resolution to match FAT drive. This prevents spurious timestamp mismatches.
@@ -180,10 +174,11 @@ class Cli:
 
     def preset_save_command(self):
         """preset save command."""
+        device = self.distinct_device()
         preset = Preset(
-            vendor=self.device.vendor,
-            model=self.device.model,
-            serial=self.device.serial,
+            vendor=device.vendor,
+            model=device.model,
+            serial=device.serial,
             source_dirs=self.source_dirs,
         )
         self.console.print(f"Saving new preset: [blue]{self.new_preset_name}")
@@ -192,22 +187,18 @@ class Cli:
 
     def connect_command(self):
         """connect subcommand."""
+        device = self.distinct_device()
         print("Launching minicom for ")
-        print(self.device)
-        execlp("minicom", "minicom", "-D", self.device.serial_path)
+        print(device)
+        execlp("minicom", "minicom", "-D", device.serial_path)
 
     def upload_command(self):
         """upload subcommand."""
+        device = self.distinct_device()
         print("Uploading to device: ")
-        print(self.device)
-        if self.new_preset_name:
-            self.preset_db[self.new_preset_name] = Preset(
-                vendor=self.device.vendor,
-                model=self.device.model,
-                serial=self.device.serial,
-                source_dirs=self.source_dirs,
-            )
-        self.upload()
+        print(device)
+        mountpoint = device.mount_if_needed()
+        self.upload(mountpoint)
         if not self.watch:
             return
 
@@ -219,4 +210,4 @@ class Cli:
                     modified_paths = next(events)
                 logger.info(f"Modified paths: {[str(p) for p in modified_paths]}")
                 with self.console.status("Uploading to device."):
-                    self.upload()
+                    self.upload(mountpoint)

@@ -2,6 +2,15 @@ from argparse import ArgumentParser
 from pathlib import Path
 
 
+def add_fake_arg(parser):
+    parser.add_argument(
+        "--fake",
+        dest="fake_device_count",
+        type=int,
+        help="If set, generate this many fake devices rather than probing for real devices.",
+    )
+
+
 def add_filter_args(parser):
     parser.add_argument(
         "--vendor",
@@ -60,9 +69,11 @@ def parse_args():
         "list",
         help="List all CircuitPython devices matching the requested filters.",
     )
+    add_fake_arg(list_parser)
     add_filter_args(list_parser)
 
     upload_parser = subparsers.add_parser("upload", help="Upload code to device.")
+    add_fake_arg(upload_parser)
     add_filter_args(upload_parser)
     add_watch_arg(upload_parser)
     upload_parser.add_argument(
@@ -83,18 +94,21 @@ def parse_args():
         "preset_upload",
         help="Similar to the 'upload' command, but using parameters from a preset.",
     )
+    add_fake_arg(preset_upload_parser)
     add_watch_arg(preset_upload_parser)
     preset_upload_parser.add_argument("preset_name", type=str)
 
     connect_parser = subparsers.add_parser(
         "connect", help="Connect to device's serial console."
     )
+    add_fake_arg(connect_parser)
     add_filter_args(connect_parser)
 
     preset_connect_parser = subparsers.add_parser(
         "preset_connect",
         help="Similar to the 'connect' command, but using parameters from a preset.",
     )
+    add_fake_arg(preset_connect_parser)
     preset_connect_parser.add_argument("preset_name", type=str)
 
     # Ensure these attributes are set even if the relevant commands aren't specified.

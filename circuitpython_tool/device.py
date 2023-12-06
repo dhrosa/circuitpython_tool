@@ -114,3 +114,19 @@ def all_devices():
         device.serial_path = path
 
     return devices
+
+
+def fake_devices(count):
+    """List of fake Devices for testing."""
+    devices = []
+    for i in range(count):
+        devices.append(
+            Device(
+                vendor=f"vendor_{i}",
+                model=f"model_{i}",
+                serial=f"serial_{i}",
+                partition_path="/dev/null",
+                serial_path="/dev/null",
+            )
+        )
+    return devices

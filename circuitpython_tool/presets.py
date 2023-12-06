@@ -51,15 +51,16 @@ class PresetDatabase:
     def write(self, config):
         self.file().write(config)
 
-    def __getitem__(self, name):
-        config = self.read()
-        entry = config[name]
+    def _table_to_preset(self, entry):
         return Preset(
             vendor=entry["vendor"],
             model=entry["model"],
             serial=entry["serial"],
             source_dirs=[Path(d) for d in entry["source_dirs"]],
         )
+
+    def __getitem__(self, name):
+        return self._table_to_preset(self.read()[name])
 
     def __setitem__(self, name, preset):
         entry = tomlkit.table()
@@ -74,3 +75,8 @@ class PresetDatabase:
 
     def keys(self):
         return self.read().keys()
+
+    def items(self):
+        return (
+            (name, self._table_to_preset(table)) for name, table in self.read().items()
+        )

@@ -127,6 +127,10 @@ class Cli:
                 self.connect_command()
             case "upload" | "preset_upload":
                 self.upload_command()
+            case "preset_list":
+                self.preset_list_command()
+            case _:
+                raise NotImplementedError(self.command)
 
     def list_command(self):
         """list subcommand."""
@@ -152,6 +156,16 @@ class Cli:
 
         console = Console()
         console.print(table, overflow="fold")
+
+    def preset_list_command(self):
+        """preset list command."""
+        table = Table("Name", "Vendor", "Model", "Serial", "Source Directories")
+        table.title = "Presets"
+        for name, preset in self.preset_db.items():
+            table.add_row(
+                name, preset.vendor, preset.model, preset.model, preset.serial, ""
+            )
+        self.console.print(table)
 
     def connect_command(self):
         """connect subcommand."""

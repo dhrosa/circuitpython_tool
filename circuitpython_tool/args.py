@@ -104,6 +104,12 @@ def parse_args():
     add_fake_arg(preset_connect_parser)
     preset_connect_parser.add_argument("preset_name", type=str)
 
+    # New-style commands.
+    preset_list_parser = subparsers.add_parser(
+        "preset_list", help="List existing presets."
+    )
+    add_fake_arg(preset_list_parser)
+
     # Ensure these attributes are set even if the relevant commands aren't specified.
     parser.set_defaults(
         source_dir=[],

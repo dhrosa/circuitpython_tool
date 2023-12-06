@@ -2,37 +2,6 @@ from argparse import ArgumentParser
 from pathlib import Path
 
 
-def add_filter_args(parser):
-    parser.add_argument(
-        "--vendor",
-        "-v",
-        type=str,
-        default="",
-        help="Filter to devices whose vendor contains this string.",
-    )
-    parser.add_argument(
-        "--model",
-        "-m",
-        type=str,
-        default="",
-        help="Filter to devices whose model contains this string.",
-    )
-    parser.add_argument(
-        "--serial",
-        "-s",
-        type=str,
-        default="",
-        help="Filter to devices whose serial contains this string.",
-    )
-    parser.add_argument(
-        "--preset",
-        "-p",
-        type=str,
-        default="",
-        dest="preset_name",
-    )
-
-
 def parse_args():
     """Parse command line arguments."""
     parser = ArgumentParser()
@@ -56,7 +25,6 @@ def parse_args():
     )
     connect_parser.add_argument("preset_name", type=str)
 
-    # New-style commands.
     preset_list_parser = subparsers.add_parser(
         "preset_list", help="List existing presets."
     )
@@ -67,12 +35,39 @@ def parse_args():
     preset_save_parser.add_argument(
         "new_preset_name", type=str, help="Name of preset to save."
     )
-    add_filter_args(preset_save_parser)
     preset_save_parser.add_argument(
         "source_dir",
         type=Path,
         nargs="+",
         help="Source directory to copy.",
+    )
+    preset_save_parser.add_argument(
+        "--vendor",
+        "-v",
+        type=str,
+        default="",
+        help="Filter to devices whose vendor contains this string.",
+    )
+    preset_save_parser.add_argument(
+        "--model",
+        "-m",
+        type=str,
+        default="",
+        help="Filter to devices whose model contains this string.",
+    )
+    preset_save_parser.add_argument(
+        "--serial",
+        "-s",
+        type=str,
+        default="",
+        help="Filter to devices whose serial contains this string.",
+    )
+    preset_save_parser.add_argument(
+        "--preset",
+        "-p",
+        type=str,
+        default="",
+        dest="preset_name",
     )
 
     # Ensure these attributes are set even if the relevant commands aren't specified.

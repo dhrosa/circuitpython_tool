@@ -34,13 +34,6 @@ def add_filter_args(parser):
         help="Filter to devices whose serial contains this string.",
     )
     parser.add_argument(
-        "--fuzzy",
-        "-f",
-        type=str,
-        default="",
-        help="Filter to devices whose vendor, model, or serial contains this string.",
-    )
-    parser.add_argument(
         "--preset",
         "-p",
         type=str,

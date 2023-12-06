@@ -39,7 +39,6 @@ class Cli:
         self.vendor = args.vendor
         self.model = args.model
         self.serial = args.serial
-        self.fuzzy = args.fuzzy
         self.preset_name = args.preset_name
         self.source_dirs = args.source_dir
         self.watch = args.watch
@@ -58,14 +57,6 @@ class Cli:
 
     def device_matches_filter(self, device):
         """Predicate for devices matching requested filter."""
-        if self.fuzzy:
-            return any(
-                (
-                    self.fuzzy in device.vendor,
-                    self.fuzzy in device.model,
-                    self.fuzzy in device.serial,
-                )
-            )
         return all(
             (
                 self.vendor in device.vendor,

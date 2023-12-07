@@ -49,6 +49,7 @@ class PresetDatabase:
         return tomlkit.TOMLDocument()
 
     def write(self, config):
+        logging.info(f"Writing to presets file: {self.path}")
         self.file().write(config)
 
     def _table_to_preset(self, entry):

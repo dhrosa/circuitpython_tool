@@ -12,7 +12,7 @@ from .fs import walk_all, watch_all
 
 from rich.console import Console
 from rich.table import Table
-from rich import get_console, traceback
+from rich import get_console, traceback, print
 
 import logging
 from rich.logging import RichHandler
@@ -22,7 +22,9 @@ logging.basicConfig(
     level="NOTSET",
     format="%(message)s",
     datefmt="[%X]",
-    handlers=[RichHandler(rich_tracebacks=True, markup=True)],
+    handlers=[
+        RichHandler(rich_tracebacks=True, markup=True, omit_repeated_times=False)
+    ],
 )
 logger = logging.getLogger(__name__)
 
@@ -47,9 +49,9 @@ def _render_device(self):
     table.add_row("Vendor", self.vendor)
     table.add_row("Model", self.model)
     table.add_row("Serial", self.serial)
-    table.add_row("Partition Path", self.partition_path)
-    table.add_row("Serial Path", self.serial_path)
-    table.add_row("Mountpoint", self.get_mountpoint())
+    table.add_row("Partition Path", str(self.partition_path))
+    table.add_row("Serial Path", str(self.serial_path))
+    table.add_row("Mountpoint", str(self.get_mountpoint()))
     return table
 
 
@@ -101,8 +103,10 @@ class Cli:
                 logger.critical("No CircuitPython devices found.")
                 exit(1)
             case _:
-                logger.critical(self.devices_table())
-                logger.critical("Ambiguous choice of CircuitPython device.")
+                logger.critical(
+                    "Ambiguous choice of CircuitPython device. Matching devices:"
+                )
+                self.console.log(self.devices_table())
                 exit(1)
 
     def load_preset(self):
@@ -197,7 +201,7 @@ class Cli:
 
     def devices_command(self):
         """devices subcommand."""
-        logger.info(self.devices_table())
+        print("Connected CircuitPython devices:", self.devices_table())
 
     def preset_list_command(self):
         """preset list command."""
@@ -210,7 +214,7 @@ class Cli:
                 preset.serial,
                 "\n".join(str(p) for p in preset.source_dirs),
             )
-        logger.info(table)
+        print(table)
 
     def preset_save_command(self):
         """preset save command."""
@@ -221,8 +225,7 @@ class Cli:
             serial=device.serial,
             source_dirs=self.source_dirs,
         )
-        logger.info(f"Saving new preset: [blue]{self.new_preset_name}")
-        logger.info(preset)
+        print(f"Saving new preset: [blue]{self.new_preset_name}[/]", preset)
         self.preset_db[self.new_preset_name] = preset
 
     def connect_command(self):
@@ -236,8 +239,7 @@ class Cli:
         """upload subcommand."""
         device = self.distinct_device()
         mountpoint = device.mount_if_needed()
-        logger.info("Uploading to device: ")
-        logger.info(device)
+        print("Uploading to device: ", device)
         self.upload(mountpoint)
 
     def watch_command(self):

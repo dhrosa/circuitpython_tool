@@ -12,9 +12,7 @@ from .fs import walk_all, watch_all
 
 from rich.console import Console
 from rich.table import Table
-from rich import get_console
-from rich import traceback
-from rich import print
+from rich import get_console, traceback
 
 import logging
 from rich.logging import RichHandler
@@ -24,18 +22,38 @@ logging.basicConfig(
     level="NOTSET",
     format="%(message)s",
     datefmt="[%X]",
-    handlers=[RichHandler(rich_tracebacks=True)],
+    handlers=[RichHandler(rich_tracebacks=True, markup=True)],
 )
 logger = logging.getLogger(__name__)
 
+# Choosing to implement __rich__ render protocol via monkeypatching to decouple
+# rendering logic from lower-level data structures.
 
-def render_preset(preset):
+
+def _render_preset(self):
     table = Table("Property", "Value")
-    table.add_row("Vendor", preset.vendor)
-    table.add_row("Model", preset.model)
-    table.add_row("Serial", preset.serial)
-    table.add_row("Source Dirs", "\n".join(str(p) for p in preset.source_dirs))
+    table.add_row("Vendor", self.vendor)
+    table.add_row("Model", self.model)
+    table.add_row("Serial", self.serial)
+    table.add_row("Source Dirs", "\n".join(str(p) for p in self.source_dirs))
     return table
+
+
+Preset.__rich__ = _render_preset
+
+
+def _render_device(self):
+    table = Table("Property", "Value")
+    table.add_row("Vendor", self.vendor)
+    table.add_row("Model", self.model)
+    table.add_row("Serial", self.serial)
+    table.add_row("Partition Path", self.partition_path)
+    table.add_row("Serial Path", self.serial_path)
+    table.add_row("Mountpoint", self.get_mountpoint())
+    return table
+
+
+Device.__rich__ = _render_device
 
 
 class Cli:
@@ -83,7 +101,7 @@ class Cli:
                 logger.critical("No CircuitPython devices found.")
                 exit(1)
             case _:
-                print(self.devices_table())
+                logger.critical(self.devices_table())
                 logger.critical("Ambiguous choice of CircuitPython device.")
                 exit(1)
 
@@ -95,8 +113,7 @@ class Cli:
                 f"[green]{name}[/]" for name in self.preset_db.keys()
             )
             logger.critical(
-                f"Can't find preset [blue]{self.preset_name}[/blue]. Valid choices: {valid_choices}",
-                extra={"markup": True},
+                f"Can't find preset [blue]{self.preset_name}[/blue]. Valid choices: {valid_choices}"
             )
             exit(1)
         self.vendor = preset.vendor
@@ -180,7 +197,7 @@ class Cli:
 
     def devices_command(self):
         """devices subcommand."""
-        print(self.devices_table())
+        logger.info(self.devices_table())
 
     def preset_list_command(self):
         """preset list command."""
@@ -193,7 +210,7 @@ class Cli:
                 preset.serial,
                 "\n".join(str(p) for p in preset.source_dirs),
             )
-        print(table)
+        logger.info(table)
 
     def preset_save_command(self):
         """preset save command."""
@@ -204,31 +221,31 @@ class Cli:
             serial=device.serial,
             source_dirs=self.source_dirs,
         )
-        self.console.print(f"Saving new preset: [blue]{self.new_preset_name}")
-        print(render_preset(preset))
+        logger.info(f"Saving new preset: [blue]{self.new_preset_name}")
+        logger.info(preset)
         self.preset_db[self.new_preset_name] = preset
 
     def connect_command(self):
         """connect subcommand."""
         device = self.distinct_device()
-        print("Launching minicom for ")
-        print(device)
+        logger.info("Launching minicom for ")
+        logger.info(device)
         execlp("minicom", "minicom", "-D", device.serial_path)
 
     def upload_command(self):
         """upload subcommand."""
         device = self.distinct_device()
         mountpoint = device.mount_if_needed()
-        print("Uploading to device: ")
-        print(device)
+        logger.info("Uploading to device: ")
+        logger.info(device)
         self.upload(mountpoint)
 
     def watch_command(self):
         """watch subcommand."""
         device = self.distinct_device()
         mountpoint = device.mount_if_needed()
-        print("Target device: ")
-        print(device)
+        logger.info("Target device: ")
+        logger.info(device)
         # Always do at least one upload at the start.
         self.upload(mountpoint)
 

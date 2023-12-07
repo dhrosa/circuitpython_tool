@@ -160,6 +160,8 @@ class Cli:
                 self.connect_command()
             case "upload":
                 self.upload_command()
+            case "watch":
+                self.watch_command()
             case "preset":
                 match self.preset_command:
                     case "list":
@@ -216,15 +218,21 @@ class Cli:
     def upload_command(self):
         """upload subcommand."""
         device = self.distinct_device()
+        mountpoint = device.mount_if_needed()
         print("Uploading to device: ")
         print(device)
-        mountpoint = device.mount_if_needed()
         self.upload(mountpoint)
-        if not self.watch:
-            return
+
+    def watch_command(self):
+        """watch subcommand."""
+        device = self.distinct_device()
+        mountpoint = device.mount_if_needed()
+        print("Target device: ")
+        print(device)
+        # Always do at least one upload at the start.
+        self.upload(mountpoint)
 
         events = iter(watch_all(self.source_dirs))
-
         with suppress(KeyboardInterrupt):
             while True:
                 with self.console.status("Waiting for file modification."):

@@ -13,12 +13,11 @@ def parse_args():
 
     upload = children.add_parser("upload", help="Upload code to device.")
     upload.add_argument("preset_name", type=str)
-    upload.add_argument(
-        "--watch",
-        "-w",
-        action="store_true",
-        help="Continuously upload code as files in the source directories change.",
+
+    watch = children.add_parser(
+        "watch", help="Upload code to device in response to filesystem events."
     )
+    watch.add_argument("preset_name", type=str)
 
     connect = children.add_parser("connect", help="Connect to device's serial console.")
     connect.add_argument("preset_name", type=str)

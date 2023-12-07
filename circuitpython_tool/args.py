@@ -23,9 +23,14 @@ def parse_args():
     connect = children.add_parser("connect", help="Connect to device's serial console.")
     connect.add_argument("preset_name", type=str)
 
-    preset_list = children.add_parser("preset_list", help="List existing presets.")
+    preset = children.add_parser("preset", help="Manipulate presets.")
+    preset_children = preset.add_subparsers(
+        title="preset commands", required=True, dest="preset_command"
+    )
 
-    preset_save = children.add_parser("preset_save", help="List existing presets.")
+    preset_list = preset_children.add_parser("list", help="List existing presets.")
+
+    preset_save = preset_children.add_parser("save", help="Save preset.")
     preset_save.add_argument(
         "new_preset_name", type=str, help="Name of preset to save."
     )
@@ -74,6 +79,7 @@ def parse_args():
         serial="",
         fuzzy="",
         preset_name="",
+        preset_command="",
     )
 
     return root.parse_args()

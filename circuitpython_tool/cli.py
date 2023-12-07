@@ -45,6 +45,7 @@ class Cli:
         self.console = get_console()
 
         self.command = args.command
+        self.preset_command = args.preset_command
         self.vendor = args.vendor
         self.model = args.model
         self.serial = args.serial
@@ -127,6 +128,15 @@ class Cli:
                 self.connect_command()
             case "upload":
                 self.upload_command()
+            case "preset":
+                match self.preset_command:
+                    case "list":
+                        self.preset_list_command()
+                    case "save":
+                        self.preset_save_command()
+                    case _:
+                        raise NotImplementedError((self.command, self.preset_command))
+
             case "preset_list":
                 self.preset_list_command()
             case "preset_save":

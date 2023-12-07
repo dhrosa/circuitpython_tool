@@ -100,13 +100,14 @@ class Cli:
             case [device]:
                 return device
             case []:
-                logger.critical("No CircuitPython devices found.")
+                print(":thumbs_down: [red]0[/red] matching devices found.")
                 exit(1)
             case _:
-                logger.critical(
-                    "Ambiguous choice of CircuitPython device. Matching devices:"
+                count = len(self.matching_devices)
+                print(
+                    f":thumbs_down: Ambiguous filter. [red]{count}[/red] matching devices found:",
+                    self.devices_table(),
                 )
-                self.console.log(self.devices_table())
                 exit(1)
 
     def load_preset(self):
@@ -114,10 +115,10 @@ class Cli:
             preset = self.preset_db[self.preset_name]
         except KeyError:
             valid_choices = " | ".join(
-                f"[green]{name}[/]" for name in self.preset_db.keys()
+                f"[blue]{name}[/]" for name in self.preset_db.keys()
             )
-            logger.critical(
-                f"Can't find preset [blue]{self.preset_name}[/blue]. Valid choices: {valid_choices}"
+            print(
+                f":thumbs_down: Cannot find preset [red]{self.preset_name}[/red]. Valid choices: {valid_choices}"
             )
             exit(1)
         self.vendor = preset.vendor
@@ -225,8 +226,9 @@ class Cli:
             serial=device.serial,
             source_dirs=self.source_dirs,
         )
-        print(f"Saving new preset: [blue]{self.new_preset_name}[/]", preset)
+        print(f"Saving preset [blue]{self.new_preset_name}[/blue]: ", preset)
         self.preset_db[self.new_preset_name] = preset
+        print(f":thumbs_up: [green]Successfully[/green] saved new preset.")
 
     def connect_command(self):
         """connect subcommand."""
@@ -241,20 +243,23 @@ class Cli:
         mountpoint = device.mount_if_needed()
         print("Uploading to device: ", device)
         self.upload(mountpoint)
+        print(":thumbs_up: Upload [green]succeeded.")
 
     def watch_command(self):
         """watch subcommand."""
         device = self.distinct_device()
         mountpoint = device.mount_if_needed()
-        logger.info("Target device: ")
-        logger.info(device)
+        print("Target device: ")
+        print(device)
         # Always do at least one upload at the start.
         self.upload(mountpoint)
 
         events = iter(watch_all(self.source_dirs))
         with suppress(KeyboardInterrupt):
             while True:
-                with self.console.status("Waiting for file modification."):
+                with self.console.status(
+                    "[yellow]Waiting[/yellow] for file modification."
+                ):
                     modified_paths = next(events)
                 logger.info(f"Modified paths: {[str(p) for p in modified_paths]}")
                 with self.console.status("Uploading to device."):

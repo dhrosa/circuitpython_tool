@@ -77,7 +77,6 @@ def parse_args():
         vendor="",
         model="",
         serial="",
-        fuzzy="",
         preset_name="",
         preset_command="",
     )

@@ -103,7 +103,7 @@ def all_devices():
         ):
             continue
         device = find_or_add_device(info)
-        device.partition_path = path
+        device.partition_path = path.resolve()
 
     # Find serial devices.
     for path in Path("/dev/serial/by-id/").iterdir():
@@ -111,6 +111,6 @@ def all_devices():
         if info is None:
             continue
         device = find_or_add_device(info)
-        device.serial_path = path
+        device.serial_path = path.resolve()
 
     return devices

@@ -80,18 +80,25 @@ class Cli:
             case [device]:
                 return device
             case []:
-                exit("No CircuitPython devices found.")
+                logger.critical("No CircuitPython devices found.")
+                exit(1)
             case _:
-                print(self.matching_devices)
-                exit("Ambiguous choice of CircuitPython device.")
+                print(self.devices_table())
+                logger.critical("Ambiguous choice of CircuitPython device.")
+                exit(1)
 
     def load_preset(self):
         try:
             preset = self.preset_db[self.preset_name]
         except KeyError:
-            exit(
-                f"Can't find preset '{self.preset_name}'. Valid choices: {list(self.preset_db.keys())}"
+            valid_choices = " | ".join(
+                f"[green]{name}[/]" for name in self.preset_db.keys()
             )
+            logger.critical(
+                f"Can't find preset [blue]{self.preset_name}[/blue]. Valid choices: {valid_choices}",
+                extra={"markup": True},
+            )
+            exit(1)
         self.vendor = preset.vendor
         self.model = preset.model
         self.serial = preset.serial
@@ -118,6 +125,31 @@ class Cli:
             logger.info(f"Copying {source_dir / rel_path}")
             shutil.copy2(source, dest)
         logger.info("Upload complete")
+
+    def devices_table(self):
+        """Rich table of connected devices matching filter."""
+        table = Table()
+        for column_name in (
+            "Vendor",
+            "Model",
+            "Serial",
+            "Partition Path",
+            "Serial Path",
+            "Mountpoint",
+        ):
+            # Make sure full paths are rendered even if terminal is too small.
+            table.add_column(column_name, overflow="fold")
+
+        for device in self.matching_devices:
+            table.add_row(
+                device.vendor,
+                device.model,
+                device.serial,
+                str(device.partition_path),
+                str(device.serial_path),
+                str(device.get_mountpoint()),
+            )
+        return table
 
     def run(self):
         """Main entry point."""
@@ -146,28 +178,7 @@ class Cli:
 
     def devices_command(self):
         """devices subcommand."""
-        table = Table(title="CircuitPython Devices")
-        for column_name in (
-            "Vendor",
-            "Model",
-            "Serial",
-            "Partition Path",
-            "Serial Path",
-        ):
-            # Make sure full paths are rendered even if terminal is too small.
-            table.add_column(column_name, overflow="fold")
-
-        for device in self.matching_devices:
-            table.add_row(
-                device.vendor,
-                device.model,
-                device.serial,
-                str(device.partition_path),
-                str(device.serial_path),
-            )
-
-        console = Console()
-        console.print(table, overflow="fold")
+        print(self.devices_table())
 
     def preset_list_command(self):
         """preset list command."""

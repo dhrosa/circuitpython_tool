@@ -7,13 +7,13 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-def run(args):
+def run(command: str):
     """Execute command and return its stdout output."""
-    process = subprocess.run(args, capture_output=True, text=True)
+    process = subprocess.run(command, capture_output=True, text=True)
     try:
         process.check_returncode()
-    except subprocess.CalledProcessError as e:
-        logger.error(f"{args[0]} exited with status {process.returncode}")
+    except subprocess.CalledProcessError:
+        logger.error(f"Command:\n{command}\nExited with status {process.returncode}")
         if process.stdout:
             logger.error(f"stdout:\n{process.stdout}")
         if process.stderr:
@@ -38,17 +38,17 @@ class Device:
 
     def get_mountpoint(self):
         """Find mountpoint. Returns empty string if not mounted."""
-        args = f"lsblk {self.partition_path} --output mountpoint --noheadings".split()
-        return run(args).strip()
+        command = f"lsblk {self.partition_path} --output mountpoint --noheadings"
+        return run(command).strip()
 
     def mount_if_needed(self):
         """Mounts the partition device if needed, and returns the mountpoint."""
         mountpoint = self.get_mountpoint()
         if mountpoint:
             return mountpoint
-        mount_stdout = run(
-            f"udisksctl mount --block-device {self.partition_path} --options noatime".split()
-        )
+        partition_path = self.partition_path
+        command = f"udisksctl mount --block-device {partition_path} --options noatime"
+        mount_stdout = run(command)
         logger.info(f"udisksctl: {mount_stdout}")
         mountpoint = self.get_mountpoint(partition_path)
         if mountpoint:
@@ -63,8 +63,8 @@ def get_device_info(path):
     Returns None if the device is not a USB device.
     """
     info = {}
-    args = f"udevadm info --query=property --name {path}".split()
-    for line in run(args).splitlines():
+    command = f"udevadm info --query=property --name {path}"
+    for line in run(command).splitlines():
         key, value = line.split("=", maxsplit=1)
         info[key] = value
     if info.get("ID_BUS", None) != "usb":

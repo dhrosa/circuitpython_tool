@@ -1,15 +1,11 @@
-import subprocess
-from pathlib import Path
 import shutil
 from sys import exit
 from os import execlp
-from functools import cached_property
 
 from .device import Device, all_devices
 from .presets import Preset, PresetDatabase
 from .fs import walk_all, watch_all
 
-from rich.console import Console
 from rich.table import Table
 from rich import get_console, traceback, print
 
@@ -92,8 +88,10 @@ class Cli:
         )
 
     def distinct_device(self):
-        """
-        Returns the single device matching our filter. If there isn't strictly one device, we exit the process with an error.
+        """Returns the single device matching our filter.
+
+        If there isn't strictly one device, we exit the process with an error.
+
         """
         match self.matching_devices:
             case [device]:
@@ -104,7 +102,8 @@ class Cli:
             case _:
                 count = len(self.matching_devices)
                 print(
-                    f":thumbs_down: Ambiguous filter. [red]{count}[/red] matching devices found:",
+                    ":thumbs_down: Ambiguous filter. ",
+                    f"[red]{count}[/red] matching devices found:",
                     self.devices_table(),
                 )
                 exit(1)
@@ -116,9 +115,8 @@ class Cli:
             valid_choices = " | ".join(
                 f"[blue]{name}[/]" for name in self.preset_db.keys()
             )
-            print(
-                f":thumbs_down: Cannot find preset [red]{self.preset_name}[/red]. Valid choices: {valid_choices}"
-            )
+            print(f":thumbs_down: Cannot find preset [red]{self.preset_name}[/red].")
+            print(f"Valid choices: {valid_choices}")
             exit(1)
         self.vendor = preset.vendor
         self.model = preset.model
@@ -126,7 +124,10 @@ class Cli:
         self.source_dirs = preset.source_dirs
 
     def walk_sources(self):
-        """Generator that yields tuples of (top-level source directory, descendant path)."""
+        """Walk through source folders.
+
+        Generates (root, descendant path) for each root.
+        """
         return walk_all(self.source_dirs)
 
     def upload(self, mountpoint):
@@ -138,7 +139,8 @@ class Cli:
             dest = mountpoint / rel_path
             dest.parent.mkdir(parents=True, exist_ok=True)
             if dest.exists():
-                # Round source timestamp to 2s resolution to match FAT drive. This prevents spurious timestamp mismatches.
+                # Round source timestamp to 2s resolution to match FAT drive.
+                # This prevents spurious timestamp mismatches.
                 source_mtime = (source.stat().st_mtime // 2) * 2
                 dest_mtime = dest.stat().st_mtime
                 if source_mtime == dest_mtime:
@@ -227,7 +229,7 @@ class Cli:
         )
         print(f"Saving preset [blue]{self.new_preset_name}[/blue]: ", preset)
         self.preset_db[self.new_preset_name] = preset
-        print(f":thumbs_up: [green]Successfully[/green] saved new preset.")
+        print(":thumbs_up: [green]Successfully[/green] saved new preset.")
 
     def connect_command(self):
         """connect subcommand."""

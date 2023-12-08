@@ -27,7 +27,7 @@ def parse_args():
         title="preset commands", required=True, dest="preset_command"
     )
 
-    preset_list = preset_children.add_parser("list", help="List existing presets.")
+    preset_children.add_parser("list", help="List existing presets.")
 
     preset_save = preset_children.add_parser("save", help="Save preset.")
     preset_save.add_argument(

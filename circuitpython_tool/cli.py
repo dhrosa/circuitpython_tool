@@ -4,7 +4,6 @@ import shutil
 from sys import exit
 from os import execlp
 from functools import cached_property
-from contextlib import suppress
 
 from .device import Device, all_devices
 from .presets import Preset, PresetDatabase
@@ -255,7 +254,7 @@ class Cli:
         self.upload(mountpoint)
 
         events = iter(watch_all(self.source_dirs))
-        with suppress(KeyboardInterrupt):
+        try:
             while True:
                 with self.console.status(
                     "[yellow]Waiting[/yellow] for file modification."
@@ -264,3 +263,6 @@ class Cli:
                 logger.info(f"Modified paths: {[str(p) for p in modified_paths]}")
                 with self.console.status("Uploading to device."):
                     self.upload(mountpoint)
+        except KeyboardInterrupt:
+            print("Watch [magenta]cancelled[/magenta] by keyboard interrupt.")
+            return

@@ -51,7 +51,7 @@ class Device:
         command = f"udisksctl mount --block-device {partition_path} --options noatime"
         mount_stdout = run(command)
         logger.info(f"udisksctl: {mount_stdout}")
-        mountpoint = self.get_mountpoint(partition_path)
+        mountpoint = self.get_mountpoint()
         if mountpoint:
             return mountpoint
         exit(f"{partition_path} somehow not mounted.")

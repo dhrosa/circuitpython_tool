@@ -1,5 +1,5 @@
-from .cli import Cli
 from .args import parse_args
+from .cli import Cli
 
 
 def main():

@@ -1,6 +1,7 @@
-from pathlib import Path
-from inotify_simple import INotify, flags
 import logging
+from pathlib import Path
+
+from inotify_simple import INotify, flags
 
 logger = logging.getLogger(__name__)
 

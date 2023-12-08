@@ -1,16 +1,15 @@
+import logging
 import shutil
-from sys import exit
 from os import execlp
+from sys import exit
+
+from rich import get_console, print, traceback
+from rich.logging import RichHandler
+from rich.table import Table
 
 from .device import Device, all_devices
-from .presets import Preset, PresetDatabase
 from .fs import walk_all, watch_all
-
-from rich.table import Table
-from rich import get_console, traceback, print
-
-import logging
-from rich.logging import RichHandler
+from .presets import Preset, PresetDatabase
 
 traceback.install(show_locals=True)
 logging.basicConfig(

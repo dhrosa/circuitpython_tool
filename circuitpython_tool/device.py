@@ -1,9 +1,9 @@
-from dataclasses import dataclass
-import subprocess
-from pathlib import Path
-from sys import exit
 import logging
 import shlex
+import subprocess
+from dataclasses import dataclass
+from pathlib import Path
+from sys import exit
 
 logger = logging.getLogger(__name__)
 

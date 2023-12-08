@@ -3,13 +3,14 @@ import subprocess
 from pathlib import Path
 from sys import exit
 import logging
+import shlex
 
 logger = logging.getLogger(__name__)
 
 
 def run(command: str):
     """Execute command and return its stdout output."""
-    process = subprocess.run(command, capture_output=True, text=True)
+    process = subprocess.run(shlex.split(command), capture_output=True, text=True)
     try:
         process.check_returncode()
     except subprocess.CalledProcessError:

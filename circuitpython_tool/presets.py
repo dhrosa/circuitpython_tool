@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 import tomlkit
+from platformdirs import user_config_path
 from tomlkit.toml_file import TOMLFile
 
 logger = logging.getLogger(__name__)
@@ -25,13 +26,16 @@ def presets_path():
     """
     start_dir = Path.cwd()
     name = "presets.toml"
-    candidates = [d / name for d in (start_dir, *start_dir.parents)]
+    candidates = [
+        d / name
+        for d in (start_dir, *start_dir.parents, user_config_path("circuitpython-tool"))
+    ]
     for path in candidates:
         logger.debug(f"Trying presets file candidate: {path}")
         if path.exists():
             logger.info(f"Using presets file: {path}")
             return path
-    fallback = candidates[0]
+    fallback = candidates[-1]
     logger.info(f"No existing presets file found. Will use {fallback}")
     return fallback
 

@@ -53,6 +53,17 @@ class PresetDatabase:
         return tomlkit.TOMLDocument()
 
     def write(self, config):
+        if not self.path.exists():
+            parent = self.path.parent
+            if not parent.exists():
+                logging.info(
+                    f"Parent directory {parent} does not exist. Creating parents now."
+                )
+                parent.mkdir(parents=True)
+
+            # TOMLFile.write() fails if the path doesn't exist yet
+            logging.info(f"Presets file {self.path} does not exist. Creating file now.")
+            self.path.touch()
         logging.info(f"Writing to presets file: {self.path}")
         self.file().write(config)
 

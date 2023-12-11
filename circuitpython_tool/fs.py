@@ -10,11 +10,12 @@ def walk_all(roots: list[Path]):
     """Generator that yields tuples of (top-level source directory, descendant path)."""
     for root in roots:
         yield root, root
-        for parent, subdirs, files in root.walk():
-            for subdir in subdirs:
-                yield root, parent / subdir
-            for file in files:
-                yield root, parent / file
+        # Path.walk requires Python 3.12 or higher, so we roll our own here.
+        for path in root.iterdir():
+            if path.is_dir():
+                yield from walk_all([path])
+            else:
+                yield root, path
 
 
 def watch_all(roots: list[Path]):

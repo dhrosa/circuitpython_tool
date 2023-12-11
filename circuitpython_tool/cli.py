@@ -202,6 +202,11 @@ class Cli:
 
     def devices_command(self):
         """devices subcommand."""
+        if not self.matching_devices:
+            print(
+                ":person_shrugging: [blue]No[/] connected CircuitPython devices found."
+            )
+            return
         print("Connected CircuitPython devices:", self.devices_table())
 
     def preset_list_command(self):

@@ -107,7 +107,13 @@ def all_devices():
         device.partition_path = path.resolve()
 
     # Find serial devices.
-    for path in Path("/dev/serial/by-id/").iterdir():
+
+    # Parent directory might not exist if there are no attached serial devices.
+    serial_dir = Path("/dev/serial/by-id/")
+    if not serial_dir.exists():
+        logging.info("No serial devices found.")
+        return []
+    for path in serial_dir.iterdir():
         info = get_device_info(path)
         if info is None:
             continue

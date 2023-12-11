@@ -2,6 +2,7 @@ import logging
 import shutil
 from os import execlp
 from sys import exit
+from functools import cached_property
 
 from rich import get_console, print, traceback
 from rich.logging import RichHandler
@@ -60,29 +61,53 @@ class Cli:
 
         self.command = args.command
         self.preset_command = args.preset_command
-        self.vendor = args.vendor
-        self.model = args.model
-        self.serial = args.serial
         self.preset_name = args.preset_name
-        self.source_dirs = args.source_dir
         self.watch = args.watch
         self.new_preset_name = args.new_preset_name
 
-        self.preset_db = PresetDatabase()
-        if self.preset_name:
-            self.load_preset()
+        self.new_preset = (
+            Preset(
+                vendor=args.vendor,
+                model=args.model,
+                serial=args.serial,
+                source_dirs=args.source_dir,
+            )
+            if args.new_preset_name
+            else None
+        )
 
-        self.matching_devices = [
-            d for d in all_devices() if self.device_matches_filter(d)
-        ]
+    @cached_property
+    def matching_devices(self):
+        if self.command == "devices":
+            return all_devices()
+        return [d for d in all_devices() if self.device_matches_filter(d)]
+
+    @cached_property
+    def preset_db(self):
+        return PresetDatabase()
+
+    @cached_property
+    def preset(self):
+        if self.new_preset:
+            return self.new_preset
+        try:
+            return self.preset_db[self.preset_name]
+        except KeyError:
+            valid_choices = " | ".join(
+                f"[blue]{name}[/]" for name in self.preset_db.keys()
+            )
+            print(f":thumbs_down: Cannot find preset [red]{self.preset_name}[/red].")
+            print(f"Valid choices: {valid_choices}")
+            exit(1)
 
     def device_matches_filter(self, device):
         """Predicate for devices matching requested filter."""
+        preset = self.preset
         return all(
             (
-                self.vendor in device.vendor,
-                self.model in device.model,
-                self.serial in device.serial,
+                preset.vendor in device.vendor,
+                preset.model in device.model,
+                preset.serial in device.serial,
             )
         )
 
@@ -107,27 +132,12 @@ class Cli:
                 )
                 exit(1)
 
-    def load_preset(self):
-        try:
-            preset = self.preset_db[self.preset_name]
-        except KeyError:
-            valid_choices = " | ".join(
-                f"[blue]{name}[/]" for name in self.preset_db.keys()
-            )
-            print(f":thumbs_down: Cannot find preset [red]{self.preset_name}[/red].")
-            print(f"Valid choices: {valid_choices}")
-            exit(1)
-        self.vendor = preset.vendor
-        self.model = preset.model
-        self.serial = preset.serial
-        self.source_dirs = preset.source_dirs
-
     def walk_sources(self):
         """Walk through source folders.
 
         Generates (root, descendant path) for each root.
         """
-        return walk_all(self.source_dirs)
+        return walk_all(self.preset.source_dirs)
 
     def upload(self, mountpoint):
         """Copy all source files onto the device."""
@@ -224,15 +234,8 @@ class Cli:
 
     def preset_save_command(self):
         """preset save command."""
-        device = self.distinct_device()
-        preset = Preset(
-            vendor=device.vendor,
-            model=device.model,
-            serial=device.serial,
-            source_dirs=self.source_dirs,
-        )
-        print(f"Saving preset [blue]{self.new_preset_name}[/blue]: ", preset)
-        self.preset_db[self.new_preset_name] = preset
+        print(f"Saving preset [blue]{self.new_preset_name}[/blue]: ", self.new_preset)
+        self.preset_db[self.new_preset_name] = self.new_preset
         print(":thumbs_up: [green]Successfully[/green] saved new preset.")
 
     def connect_command(self):
@@ -259,7 +262,7 @@ class Cli:
         # Always do at least one upload at the start.
         self.upload(mountpoint)
 
-        events = iter(watch_all(self.source_dirs))
+        events = iter(watch_all(self.preset.source_dirs))
         try:
             while True:
                 with self.console.status(

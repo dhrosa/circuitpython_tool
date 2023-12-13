@@ -16,3 +16,18 @@ dependencies = ["tomlkit", "inotify_simple", "rich", "platformdirs"]
 
 [project.scripts]
 circuitpython-tool = "circuitpython_tool:main"
+
+[tool.hatch.envs.style]
+detached = true
+dependencies = ["setuptools", "isort", "black", "pylama"]
+
+[tool.hatch.envs.style.scripts]
+format = [
+       "isort .",
+       "black .",
+]
+check = "pylama ."
+all = [
+    "hatch run style:format",
+    "hatch run style:check",
+]

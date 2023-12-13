@@ -16,6 +16,16 @@ class Preset:
     serial: str
     source_dirs: list[Path]
 
+    def predicate(self, device):
+        """Predicate for checking if this preset's filters matches the device."""
+        return all(
+            (
+                self.vendor in device.vendor,
+                self.model in device.model,
+                self.serial in device.serial,
+            )
+        )
+
 
 def presets_path():
     """Search for existing presets file.

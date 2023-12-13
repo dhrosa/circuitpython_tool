@@ -1,8 +1,9 @@
 import logging
 import shutil
+from collections.abc import Iterable
 from os import execlp
+from pathlib import Path
 from sys import exit
-from functools import cached_property
 
 from rich import get_console, print, traceback
 from rich.logging import RichHandler
@@ -32,6 +33,7 @@ def _render_preset(self):
     table.add_row("Vendor", self.vendor)
     table.add_row("Model", self.model)
     table.add_row("Serial", self.serial)
+
     table.add_row("Source Dirs", "\n".join(str(p) for p in self.source_dirs))
     return table
 
@@ -53,225 +55,191 @@ def _render_device(self):
 Device.__rich__ = _render_device
 
 
-class Cli:
-    """Application logic and shared state."""
+def devices_command():
+    """devices subcommand."""
+    devices = all_devices()
+    if not devices:
+        print(":person_shrugging: [blue]No[/] connected CircuitPython devices found.")
+        return
+    print("Connected CircuitPython devices:", devices_table(devices))
 
-    def __init__(self, args):
-        self.console = get_console()
 
-        self.command = args.command
-        self.preset_command = args.preset_command
-        self.preset_name = args.preset_name
-        self.watch = args.watch
-        self.new_preset_name = args.new_preset_name
-
-        self.new_preset = (
-            Preset(
-                vendor=args.vendor,
-                model=args.model,
-                serial=args.serial,
-                source_dirs=args.source_dir,
-            )
-            if args.new_preset_name
-            else None
+def preset_list_command(preset_db: PresetDatabase):
+    """preset list command."""
+    table = Table("Preset Name", "Vendor", "Model", "Serial", "Source Directories")
+    for name, preset in preset_db.items():
+        table.add_row(
+            name,
+            preset.vendor,
+            preset.model,
+            preset.serial,
+            "\n".join(str(p) for p in preset.source_dirs),
         )
+    print(table)
 
-    @cached_property
-    def matching_devices(self):
-        if self.command == "devices":
-            return all_devices()
-        return [d for d in all_devices() if self.device_matches_filter(d)]
 
-    @cached_property
-    def preset_db(self):
-        return PresetDatabase()
+def preset_save_command(preset_db: PresetDatabase, preset_name: str, preset: Preset):
+    """preset save command."""
+    print(f"Saving preset [blue]{preset_name}[/blue]: ", preset)
+    preset_db[preset_name] = preset
+    print(":thumbs_up: [green]Successfully[/green] saved new preset.")
 
-    @cached_property
-    def preset(self):
-        if self.new_preset:
-            return self.new_preset
-        try:
-            return self.preset_db[self.preset_name]
-        except KeyError:
-            valid_choices = " | ".join(
-                f"[blue]{name}[/]" for name in self.preset_db.keys()
+
+def upload_command(preset: Preset):
+    """upload subcommand."""
+    device = distinct_device(preset)
+    mountpoint = device.mount_if_needed()
+    print("Uploading to device: ", device)
+    upload(preset.source_dirs, mountpoint)
+    print(":thumbs_up: Upload [green]succeeded.")
+
+
+def watch_command(preset: Preset):
+    """watch subcommand."""
+    device = distinct_device(preset)
+    mountpoint = device.mount_if_needed()
+    print("Target device: ")
+    print(device)
+    # Always do at least one upload at the start.
+    source_dirs = preset.source_dirs
+    upload(source_dirs, mountpoint)
+
+    events = iter(watch_all(source_dirs))
+    try:
+        while True:
+            with get_console().status(
+                "[yellow]Waiting[/yellow] for file modification."
+            ):
+                modified_paths = next(events)
+                logger.info(f"Modified paths: {[str(p) for p in modified_paths]}")
+            with get_console().status("Uploading to device."):
+                upload(source_dirs, mountpoint)
+    except KeyboardInterrupt:
+        print("Watch [magenta]cancelled[/magenta] by keyboard interrupt.")
+
+
+def connect_command(preset: Preset):
+    """connect subcommand"""
+    device = distinct_device(preset)
+    logger.info("Launching minicom for ")
+    logger.info(device)
+    execlp("minicom", "minicom", "-D", device.serial_path)
+
+
+def devices_table(devices: Iterable[Device]) -> Table:
+    """Render devices into a table."""
+    table = Table()
+    for column_name in (
+        "Vendor",
+        "Model",
+        "Serial",
+        "Partition Path",
+        "Serial Path",
+        "Mountpoint",
+    ):
+        # Make sure full paths are rendered even if terminal is too small.
+        table.add_column(column_name, overflow="fold")
+
+    for device in devices:
+        table.add_row(
+            device.vendor,
+            device.model,
+            device.serial,
+            str(device.partition_path),
+            str(device.serial_path),
+            str(device.get_mountpoint()),
+        )
+    return table
+
+
+def distinct_device(preset: Preset) -> Device:
+    """Returns the single device matching our filter.
+
+    If there isn't strictly one device, we exit the process with an error.
+    """
+    matching_devices = [d for d in all_devices() if preset.predicate(d)]
+    match matching_devices:
+        case [device]:
+            return device
+        case []:
+            print(":thumbs_down: [red]0[/red] matching devices found.")
+            exit(1)
+        case _:
+            count = len(matching_devices)
+            print(
+                ":thumbs_down: Ambiguous filter. ",
+                f"[red]{count}[/red] matching devices found:",
+                devices_table(matching_devices),
             )
-            print(f":thumbs_down: Cannot find preset [red]{self.preset_name}[/red].")
-            print(f"Valid choices: {valid_choices}")
             exit(1)
 
-    def device_matches_filter(self, device):
-        """Predicate for devices matching requested filter."""
-        preset = self.preset
-        return all(
-            (
-                preset.vendor in device.vendor,
-                preset.model in device.model,
-                preset.serial in device.serial,
-            )
-        )
 
-    def distinct_device(self):
-        """Returns the single device matching our filter.
-
-        If there isn't strictly one device, we exit the process with an error.
-
-        """
-        match self.matching_devices:
-            case [device]:
-                return device
-            case []:
-                print(":thumbs_down: [red]0[/red] matching devices found.")
-                exit(1)
-            case _:
-                count = len(self.matching_devices)
-                print(
-                    ":thumbs_down: Ambiguous filter. ",
-                    f"[red]{count}[/red] matching devices found:",
-                    self.devices_table(),
-                )
-                exit(1)
-
-    def walk_sources(self):
-        """Walk through source folders.
-
-        Generates (root, descendant path) for each root.
-        """
-        return walk_all(self.preset.source_dirs)
-
-    def upload(self, mountpoint):
-        """Copy all source files onto the device."""
-        for source_dir, source in self.walk_sources():
-            if source.name[0] == "." or source.is_dir():
+def upload(source_dirs: Iterable[Path], mountpoint: Path):
+    """Copy all source files onto the device."""
+    for source_dir, source in walk_all(source_dirs):
+        if source.name[0] == "." or source.is_dir():
+            continue
+        rel_path = source.relative_to(source_dir)
+        dest = mountpoint / rel_path
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        if dest.exists():
+            # Round source timestamp to 2s resolution to match FAT drive.
+            # This prevents spurious timestamp mismatches.
+            source_mtime = (source.stat().st_mtime // 2) * 2
+            dest_mtime = dest.stat().st_mtime
+            if source_mtime == dest_mtime:
                 continue
-            rel_path = source.relative_to(source_dir)
-            dest = mountpoint / rel_path
-            dest.parent.mkdir(parents=True, exist_ok=True)
-            if dest.exists():
-                # Round source timestamp to 2s resolution to match FAT drive.
-                # This prevents spurious timestamp mismatches.
-                source_mtime = (source.stat().st_mtime // 2) * 2
-                dest_mtime = dest.stat().st_mtime
-                if source_mtime == dest_mtime:
-                    continue
-            logger.info(f"Copying {source_dir / rel_path}")
-            shutil.copy2(source, dest)
-        logger.info("Upload complete")
+        logger.info(f"Copying {source_dir / rel_path}")
+        shutil.copy2(source, dest)
+    logger.info("Upload complete")
 
-    def devices_table(self):
-        """Rich table of connected devices matching filter."""
-        table = Table()
-        for column_name in (
-            "Vendor",
-            "Model",
-            "Serial",
-            "Partition Path",
-            "Serial Path",
-            "Mountpoint",
-        ):
-            # Make sure full paths are rendered even if terminal is too small.
-            table.add_column(column_name, overflow="fold")
 
-        for device in self.matching_devices:
-            table.add_row(
-                device.vendor,
-                device.model,
-                device.serial,
-                str(device.partition_path),
-                str(device.serial_path),
-                str(device.get_mountpoint()),
-            )
-        return table
+def run(args):
+    command = args.command
+    if command == "devices":
+        devices_command()
+        return
 
-    def run(self):
-        """Main entry point."""
-        match self.command:
-            case "devices":
-                self.devices_command()
-            case "connect" | "preset_connect":
-                self.connect_command()
-            case "upload":
-                self.upload_command()
-            case "watch":
-                self.watch_command()
-            case "preset":
-                match self.preset_command:
-                    case "list":
-                        self.preset_list_command()
-                    case "save":
-                        self.preset_save_command()
-                    case _:
-                        raise NotImplementedError((self.command, self.preset_command))
+    # Commands below require access to preset database.
+    preset_db = PresetDatabase()
 
-            case "preset_list":
-                self.preset_list_command()
-            case "preset_save":
-                self.preset_save_command()
+    if command == "preset":
+        match args.preset_command:
+            case "list":
+                preset_list_command(preset_db)
+                return
+            case "save":
+                preset = Preset(
+                    vendor=args.vendor,
+                    model=args.model,
+                    serial=args.serial,
+                    source_dirs=args.source_dir,
+                )
+                device = distinct_device(preset)
+                preset.vendor = device.vendor
+                preset.model = device.model
+                preset.serial = device.serial
+                preset_save_command(preset_db, args.new_preset_name, preset)
+                return
             case _:
-                raise NotImplementedError(self.command)
+                raise NotImplementedError(
+                    f"Unknown 'preset' command: {args.preset_command}"
+                )
 
-    def devices_command(self):
-        """devices subcommand."""
-        if not self.matching_devices:
-            print(
-                ":person_shrugging: [blue]No[/] connected CircuitPython devices found."
-            )
-            return
-        print("Connected CircuitPython devices:", self.devices_table())
+    try:
+        preset = preset_db[args.preset_name]
+    except KeyError:
+        valid_choices = " | ".join(f"[blue]{name}[/]" for name in preset_db.keys())
+        print(f":thumbs_down: Cannot find preset [red]{args.preset_name}[/red].")
+        print(f"Valid choices: {valid_choices}")
+        exit(1)
 
-    def preset_list_command(self):
-        """preset list command."""
-        table = Table("Preset Name", "Vendor", "Model", "Serial", "Source Directories")
-        for name, preset in self.preset_db.items():
-            table.add_row(
-                name,
-                preset.vendor,
-                preset.model,
-                preset.serial,
-                "\n".join(str(p) for p in preset.source_dirs),
-            )
-        print(table)
+    match command:
+        case "upload":
+            upload_command(preset)
+        case "watch":
+            watch_command(preset)
+        case "connect":
+            connect_command(preset)
 
-    def preset_save_command(self):
-        """preset save command."""
-        print(f"Saving preset [blue]{self.new_preset_name}[/blue]: ", self.new_preset)
-        self.preset_db[self.new_preset_name] = self.new_preset
-        print(":thumbs_up: [green]Successfully[/green] saved new preset.")
-
-    def connect_command(self):
-        """connect subcommand."""
-        device = self.distinct_device()
-        logger.info("Launching minicom for ")
-        logger.info(device)
-        execlp("minicom", "minicom", "-D", device.serial_path)
-
-    def upload_command(self):
-        """upload subcommand."""
-        device = self.distinct_device()
-        mountpoint = device.mount_if_needed()
-        print("Uploading to device: ", device)
-        self.upload(mountpoint)
-        print(":thumbs_up: Upload [green]succeeded.")
-
-    def watch_command(self):
-        """watch subcommand."""
-        device = self.distinct_device()
-        mountpoint = device.mount_if_needed()
-        print("Target device: ")
-        print(device)
-        # Always do at least one upload at the start.
-        self.upload(mountpoint)
-
-        events = iter(watch_all(self.preset.source_dirs))
-        try:
-            while True:
-                with self.console.status(
-                    "[yellow]Waiting[/yellow] for file modification."
-                ):
-                    modified_paths = next(events)
-                logger.info(f"Modified paths: {[str(p) for p in modified_paths]}")
-                with self.console.status("Uploading to device."):
-                    self.upload(mountpoint)
-        except KeyboardInterrupt:
-            print("Watch [magenta]cancelled[/magenta] by keyboard interrupt.")
-            return
+    raise NotImplementedError(f"Unknown command: {command}")

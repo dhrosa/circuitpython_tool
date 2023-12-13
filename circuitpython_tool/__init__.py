@@ -1,10 +1,9 @@
 from .args import parse_args
-from .cli import Cli
+from .cli import run
 
 
 def main():
-    cli = Cli(parse_args())
-    cli.run()
+    run(parse_args())
 
 
 if __name__ == "__main__":

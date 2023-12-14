@@ -4,6 +4,7 @@ import subprocess
 from dataclasses import dataclass
 from pathlib import Path
 from sys import exit
+from typing import Self
 
 logger = logging.getLogger(__name__)
 
@@ -30,6 +31,23 @@ class Query:
     vendor: str
     model: str
     serial: str
+
+    class ParseError(ValueError):
+        pass
+
+    @staticmethod
+    def parse(value: str) -> Self:
+        if not value:
+            return Query("", "", "")
+        parts = value.split(":")
+        if (count := len(parts)) != 3:
+            raise Query.ParseError(
+                f"Expected 3 query components. Instead found {count}."
+            )
+        return Query(*parts)
+
+    def as_str(self) -> str:
+        return f"{self.vendor}:{self.model}:{self.serial}"
 
     def matches(self, device):
         """Whether this device is matched by the query."""

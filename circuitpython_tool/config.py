@@ -103,19 +103,10 @@ class Config:
     @device_labels.setter
     def device_labels(self, value: dict[str, DeviceLabel]):
         document = self.document
-        table = document.setdefault("device_labels", tomlkit.table())
+        table = tomlkit.table()
         for name, label in value.items():
             table[name] = label.query.to_str()
-
+            logger.info(value)
+        logger.info(table)
+        document["device_labels"] = table
         self.document = document
-
-
-config = Config()
-config.source_trees = {
-    "tree1": SourceTree(["/tmp"]),
-    "tree2": SourceTree(["/var/tmp"]),
-}
-
-dl = config.device_labels
-dl["ui"] = DeviceLabel(Query.parse("d:e:f"))
-print(dl)

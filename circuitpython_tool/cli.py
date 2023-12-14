@@ -10,6 +10,7 @@ from rich import get_console, print, traceback
 from rich.logging import RichHandler
 from rich.table import Table
 
+from .config import Config
 from .device import Device, Query, all_devices, matching_devices
 from .fs import walk_all, watch_all
 
@@ -45,12 +46,10 @@ class QueryParam(click.ParamType):
     name = "query"
 
     def convert(self, value: str, param, context) -> Query:
-        if not value:
-            return Query("", "", "")
-        parts = value.split(":")
-        if (count := len(parts)) != 3:
-            self.fail(f"Expected 3 query components. Instead found {count}.")
-        return Query(*parts)
+        try:
+            return Query.parse(value)
+        except Query.ParseError as error:
+            self.fail(str(error))
 
 
 @click.group
@@ -69,9 +68,50 @@ def devices(query: Query):
     print("Connected CircuitPython devices:", devices_table(devices))
 
 
-@run.command
+@run.group
 def label():
     pass
+
+
+@label.command("list")
+def label_list():
+    config = Config()
+    labels = config.device_labels
+    if not labels:
+        print(":person_shrugging: [blue]No[/] existing labels found.")
+        return
+    table = Table("Label", "Query")
+    for name, label in config.device_labels.items():
+        table.add_row(name, label.query.as_str())
+    print(table)
+
+
+@label.command("remove")
+@click.confirmation_option(
+    "--yes", "-y", prompt="Are you sure you want to delete this label?"
+)
+@click.argument("label_name")
+@click.option(
+    "--force",
+    "-f",
+    is_flag=True,
+    help="Return success even if there was no matching label to remove.",
+)
+def label_remove(label_name, force):
+    config = Config()
+    labels = config.device_labels
+    label = labels.get(label_name)
+    if label:
+        logger.debug(f"Found label [blue]{label_name}[/]: {label}")
+        del labels[label_name]
+    elif force:
+        logger.info(f"Label [blue]{label_name}[/] not found. Proceeding anyway.")
+    else:
+        print(f":thumbs_down: Label [red]{label_name}[/] does not exist.")
+        exit(1)
+
+    config.device_labels = labels
+    print(f":thumbs_up: Label [blue]{label_name}[/] [green]successfully[/] deleted.")
 
 
 def upload_command(preset: Preset):

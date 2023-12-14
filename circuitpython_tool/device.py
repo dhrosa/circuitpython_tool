@@ -4,6 +4,7 @@ import subprocess
 from dataclasses import dataclass
 from pathlib import Path
 from sys import exit
+from typing import Self
 
 logger = logging.getLogger(__name__)
 
@@ -27,9 +28,27 @@ def run(command: str) -> str:
 class Query:
     """Filter criteria for selecting a CircuitPython device."""
 
+    class ParseError(ValueError):
+        pass
+
     vendor: str = ""
     model: str = ""
     serial: str = ""
+
+    @staticmethod
+    def parse(arg: str) -> Self:
+        """Parses a string of the format (vendor:model:serial) into a Query"""
+        if not arg:
+            return Query()
+        parts = arg.split(":")
+        if (count := len(parts)) != 3:
+            raise Query.ParseError(
+                f"Expected 3 query components. Instead found {count}"
+            )
+        return Query(*parts)
+
+    def to_str(self) -> str:
+        return f"{self.vendor}:{self.model}:{self.serial}"
 
     def matches(self, device):
         """Whether this device is matched by the query."""

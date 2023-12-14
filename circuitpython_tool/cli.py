@@ -1,18 +1,17 @@
 import logging
 import shutil
 from collections.abc import Iterable
-from functools import singledispatch
 from os import execlp
 from pathlib import Path
 from sys import exit
 
+import click
 from rich import get_console, print, traceback
 from rich.logging import RichHandler
 from rich.table import Table
 
 from .device import Device, Query, all_devices, matching_devices
 from .fs import walk_all, watch_all
-from .presets import Preset, PresetDatabase
 
 traceback.install(show_locals=True)
 logging.basicConfig(
@@ -24,22 +23,6 @@ logging.basicConfig(
     ],
 )
 logger = logging.getLogger(__name__)
-
-# Choosing to implement __rich__ render protocol via monkeypatching to decouple
-# rendering logic from lower-level data structures.
-
-
-def _render_preset(self):
-    table = Table("Property", "Value")
-    table.add_row("Vendor", self.vendor)
-    table.add_row("Model", self.model)
-    table.add_row("Serial", self.serial)
-
-    table.add_row("Source Dirs", "\n".join(str(p) for p in self.source_dirs))
-    return table
-
-
-Preset.__rich__ = _render_preset
 
 
 def _render_device(self):
@@ -55,8 +38,29 @@ def _render_device(self):
 
 Device.__rich__ = _render_device
 
+Preset = object
 
-def devices_command(query: Query):
+
+class QueryParam(click.ParamType):
+    name = "query"
+
+    def convert(self, value: str, param, context) -> Query:
+        if not value:
+            return Query("", "", "")
+        parts = value.split(":")
+        if (count := len(parts)) != 3:
+            self.fail(f"Expected 3 query components. Instead found {count}.")
+        return Query(*parts)
+
+
+@click.group
+def run():
+    pass
+
+
+@run.command
+@click.argument("query", type=QueryParam(), default="")
+def devices(query: Query):
     """devices subcommand."""
     devices = matching_devices(query)
     if not devices:
@@ -65,25 +69,9 @@ def devices_command(query: Query):
     print("Connected CircuitPython devices:", devices_table(devices))
 
 
-def preset_list_command(preset_db: PresetDatabase):
-    """preset list command."""
-    table = Table("Preset Name", "Vendor", "Model", "Serial", "Source Directories")
-    for name, preset in preset_db.items():
-        table.add_row(
-            name,
-            preset.vendor,
-            preset.model,
-            preset.serial,
-            "\n".join(str(p) for p in preset.source_dirs),
-        )
-    print(table)
-
-
-def preset_save_command(preset_db: PresetDatabase, preset_name: str, preset: Preset):
-    """preset save command."""
-    print(f"Saving preset [blue]{preset_name}[/blue]: ", preset)
-    preset_db[preset_name] = preset
-    print(":thumbs_up: [green]Successfully[/green] saved new preset.")
+@run.command
+def label():
+    pass
 
 
 def upload_command(preset: Preset):
@@ -153,7 +141,6 @@ def devices_table(devices: Iterable[Device]) -> Table:
     return table
 
 
-@singledispatch
 def distinct_device(query: Query):
     matching_devices = [d for d in all_devices() if query.matches(d)]
     match matching_devices:
@@ -170,17 +157,6 @@ def distinct_device(query: Query):
                 devices_table(matching_devices),
             )
             exit(1)
-
-
-@distinct_device.register
-def _(preset: Preset) -> Device:
-    """Returns the single device matching our filter.
-
-    If there isn't strictly one device, we exit the process with an error.
-    """
-    return distinct_device(
-        Query(vendor=preset.vendor, model=preset.model, serial=preset.serial)
-    )
 
 
 def upload(source_dirs: Iterable[Path], mountpoint: Path):
@@ -201,54 +177,3 @@ def upload(source_dirs: Iterable[Path], mountpoint: Path):
         logger.info(f"Copying {source_dir / rel_path}")
         shutil.copy2(source, dest)
     logger.info("Upload complete")
-
-
-def run(args):
-    command = args.command
-    if command == "devices":
-        devices_command(args.query)
-        return
-
-    # Commands below require access to preset database.
-    preset_db = PresetDatabase()
-
-    if command == "preset":
-        match args.preset_command:
-            case "list":
-                preset_list_command(preset_db)
-                return
-            case "save":
-                preset = Preset(
-                    vendor=args.vendor,
-                    model=args.model,
-                    serial=args.serial,
-                    source_dirs=args.source_dir,
-                )
-                device = distinct_device(preset)
-                preset.vendor = device.vendor
-                preset.model = device.model
-                preset.serial = device.serial
-                preset_save_command(preset_db, args.new_preset_name, preset)
-                return
-            case _:
-                raise NotImplementedError(
-                    f"Unknown 'preset' command: {args.preset_command}"
-                )
-
-    try:
-        preset = preset_db[args.preset_name]
-    except KeyError:
-        valid_choices = " | ".join(f"[blue]{name}[/]" for name in preset_db.keys())
-        print(f":thumbs_down: Cannot find preset [red]{args.preset_name}[/red].")
-        print(f"Valid choices: {valid_choices}")
-        exit(1)
-
-    match command:
-        case "upload":
-            upload_command(preset)
-        case "watch":
-            watch_command(preset)
-        case "connect":
-            connect_command(preset)
-
-    raise NotImplementedError(f"Unknown command: {command}")

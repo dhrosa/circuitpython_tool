@@ -82,7 +82,7 @@ class Config:
 
         trees = {}
         for name, dirs in table.items():
-            trees[name] = SourceTree([Path(d) for d in source_dirs])
+            trees[name] = SourceTree([Path(d) for d in dirs])
         return trees
 
     @source_trees.setter
@@ -105,7 +105,6 @@ class Config:
         document = self.document
         table = document.setdefault("device_labels", tomlkit.table())
         for name, label in value.items():
-            print(name, label)
             table[name] = label.query.to_str()
 
         self.document = document

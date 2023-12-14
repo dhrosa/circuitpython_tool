@@ -19,7 +19,7 @@ circuitpython-tool = "circuitpython_tool:main"
 
 [tool.hatch.envs.style]
 detached = true
-dependencies = ["setuptools", "isort", "black", "pylama"]
+dependencies = ["setuptools", "isort", "black", "pylama", "click"]
 
 [tool.hatch.envs.style.scripts]
 format = [

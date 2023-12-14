@@ -1,6 +1,7 @@
 import logging
 import shutil
 from collections.abc import Iterable
+from functools import singledispatch
 from os import execlp
 from pathlib import Path
 from sys import exit
@@ -9,7 +10,7 @@ from rich import get_console, print, traceback
 from rich.logging import RichHandler
 from rich.table import Table
 
-from .device import Device, all_devices
+from .device import Device, Query, all_devices, matching_devices
 from .fs import walk_all, watch_all
 from .presets import Preset, PresetDatabase
 
@@ -55,9 +56,9 @@ def _render_device(self):
 Device.__rich__ = _render_device
 
 
-def devices_command():
+def devices_command(query: Query):
     """devices subcommand."""
-    devices = all_devices()
+    devices = matching_devices(query)
     if not devices:
         print(":person_shrugging: [blue]No[/] connected CircuitPython devices found.")
         return
@@ -152,12 +153,9 @@ def devices_table(devices: Iterable[Device]) -> Table:
     return table
 
 
-def distinct_device(preset: Preset) -> Device:
-    """Returns the single device matching our filter.
-
-    If there isn't strictly one device, we exit the process with an error.
-    """
-    matching_devices = [d for d in all_devices() if preset.predicate(d)]
+@singledispatch
+def distinct_device(query: Query):
+    matching_devices = [d for d in all_devices() if query.matches(d)]
     match matching_devices:
         case [device]:
             return device
@@ -172,6 +170,17 @@ def distinct_device(preset: Preset) -> Device:
                 devices_table(matching_devices),
             )
             exit(1)
+
+
+@distinct_device.register
+def _(preset: Preset) -> Device:
+    """Returns the single device matching our filter.
+
+    If there isn't strictly one device, we exit the process with an error.
+    """
+    return distinct_device(
+        Query(vendor=preset.vendor, model=preset.model, serial=preset.serial)
+    )
 
 
 def upload(source_dirs: Iterable[Path], mountpoint: Path):
@@ -197,7 +206,7 @@ def upload(source_dirs: Iterable[Path], mountpoint: Path):
 def run(args):
     command = args.command
     if command == "devices":
-        devices_command()
+        devices_command(args.query)
         return
 
     # Commands below require access to preset database.

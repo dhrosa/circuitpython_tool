@@ -1,5 +1,17 @@
-from argparse import ArgumentParser
+from argparse import ArgumentParser, ArgumentTypeError
 from pathlib import Path
+
+from .device import Query
+
+
+def parse_query(arg: str) -> Query:
+    """Parses a string of the format (vendor:model:serial) into a Query"""
+    if not arg:
+        return Query()
+    parts = arg.split(":")
+    if (count := len(parts)) != 3:
+        raise ArgumentTypeError(f"Expected 3 query components. Instead found {count}")
+    return Query(*parts)
 
 
 def parse_args():
@@ -9,7 +21,16 @@ def parse_args():
     # Subcommand parsers.
     children = root.add_subparsers(title="commands", required=True, dest="command")
 
-    children.add_parser("devices", help="List all connected CircuitPython devices.")
+    devices = children.add_parser(
+        "devices", help="List all connected CircuitPython devices."
+    )
+    devices.add_argument(
+        "query",
+        type=parse_query,
+        nargs="?",
+        default="::",
+        help="Query in the format 'vendor:model:serial'.",
+    )
 
     upload = children.add_parser("upload", help="Upload code to device.")
     upload.add_argument("preset_name", type=str)
@@ -34,38 +55,7 @@ def parse_args():
         "new_preset_name", type=str, help="Name of preset to save."
     )
     preset_save.add_argument(
-        "source_dir",
-        type=Path,
-        nargs="+",
-        help="Source directory to copy.",
-    )
-    preset_save.add_argument(
-        "--vendor",
-        "-v",
-        type=str,
-        default="",
-        help="Filter to devices whose vendor contains this string.",
-    )
-    preset_save.add_argument(
-        "--model",
-        "-m",
-        type=str,
-        default="",
-        help="Filter to devices whose model contains this string.",
-    )
-    preset_save.add_argument(
-        "--serial",
-        "-s",
-        type=str,
-        default="",
-        help="Filter to devices whose serial contains this string.",
-    )
-    preset_save.add_argument(
-        "--preset",
-        "-p",
-        type=str,
-        default="",
-        dest="preset_name",
+        "source_dir", type=Path, nargs="+", help="Source directory to copy."
     )
 
     # Ensure these attributes are set even if the relevant commands aren't specified.

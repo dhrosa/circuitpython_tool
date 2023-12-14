@@ -8,7 +8,7 @@ from sys import exit
 logger = logging.getLogger(__name__)
 
 
-def run(command: str):
+def run(command: str) -> str:
     """Execute command and return its stdout output."""
     process = subprocess.run(shlex.split(command), capture_output=True, text=True)
     try:
@@ -21,6 +21,25 @@ def run(command: str):
             logger.error(f"stderr:\n{process.stderr}")
         raise
     return process.stdout
+
+
+@dataclass
+class Query:
+    """Filter criteria for selecting a CircuitPython device."""
+
+    vendor: str = ""
+    model: str = ""
+    serial: str = ""
+
+    def matches(self, device):
+        """Whether this device is matched by the query."""
+        return all(
+            (
+                self.vendor in device.vendor,
+                self.model in device.model,
+                self.serial in device.serial,
+            )
+        )
 
 
 @dataclass
@@ -121,3 +140,7 @@ def all_devices():
         device.serial_path = path.resolve()
 
     return devices
+
+
+def matching_devices(query: Query):
+    return [d for d in all_devices() if query.matches(d)]

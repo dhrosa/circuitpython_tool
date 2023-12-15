@@ -1,11 +1,14 @@
 import logging
+from contextlib import contextmanager
+from copy import deepcopy
 from dataclasses import dataclass
 from functools import cached_property
 from pathlib import Path
+from typing import Self
 
 import tomlkit
 from platformdirs import user_config_path
-from tomlkit.toml_file import TOMLFile
+from tomlkit import TOMLTable
 
 from .device import Query
 
@@ -21,8 +24,52 @@ class SourceTree:
 class DeviceLabel:
     query: Query
 
+    @staticmethod
+    def from_toml(table: TOMLTable) -> Self:
+        ...
 
+    def to_toml(self) -> TOMLTable:
+        ...
+
+
+@dataclass
 class Config:
+    device_labels: dict[str, DeviceLabel]
+    source_trees: dict[str, SourceTree]
+
+
+class ConfigStorage:
+    @contextmanager
+    def open(self):
+        document = tomlkit.TOMLDocument()
+        if self.path.exists():
+            with self.path.open("r") as f:
+                document = tomlkit.load(f)
+
+        config = Config({}, {})
+        config.device_labels = {
+            k: DeviceLabel(Query.parse(v))
+            for k, v in document.get("device_labels", tomlkit.table()).items()
+        }
+        config.source_trees = {}
+        old_config = deepcopy(config)
+        yield config
+
+        if old_config == config:
+            return
+
+        if not self.path.exists():
+            parent = self.path.parent
+            if not parent.exists():
+                logging.info(
+                    f"Parent directory {parent} does not exist. Creating parents now."
+                )
+                parent.mkdir(parents=True)
+            logging.info(f"Writing to config file: {self.path}")
+        # with self.path.open("w") as f:
+        #     tomlkit.dump(document, f)
+        # logging.info("Config file updated.")
+
     @cached_property
     def path(self):
         """Search for existing config file.
@@ -50,61 +97,24 @@ class Config:
         logger.info(f"No existing config file found. Will use {fallback}")
         return fallback
 
-    @property
-    def file(self):
-        return TOMLFile(self.path)
+    # @property
+    # def document(self):
+    #     if self.path.exists():
+    #         return self.file.read()
+    #     return tomlkit.TOMLDocument()
 
-    @property
-    def document(self):
-        if self.path.exists():
-            return self.file.read()
-        return tomlkit.TOMLDocument()
+    # @document.setter
+    # def document(self, value):
+    #     if not self.path.exists():
+    #         parent = self.path.parent
+    #         if not parent.exists():
+    #             logging.info(
+    #                 f"Parent directory {parent} does not exist. Creating parents now."
+    #             )
+    #             parent.mkdir(parents=True)
 
-    @document.setter
-    def document(self, value):
-        if not self.path.exists():
-            parent = self.path.parent
-            if not parent.exists():
-                logging.info(
-                    f"Parent directory {parent} does not exist. Creating parents now."
-                )
-                parent.mkdir(parents=True)
-
-            # TOMLFile.write() fails if the path doesn't exist yet
-            logging.info(f"Config file {self.path} does not exist. Creating file now.")
-            self.path.touch()
-        logging.info(f"Writing to config file: {self.path}")
-        self.file.write(value)
-
-    @property
-    def source_trees(self) -> dict[str, SourceTree]:
-        table = self.document.get("source_trees", tomlkit.table())
-
-        trees = {}
-        for name, dirs in table.items():
-            trees[name] = SourceTree([Path(d) for d in dirs])
-        return trees
-
-    @source_trees.setter
-    def source_trees(self, value: dict[str, SourceTree]):
-        document = self.document
-        table = document.setdefault("source_trees", tomlkit.table())
-
-        for name, tree in value.items():
-            table[name] = [str(p) for p in tree.source_dirs]
-
-        self.document = document
-
-    @property
-    def device_labels(self) -> dict[str, DeviceLabel]:
-        table = self.document.get("device_labels", tomlkit.table())
-        return {name: DeviceLabel(Query.parse(query)) for name, query in table.items()}
-
-    @device_labels.setter
-    def device_labels(self, value: dict[str, DeviceLabel]):
-        document = self.document
-        table = tomlkit.table()
-        for name, label in value.items():
-            table[name] = label.query.as_str()
-        document["device_labels"] = table
-        self.document = document
+    #         # TOMLFile.write() fails if the path doesn't exist yet
+    #         logging.info(f"Config file {self.path} does not exist. Creating file now.")
+    #         self.path.touch()
+    #     logging.info(f"Writing to config file: {self.path}")
+    #     self.file.write(value)

@@ -10,7 +10,7 @@ from rich import get_console, print, traceback
 from rich.logging import RichHandler
 from rich.table import Table
 
-from .config import Config, DeviceLabel
+from .config import Config, ConfigStorage, DeviceLabel
 from .device import Device, Query, all_devices, matching_devices
 from .fs import walk_all, watch_all
 
@@ -75,8 +75,8 @@ def label():
 
 @label.command("list")
 def label_list():
-    config = Config()
-    labels = config.device_labels
+    with ConfigStorage().open() as config:
+        labels = config.device_labels
     if not labels:
         print(":person_shrugging: [blue]No[/] existing labels found.")
         return
@@ -91,26 +91,24 @@ def label_list():
 @click.argument("query", type=QueryParam(), required=True)
 @click.option("--force", "-f", is_flag=True)
 def label_add(key: str, query: Query, force: bool):
-    config = Config()
-    labels = config.device_labels
-    old_label = labels.get(key)
-    if old_label:
-        if force:
-            logger.info(f"Label [blue]{key}[/] already exists. Proceeding anyway.")
-        else:
-            print(
-                f":thumbs_down: Label [red]{key}[/] already exists: ",
-                old_label.query.as_str(),
-            )
-            exit(1)
+    with ConfigStorage().open() as config:
+        labels = config.device_labels
+        old_label = labels.get(key)
+        if old_label:
+            if force:
+                logger.info(f"Label [blue]{key}[/] already exists. Proceeding anyway.")
+            else:
+                print(
+                    f":thumbs_down: Label [red]{key}[/] already exists: ",
+                    old_label.query.as_str(),
+                )
+                exit(1)
 
-    label = DeviceLabel(query)
-    labels[key] = label
-    print(
-        f":thumbs_up: Label [blue]{key}[/] added [green]successfully[/]: {label.query.as_str()}"
-    )
-
-    config.device_labels = labels
+        label = DeviceLabel(query)
+        labels[key] = label
+        print(
+            f":thumbs_up: Label [blue]{key}[/] added [green]successfully[/]: {label.query.as_str()}"
+        )
 
 
 @label.command("remove")

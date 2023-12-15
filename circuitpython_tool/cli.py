@@ -10,7 +10,7 @@ from rich import get_console, print, traceback
 from rich.logging import RichHandler
 from rich.table import Table
 
-from .config import Config
+from .config import Config, DeviceLabel
 from .device import Device, Query, all_devices, matching_devices
 from .fs import walk_all, watch_all
 
@@ -84,6 +84,33 @@ def label_list():
     for name, label in config.device_labels.items():
         table.add_row(name, label.query.as_str())
     print(table)
+
+
+@label.command("add")
+@click.argument("key", required=True)
+@click.argument("query", type=QueryParam(), required=True)
+@click.option("--force", "-f", is_flag=True)
+def label_add(key: str, query: Query, force: bool):
+    config = Config()
+    labels = config.device_labels
+    old_label = labels.get(key)
+    if old_label:
+        if force:
+            logger.info(f"Label [blue]{key}[/] already exists. Proceeding anyway.")
+        else:
+            print(
+                f":thumbs_down: Label [red]{key}[/] already exists: ",
+                old_label.query.as_str(),
+            )
+            exit(1)
+
+    label = DeviceLabel(query)
+    labels[key] = label
+    print(
+        f":thumbs_up: Label [blue]{key}[/] added [green]successfully[/]: {label.query.as_str()}"
+    )
+
+    config.device_labels = labels
 
 
 @label.command("remove")

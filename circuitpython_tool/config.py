@@ -105,8 +105,6 @@ class Config:
         document = self.document
         table = tomlkit.table()
         for name, label in value.items():
-            table[name] = label.query.to_str()
-            logger.info(value)
-        logger.info(table)
+            table[name] = label.query.as_str()
         document["device_labels"] = table
         self.document = document

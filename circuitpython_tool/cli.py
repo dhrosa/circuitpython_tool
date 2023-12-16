@@ -230,8 +230,6 @@ def watch(tree_name: str, label_name: str):
         label = config.device_labels[label_name]
     device = distinct_device(label.query)
     mountpoint = device.mount_if_needed()
-    device = distinct_device(label.query)
-    mountpoint = device.mount_if_needed()
     print("Target device: ")
     print(device)
     # Always do at least one upload at the start.

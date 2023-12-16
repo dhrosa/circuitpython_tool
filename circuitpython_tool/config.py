@@ -6,7 +6,7 @@ from functools import cached_property
 from pathlib import Path
 from typing import Iterable
 
-import tomlkit  # type: ignore
+import tomlkit
 from platformdirs import user_config_path
 from tomlkit import TOMLDocument
 

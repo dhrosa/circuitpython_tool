@@ -18,7 +18,6 @@ dependencies = ["tomlkit", "inotify_simple", "rich", "platformdirs", "click"]
 circuitpython-tool = "circuitpython_tool:main"
 
 [tool.hatch.envs.style]
-detached = true
 dependencies = ["setuptools", "isort", "black", "pylama", "mypy"]
 
 [tool.hatch.envs.style.scripts]

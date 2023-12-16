@@ -6,9 +6,9 @@ from pathlib import Path
 from sys import exit
 
 import click
-from rich import get_console, print, traceback  # type: ignore
-from rich.logging import RichHandler  # type: ignore
-from rich.table import Table  # type: ignore
+from rich import get_console, print, traceback
+from rich.logging import RichHandler
+from rich.table import Table
 
 from .config import ConfigStorage, DeviceLabel, SourceTree
 from .device import Device, Query, all_devices, matching_devices

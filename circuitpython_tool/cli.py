@@ -181,6 +181,31 @@ def tree_add(key, source_dirs, force):
     )
 
 
+@tree.command("remove")
+@click.confirmation_option(
+    "--yes", "-y", prompt="Are you sure you want to delete this source tree?"
+)
+@click.argument("key")
+@click.option(
+    "--force",
+    "-f",
+    is_flag=True,
+    help="Return success even if there was no matching source tree to remove.",
+)
+def tree_remove(key, force):
+    with ConfigStorage().open() as config:
+        tree = config.source_trees.get(key)
+        if tree:
+            logger.debug(f"Found source tree [blue]{key}[/]: {tree}")
+            del config.source_trees[key]
+        elif force:
+            logger.info(f"Source tree [blue]{key}[/] not found. Proceeding anyway.")
+        else:
+            print(f":thumbs_down: Source tree [red]{key}[/] does not exist.")
+            exit(1)
+    print(f":thumbs_up: Source tree [blue]{key}[/] [green]successfully[/] deleted.")
+
+
 def upload_command(preset: Preset):
     """upload subcommand."""
     device = distinct_device(preset)

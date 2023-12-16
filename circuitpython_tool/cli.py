@@ -4,6 +4,7 @@ from collections.abc import Iterable
 from os import execlp
 from pathlib import Path
 from sys import exit
+from typing import Any
 
 import click
 from rich import get_console, print, traceback
@@ -26,7 +27,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-def _render_device(self):
+def _render_device(self: Device) -> Table:
     table = Table("Property", "Value")
     table.add_row("Vendor", self.vendor)
     table.add_row("Model", self.model)
@@ -43,7 +44,7 @@ setattr(Device, "__rich__", _render_device)
 class QueryParam(click.ParamType):
     name = "query"
 
-    def convert(self, value: str, param, context) -> Query:
+    def convert(self, value: str, param: Any, context: Any) -> Query:
         try:
             return Query.parse(value)
         except Query.ParseError as error:
@@ -51,13 +52,13 @@ class QueryParam(click.ParamType):
 
 
 @click.group
-def run():
+def run() -> None:
     pass
 
 
 @run.command
 @click.argument("query", type=QueryParam(), default="")
-def devices(query: Query):
+def devices(query: Query) -> None:
     """devices subcommand."""
     devices = matching_devices(query)
     if not devices:
@@ -67,12 +68,12 @@ def devices(query: Query):
 
 
 @run.group
-def label():
+def label() -> None:
     pass
 
 
 @label.command("list")
-def label_list():
+def label_list() -> None:
     with ConfigStorage().open() as config:
         labels = config.device_labels
     if not labels:
@@ -88,7 +89,7 @@ def label_list():
 @click.argument("key", required=True)
 @click.argument("query", type=QueryParam(), required=True)
 @click.option("--force", "-f", is_flag=True)
-def label_add(key: str, query: Query, force: bool):
+def label_add(key: str, query: Query, force: bool) -> None:
     with ConfigStorage().open() as config:
         labels = config.device_labels
         old_label = labels.get(key)
@@ -120,7 +121,7 @@ def label_add(key: str, query: Query, force: bool):
     is_flag=True,
     help="Return success even if there was no matching label to remove.",
 )
-def label_remove(label_name, force):
+def label_remove(label_name: str, force: bool) -> None:
     with ConfigStorage().open() as config:
         label = config.device_labels.get(label_name)
         if label:
@@ -135,12 +136,12 @@ def label_remove(label_name, force):
 
 
 @run.group
-def tree():
+def tree() -> None:
     pass
 
 
 @tree.command("list")
-def tree_list():
+def tree_list() -> None:
     with ConfigStorage().open() as config:
         trees = config.source_trees
     if not trees:
@@ -156,7 +157,7 @@ def tree_list():
 @click.argument("key", required=True)
 @click.argument("source_dirs", type=Path, required=True, nargs=-1)
 @click.option("--force", "-f", is_flag=True)
-def tree_add(key, source_dirs, force):
+def tree_add(key: str, source_dirs: list[Path], force: bool) -> None:
     with ConfigStorage().open() as config:
         trees = config.source_trees
         old_tree = trees.get(key)
@@ -190,7 +191,7 @@ def tree_add(key, source_dirs, force):
     is_flag=True,
     help="Return success even if there was no matching source tree to remove.",
 )
-def tree_remove(key, force):
+def tree_remove(key: str, force: bool) -> None:
     with ConfigStorage().open() as config:
         tree = config.source_trees.get(key)
         if tree:
@@ -207,7 +208,7 @@ def tree_remove(key, force):
 @run.command("upload")
 @click.argument("tree_name", required=True)
 @click.argument("label_name", required=True)
-def upload_command(tree_name: str, label_name: str):
+def upload_command(tree_name: str, label_name: str) -> None:
     """upload subcommand."""
     with ConfigStorage().open() as config:
         tree = config.source_trees[tree_name]
@@ -222,7 +223,7 @@ def upload_command(tree_name: str, label_name: str):
 @run.command
 @click.argument("tree_name", required=True)
 @click.argument("label_name", required=True)
-def watch(tree_name: str, label_name: str):
+def watch(tree_name: str, label_name: str) -> None:
     """watch subcommand."""
     with ConfigStorage().open() as config:
         tree = config.source_trees[tree_name]
@@ -251,13 +252,14 @@ def watch(tree_name: str, label_name: str):
 
 @run.command
 @click.argument("label_name", required=True)
-def connect(label_name: str):
+def connect(label_name: str) -> None:
     """connect subcommand"""
     with ConfigStorage().open() as config:
         label = config.device_labels[label_name]
     device = distinct_device(label.query)
     logger.info("Launching minicom for ")
     logger.info(device)
+    assert device.serial_path is not None
     execlp("minicom", "minicom", "-D", device.serial_path)
 
 
@@ -287,7 +289,7 @@ def devices_table(devices: Iterable[Device]) -> Table:
     return table
 
 
-def distinct_device(query: Query):
+def distinct_device(query: Query) -> Device:
     matching_devices = [d for d in all_devices() if query.matches(d)]
     match matching_devices:
         case [device]:
@@ -305,7 +307,7 @@ def distinct_device(query: Query):
             exit(1)
 
 
-def upload(source_dirs: Iterable[Path], mountpoint: Path):
+def upload(source_dirs: Iterable[Path], mountpoint: Path) -> None:
     """Copy all source files onto the device."""
     for source_dir, source in walk_all(source_dirs):
         if source.name[0] == "." or source.is_dir():

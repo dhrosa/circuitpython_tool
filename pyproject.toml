@@ -27,7 +27,7 @@ format = [
 ]
 check = [
       "pylama .",
-      "mypy .",
+      "mypy --strict .",
 ]
 all = [
     "hatch run style:format",

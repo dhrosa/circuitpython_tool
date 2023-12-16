@@ -74,12 +74,15 @@ class Device:
     # Path to serial device.
     serial_path: Optional[Path] = None
 
-    def get_mountpoint(self) -> str:
-        """Find mountpoint. Returns empty string if not mounted."""
+    def get_mountpoint(self) -> Optional[Path]:
+        """Find mountpoint. Returns None if not mounted."""
         command = f"lsblk {self.partition_path} --output mountpoint --noheadings"
-        return run(command).strip()
+        out = run(command).strip()
+        if not out:
+            return None
+        return Path(out)
 
-    def mount_if_needed(self) -> str:
+    def mount_if_needed(self) -> Path:
         """Mounts the partition device if needed, and returns the mountpoint."""
         mountpoint = self.get_mountpoint()
         if mountpoint:
@@ -94,7 +97,7 @@ class Device:
         exit(f"{partition_path} somehow not mounted.")
 
 
-def get_device_info(path) -> Optional[dict]:
+def get_device_info(path: Path) -> Optional[dict[str, str]]:
     """
     Extract device attributes from udevadm.
 
@@ -110,12 +113,12 @@ def get_device_info(path) -> Optional[dict]:
     return info
 
 
-def all_devices():
+def all_devices() -> list[Device]:
     """Finds all USB CircuitPython devices."""
 
-    devices = []
+    devices: list[Device] = []
 
-    def find_or_add_device(info):
+    def find_or_add_device(info: dict[str, str]) -> Device:
         vendor = info["ID_USB_VENDOR"]
         model = info["ID_USB_MODEL"]
         serial = info["ID_USB_SERIAL_SHORT"]
@@ -160,5 +163,5 @@ def all_devices():
     return devices
 
 
-def matching_devices(query: Query):
+def matching_devices(query: Query) -> list[Device]:
     return [d for d in all_devices() if query.matches(d)]

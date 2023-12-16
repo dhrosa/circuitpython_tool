@@ -4,7 +4,7 @@ from copy import deepcopy
 from dataclasses import dataclass
 from functools import cached_property
 from pathlib import Path
-from typing import Iterable
+from typing import Generator, Iterable
 
 import tomlkit
 from platformdirs import user_config_path
@@ -72,7 +72,7 @@ class Config:
 
 class ConfigStorage:
     @contextmanager
-    def open(self):
+    def open(self) -> Generator[Config, None, None]:
         document = tomlkit.document()
         if self.path.exists():
             with self.path.open("r") as f:
@@ -97,7 +97,7 @@ class ConfigStorage:
             logging.info("Config file updated.")
 
     @cached_property
-    def path(self):
+    def path(self) -> Path:
         """Search for existing config file.
 
         Starts searching in the current directory, and then continues to iterate

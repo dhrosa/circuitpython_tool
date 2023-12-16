@@ -206,12 +206,18 @@ def tree_remove(key, force):
     print(f":thumbs_up: Source tree [blue]{key}[/] [green]successfully[/] deleted.")
 
 
-def upload_command(preset: Preset):
+@run.command("upload")
+@click.argument("tree_name", required=True)
+@click.argument("label_name", required=True)
+def upload_command(tree_name: str, label_name: str):
     """upload subcommand."""
-    device = distinct_device(preset)
+    with ConfigStorage().open() as config:
+        tree = config.source_trees[tree_name]
+        label = config.device_labels[label_name]
+    device = distinct_device(label.query)
     mountpoint = device.mount_if_needed()
     print("Uploading to device: ", device)
-    upload(preset.source_dirs, mountpoint)
+    upload(tree.source_dirs, mountpoint)
     print(":thumbs_up: Upload [green]succeeded.")
 
 

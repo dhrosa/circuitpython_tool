@@ -12,14 +12,14 @@ keywords = []
 authors = [
   { name = "Diony Rosa", email = "dhrosa+dev@gmail.com" },
 ]
-dependencies = ["tomlkit", "inotify_simple", "rich", "platformdirs"]
+dependencies = ["tomlkit", "inotify_simple", "rich", "platformdirs", "click"]
 
 [project.scripts]
 circuitpython-tool = "circuitpython_tool:main"
 
 [tool.hatch.envs.style]
 detached = true
-dependencies = ["setuptools", "isort", "black", "pylama", "click"]
+dependencies = ["setuptools", "isort", "black", "pylama"]
 
 [tool.hatch.envs.style.scripts]
 format = [

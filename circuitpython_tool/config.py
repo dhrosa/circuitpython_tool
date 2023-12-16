@@ -4,11 +4,11 @@ from copy import deepcopy
 from dataclasses import dataclass
 from functools import cached_property
 from pathlib import Path
-from typing import Self
+from typing import Iterable, Self
 
 import tomlkit
 from platformdirs import user_config_path
-from tomlkit import TOMLTable
+from tomlkit import TOMLDocument
 
 from .device import Query
 
@@ -19,17 +19,25 @@ logger = logging.getLogger(__name__)
 class SourceTree:
     source_dirs: list[Path]
 
+    @staticmethod
+    def from_toml(dirs: Iterable[str]) -> Self:
+        return SourceTree([Path(d) for d in dirs])
+
+    @staticmethod
+    def to_toml(self) -> list[str]:
+        return [str(p) for p in self.source_dirs]
+
 
 @dataclass
 class DeviceLabel:
     query: Query
 
     @staticmethod
-    def from_toml(table: TOMLTable) -> Self:
-        ...
+    def from_toml(query_str: str) -> Self:
+        return DeviceLabel(Query.parse(query_str))
 
-    def to_toml(self) -> TOMLTable:
-        ...
+    def to_toml(self) -> str:
+        return self.query.as_str()
 
 
 @dataclass
@@ -37,38 +45,57 @@ class Config:
     device_labels: dict[str, DeviceLabel]
     source_trees: dict[str, SourceTree]
 
+    @staticmethod
+    def from_toml(document: TOMLDocument) -> Self:
+        config = Config({}, {})
+        config.device_labels = {
+            k: DeviceLabel.from_toml(v)
+            for k, v in document.get("device_labels", tomlkit.table()).items()
+        }
+        config.source_labels = {
+            k: SourceTree.from_toml(v)
+            for k, v in document.get("source_trees", tomlkit.table()).items()
+        }
+        return config
+
+    def to_toml(self) -> TOMLDocument:
+        # TODO(dhrosa): Preserve original document, so comments and such are not
+        # overwritten.
+        document = tomlkit.document()
+        document["device_labels"] = {
+            k: v.to_toml() for k, v in self.device_labels.items()
+        }
+        document["source_trees"] = {
+            k: v.to_toml() for k, v in self.source_trees.items()
+        }
+        return document
+
 
 class ConfigStorage:
     @contextmanager
     def open(self):
-        document = tomlkit.TOMLDocument()
+        document = tomlkit.document()
         if self.path.exists():
             with self.path.open("r") as f:
                 document = tomlkit.load(f)
 
-        config = Config({}, {})
-        config.device_labels = {
-            k: DeviceLabel(Query.parse(v))
-            for k, v in document.get("device_labels", tomlkit.table()).items()
-        }
-        config.source_trees = {}
+        config = Config.from_toml(document)
         old_config = deepcopy(config)
         yield config
 
         if old_config == config:
             return
 
-        if not self.path.exists():
-            parent = self.path.parent
-            if not parent.exists():
-                logging.info(
-                    f"Parent directory {parent} does not exist. Creating parents now."
-                )
-                parent.mkdir(parents=True)
-            logging.info(f"Writing to config file: {self.path}")
-        # with self.path.open("w") as f:
-        #     tomlkit.dump(document, f)
-        # logging.info("Config file updated.")
+        if not (parent := self.path.parent).exists():
+            logging.info(
+                f"Parent directory {parent} does not exist. Creating parents now."
+            )
+            parent.mkdir(parents=True)
+
+        logging.info(f"Writing to config file: {self.path}")
+        with self.path.open("w") as f:
+            tomlkit.dump(config.to_toml(), f)
+            logging.info("Config file updated.")
 
     @cached_property
     def path(self):

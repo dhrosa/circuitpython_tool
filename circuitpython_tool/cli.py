@@ -10,7 +10,7 @@ from rich import get_console, print, traceback
 from rich.logging import RichHandler
 from rich.table import Table
 
-from .config import ConfigStorage, DeviceLabel
+from .config import ConfigStorage, DeviceLabel, SourceTree
 from .device import Device, Query, all_devices, matching_devices
 from .fs import walk_all, watch_all
 
@@ -134,6 +134,24 @@ def label_remove(label_name, force):
             print(f":thumbs_down: Label [red]{label_name}[/] does not exist.")
             exit(1)
     print(f":thumbs_up: Label [blue]{label_name}[/] [green]successfully[/] deleted.")
+
+
+@run.group
+def tree():
+    pass
+
+
+@tree.command("list")
+def tree_list():
+    with ConfigStorage().open() as config:
+        trees = config.source_trees
+    if not trees:
+        print(":person_shrugging: [blue]No[/] existing source trees found.")
+        return
+    table = Table("Name", "Source Directories")
+    for name, tree in trees.items():
+        table.add_row(name, "\n".join(str(p) for p in tree.source_dirs))
+    print(table)
 
 
 def upload_command(preset: Preset):

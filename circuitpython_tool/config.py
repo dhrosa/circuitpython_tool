@@ -52,7 +52,7 @@ class Config:
             k: DeviceLabel.from_toml(v)
             for k, v in document.get("device_labels", tomlkit.table()).items()
         }
-        config.source_labels = {
+        config.source_trees = {
             k: SourceTree.from_toml(v)
             for k, v in document.get("source_trees", tomlkit.table()).items()
         }

@@ -123,25 +123,3 @@ class ConfigStorage:
         fallback = candidates[-1]
         logger.info(f"No existing config file found. Will use {fallback}")
         return fallback
-
-    # @property
-    # def document(self):
-    #     if self.path.exists():
-    #         return self.file.read()
-    #     return tomlkit.TOMLDocument()
-
-    # @document.setter
-    # def document(self, value):
-    #     if not self.path.exists():
-    #         parent = self.path.parent
-    #         if not parent.exists():
-    #             logging.info(
-    #                 f"Parent directory {parent} does not exist. Creating parents now."
-    #             )
-    #             parent.mkdir(parents=True)
-
-    #         # TOMLFile.write() fails if the path doesn't exist yet
-    #         logging.info(f"Config file {self.path} does not exist. Creating file now.")
-    #         self.path.touch()
-    #     logging.info(f"Writing to config file: {self.path}")
-    #     self.file.write(value)

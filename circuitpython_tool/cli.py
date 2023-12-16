@@ -10,7 +10,7 @@ from rich import get_console, print, traceback
 from rich.logging import RichHandler
 from rich.table import Table
 
-from .config import Config, ConfigStorage, DeviceLabel
+from .config import ConfigStorage, DeviceLabel
 from .device import Device, Query, all_devices, matching_devices
 from .fs import walk_all, watch_all
 
@@ -123,19 +123,16 @@ def label_add(key: str, query: Query, force: bool):
     help="Return success even if there was no matching label to remove.",
 )
 def label_remove(label_name, force):
-    config = Config()
-    labels = config.device_labels
-    label = labels.get(label_name)
-    if label:
-        logger.debug(f"Found label [blue]{label_name}[/]: {label}")
-        del labels[label_name]
-    elif force:
-        logger.info(f"Label [blue]{label_name}[/] not found. Proceeding anyway.")
-    else:
-        print(f":thumbs_down: Label [red]{label_name}[/] does not exist.")
-        exit(1)
-
-    config.device_labels = labels
+    with ConfigStorage().open() as config:
+        label = config.device_labels.get(label_name)
+        if label:
+            logger.debug(f"Found label [blue]{label_name}[/]: {label}")
+            del config.device_labels[label_name]
+        elif force:
+            logger.info(f"Label [blue]{label_name}[/] not found. Proceeding anyway.")
+        else:
+            print(f":thumbs_down: Label [red]{label_name}[/] does not exist.")
+            exit(1)
     print(f":thumbs_up: Label [blue]{label_name}[/] [green]successfully[/] deleted.")
 
 

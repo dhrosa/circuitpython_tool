@@ -23,7 +23,6 @@ class SourceTree:
     def from_toml(dirs: Iterable[str]) -> Self:
         return SourceTree([Path(d) for d in dirs])
 
-    @staticmethod
     def to_toml(self) -> list[str]:
         return [str(p) for p in self.source_dirs]
 

@@ -154,6 +154,33 @@ def tree_list():
     print(table)
 
 
+@tree.command("add")
+@click.argument("key", required=True)
+@click.argument("source_dirs", type=Path, required=True, nargs=-1)
+@click.option("--force", "-f", is_flag=True)
+def tree_add(key, source_dirs, force):
+    with ConfigStorage().open() as config:
+        trees = config.source_trees
+        old_tree = trees.get(key)
+        if old_tree:
+            if force:
+                logger.info(
+                    f"Source tree [blue]{key}[/] already exists. Proceeding anyway."
+                )
+            else:
+                print(
+                    f":thumbs_down: Source tree [red]{key}[/] already exists: ",
+                    old_tree,
+                )
+                exit(1)
+
+        tree = SourceTree(source_dirs)
+        trees[key] = tree
+    print(
+        f":thumbs_up: Source tree [blue]{key}[/] added [green]successfully[/]:\n{tree}"
+    )
+
+
 def upload_command(preset: Preset):
     """upload subcommand."""
     device = distinct_device(preset)

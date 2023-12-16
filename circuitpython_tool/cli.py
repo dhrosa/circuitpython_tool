@@ -51,12 +51,12 @@ class QueryParam(click.ParamType):
             self.fail(str(error))
 
 
-@click.group
+@click.group()
 def run() -> None:
     pass
 
 
-@run.command
+@run.command()
 @click.argument("query", type=QueryParam(), default="")
 def devices(query: Query) -> None:
     """devices subcommand."""
@@ -67,7 +67,7 @@ def devices(query: Query) -> None:
     print("Connected CircuitPython devices:", devices_table(devices))
 
 
-@run.group
+@run.group()
 def label() -> None:
     pass
 
@@ -135,7 +135,7 @@ def label_remove(label_name: str, force: bool) -> None:
     print(f":thumbs_up: Label [blue]{label_name}[/] [green]successfully[/] deleted.")
 
 
-@run.group
+@run.group()
 def tree() -> None:
     pass
 

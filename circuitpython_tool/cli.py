@@ -221,14 +221,22 @@ def upload_command(tree_name: str, label_name: str):
     print(":thumbs_up: Upload [green]succeeded.")
 
 
-def watch_command(preset: Preset):
+@run.command("watch")
+@click.argument("tree_name", required=True)
+@click.argument("label_name", required=True)
+def watch_command(tree_name: str, label_name: str):
     """watch subcommand."""
-    device = distinct_device(preset)
+    with ConfigStorage().open() as config:
+        tree = config.source_trees[tree_name]
+        label = config.device_labels[label_name]
+    device = distinct_device(label.query)
+    mountpoint = device.mount_if_needed()
+    device = distinct_device(label.query)
     mountpoint = device.mount_if_needed()
     print("Target device: ")
     print(device)
     # Always do at least one upload at the start.
-    source_dirs = preset.source_dirs
+    source_dirs = tree.source_dirs
     upload(source_dirs, mountpoint)
 
     events = iter(watch_all(source_dirs))

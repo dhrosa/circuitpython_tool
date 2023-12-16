@@ -4,7 +4,7 @@ import subprocess
 from dataclasses import dataclass
 from pathlib import Path
 from sys import exit
-from typing import Self
+from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -36,7 +36,7 @@ class Query:
         pass
 
     @staticmethod
-    def parse(value: str) -> Self:
+    def parse(value: str) -> "Query":
         if not value:
             return Query("", "", "")
         parts = value.split(":")
@@ -49,7 +49,7 @@ class Query:
     def as_str(self) -> str:
         return f"{self.vendor}:{self.model}:{self.serial}"
 
-    def matches(self, device):
+    def matches(self, device: "Device") -> bool:
         """Whether this device is matched by the query."""
         return all(
             (
@@ -69,17 +69,17 @@ class Device:
     serial: str
 
     # Path to partition device.
-    partition_path: Path = None
+    partition_path: Optional[Path] = None
 
     # Path to serial device.
-    serial_path: Path = None
+    serial_path: Optional[Path] = None
 
-    def get_mountpoint(self):
+    def get_mountpoint(self) -> str:
         """Find mountpoint. Returns empty string if not mounted."""
         command = f"lsblk {self.partition_path} --output mountpoint --noheadings"
         return run(command).strip()
 
-    def mount_if_needed(self):
+    def mount_if_needed(self) -> str:
         """Mounts the partition device if needed, and returns the mountpoint."""
         mountpoint = self.get_mountpoint()
         if mountpoint:
@@ -94,7 +94,7 @@ class Device:
         exit(f"{partition_path} somehow not mounted.")
 
 
-def get_device_info(path):
+def get_device_info(path) -> Optional[dict]:
     """
     Extract device attributes from udevadm.
 

@@ -6,9 +6,9 @@ from pathlib import Path
 from sys import exit
 
 import click
-from rich import get_console, print, traceback
-from rich.logging import RichHandler
-from rich.table import Table
+from rich import get_console, print, traceback  # type: ignore
+from rich.logging import RichHandler  # type: ignore
+from rich.table import Table  # type: ignore
 
 from .config import ConfigStorage, DeviceLabel, SourceTree
 from .device import Device, Query, all_devices, matching_devices
@@ -37,9 +37,7 @@ def _render_device(self):
     return table
 
 
-Device.__rich__ = _render_device
-
-Preset = object
+setattr(Device, "__rich__", _render_device)
 
 
 class QueryParam(click.ParamType):
@@ -221,6 +219,7 @@ def upload_command(tree_name: str, label_name: str):
     print(":thumbs_up: Upload [green]succeeded.")
 
 
+@run.command
 @click.argument("tree_name", required=True)
 @click.argument("label_name", required=True)
 def watch(tree_name: str, label_name: str):

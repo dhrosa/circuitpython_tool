@@ -4,9 +4,9 @@ from copy import deepcopy
 from dataclasses import dataclass
 from functools import cached_property
 from pathlib import Path
-from typing import Iterable, Self
+from typing import Iterable
 
-import tomlkit
+import tomlkit  # type: ignore
 from platformdirs import user_config_path
 from tomlkit import TOMLDocument
 
@@ -20,7 +20,7 @@ class SourceTree:
     source_dirs: list[Path]
 
     @staticmethod
-    def from_toml(dirs: Iterable[str]) -> Self:
+    def from_toml(dirs: Iterable[str]) -> "SourceTree":
         return SourceTree([Path(d) for d in dirs])
 
     def to_toml(self) -> list[str]:
@@ -32,7 +32,7 @@ class DeviceLabel:
     query: Query
 
     @staticmethod
-    def from_toml(query_str: str) -> Self:
+    def from_toml(query_str: str) -> "DeviceLabel":
         return DeviceLabel(Query.parse(query_str))
 
     def to_toml(self) -> str:
@@ -45,7 +45,7 @@ class Config:
     source_trees: dict[str, SourceTree]
 
     @staticmethod
-    def from_toml(document: TOMLDocument) -> Self:
+    def from_toml(document: TOMLDocument) -> "Config":
         config = Config({}, {})
         config.device_labels = {
             k: DeviceLabel.from_toml(v)

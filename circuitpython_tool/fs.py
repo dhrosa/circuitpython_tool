@@ -1,12 +1,13 @@
 import logging
 from pathlib import Path
+from typing import Iterable
 
-from inotify_simple import INotify, flags
+from inotify_simple import INotify, flags  # type: ignore
 
 logger = logging.getLogger(__name__)
 
 
-def walk_all(roots: list[Path]):
+def walk_all(roots: Iterable[Path]):
     """Generator that yields tuples of (top-level source directory, descendant path)."""
     for root in roots:
         yield root, root
@@ -18,7 +19,7 @@ def walk_all(roots: list[Path]):
                 yield root, path
 
 
-def watch_all(roots: list[Path]):
+def watch_all(roots: Iterable[Path]):
     watcher = INotify()
 
     # Maps inotify descriptors to roots.

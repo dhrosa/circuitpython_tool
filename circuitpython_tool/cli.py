@@ -221,10 +221,9 @@ def upload_command(tree_name: str, label_name: str):
     print(":thumbs_up: Upload [green]succeeded.")
 
 
-@run.command("watch")
 @click.argument("tree_name", required=True)
 @click.argument("label_name", required=True)
-def watch_command(tree_name: str, label_name: str):
+def watch(tree_name: str, label_name: str):
     """watch subcommand."""
     with ConfigStorage().open() as config:
         tree = config.source_trees[tree_name]
@@ -253,9 +252,13 @@ def watch_command(tree_name: str, label_name: str):
         print("Watch [magenta]cancelled[/magenta] by keyboard interrupt.")
 
 
-def connect_command(preset: Preset):
+@run.command
+@click.argument("label_name", required=True)
+def connect(label_name: str):
     """connect subcommand"""
-    device = distinct_device(preset)
+    with ConfigStorage().open() as config:
+        label = config.device_labels[label_name]
+    device = distinct_device(label.query)
     logger.info("Launching minicom for ")
     logger.info(device)
     execlp("minicom", "minicom", "-D", device.serial_path)

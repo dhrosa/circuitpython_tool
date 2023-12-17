@@ -12,7 +12,7 @@ keywords = []
 authors = [
   { name = "Diony Rosa", email = "dhrosa+dev@gmail.com" },
 ]
-dependencies = ["tomlkit", "inotify_simple", "rich", "platformdirs", "click"]
+dependencies = ["tomlkit", "inotify_simple", "rich", "platformdirs", "click", "rich-click"]
 
 [project.scripts]
 circuitpython-tool = "circuitpython_tool:main"

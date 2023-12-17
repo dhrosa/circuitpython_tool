@@ -6,7 +6,7 @@ from pathlib import Path
 from sys import exit
 from typing import Any
 
-import click
+import rich_click as click
 from rich import get_console, print, traceback
 from rich.logging import RichHandler
 from rich.table import Table

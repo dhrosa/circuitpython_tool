@@ -22,12 +22,12 @@ dependencies = ["setuptools", "isort", "black", "pylama", "mypy", "types-click"]
 
 [tool.hatch.envs.style.scripts]
 format = [
-       "isort .",
-       "black .",
+       "isort src",
+       "black src",
 ]
 check = [
-      "pylama .",
-      "mypy --strict .",
+      "pylama src",
+      "mypy --strict src",
 ]
 all = [
     "hatch run style:format",

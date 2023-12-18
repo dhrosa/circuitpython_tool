@@ -51,7 +51,7 @@ class QueryParam(click.ParamType):
             self.fail(str(error))
 
 
-@click.group()
+@click.group(context_settings=dict(help_option_names=["-h", "--help"]))
 def run() -> None:
     pass
 

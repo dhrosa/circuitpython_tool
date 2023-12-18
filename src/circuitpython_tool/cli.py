@@ -4,14 +4,14 @@ from collections.abc import Iterable
 from os import execlp
 from pathlib import Path
 from sys import exit
-from typing import Any
+from typing import Any, Optional
 
 import rich_click as click
 from rich import get_console, print, traceback
 from rich.logging import RichHandler
 from rich.table import Table
 
-from .config import ConfigStorage, DeviceLabel, SourceTree
+from .config import Config, ConfigStorage, DeviceLabel, SourceTree
 from .device import Device, Query, all_devices, matching_devices
 from .fs import walk_all, watch_all
 
@@ -52,8 +52,17 @@ class QueryParam(click.ParamType):
 
 
 @click.group(context_settings=dict(help_option_names=["-h", "--help"]))
-def run() -> None:
-    pass
+@click.option(
+    "--config",
+    "-c",
+    "config_path",
+    type=Path,
+    default=None,
+    help="Path to configuration TOML file for device labels and source trees.",
+)
+@click.pass_context
+def run(context: click.Context, config_path: Optional[Path]) -> None:
+    context.obj = ConfigStorage(config_path)
 
 
 @run.command()
@@ -73,8 +82,9 @@ def label() -> None:
 
 
 @label.command("list")
-def label_list() -> None:
-    with ConfigStorage().open() as config:
+@click.pass_obj
+def label_list(config_storage: ConfigStorage) -> None:
+    with config_storage.open() as config:
         labels = config.device_labels
     if not labels:
         print(":person_shrugging: [blue]No[/] existing labels found.")
@@ -89,8 +99,11 @@ def label_list() -> None:
 @click.argument("key", required=True)
 @click.argument("query", type=QueryParam(), required=True)
 @click.option("--force", "-f", is_flag=True)
-def label_add(key: str, query: Query, force: bool) -> None:
-    with ConfigStorage().open() as config:
+@click.pass_obj
+def label_add(
+    config_storage: ConfigStorage, key: str, query: Query, force: bool
+) -> None:
+    with config_storage.open() as config:
         labels = config.device_labels
         old_label = labels.get(key)
         if old_label:
@@ -121,8 +134,9 @@ def label_add(key: str, query: Query, force: bool) -> None:
     is_flag=True,
     help="Return success even if there was no matching label to remove.",
 )
-def label_remove(label_name: str, force: bool) -> None:
-    with ConfigStorage().open() as config:
+@click.pass_obj
+def label_remove(config_storage: ConfigStorage, label_name: str, force: bool) -> None:
+    with config_storage.open() as config:
         label = config.device_labels.get(label_name)
         if label:
             logger.debug(f"Found label [blue]{label_name}[/]: {label}")
@@ -141,8 +155,9 @@ def tree() -> None:
 
 
 @tree.command("list")
-def tree_list() -> None:
-    with ConfigStorage().open() as config:
+@click.pass_obj
+def tree_list(config_storage: ConfigStorage) -> None:
+    with config_storage.open() as config:
         trees = config.source_trees
     if not trees:
         print(":person_shrugging: [blue]No[/] existing source trees found.")
@@ -157,8 +172,11 @@ def tree_list() -> None:
 @click.argument("key", required=True)
 @click.argument("source_dirs", type=Path, required=True, nargs=-1)
 @click.option("--force", "-f", is_flag=True)
-def tree_add(key: str, source_dirs: list[Path], force: bool) -> None:
-    with ConfigStorage().open() as config:
+@click.pass_obj
+def tree_add(
+    config_storage: ConfigStorage, key: str, source_dirs: list[Path], force: bool
+) -> None:
+    with config_storage.open() as config:
         trees = config.source_trees
         old_tree = trees.get(key)
         if old_tree:
@@ -191,8 +209,9 @@ def tree_add(key: str, source_dirs: list[Path], force: bool) -> None:
     is_flag=True,
     help="Return success even if there was no matching source tree to remove.",
 )
-def tree_remove(key: str, force: bool) -> None:
-    with ConfigStorage().open() as config:
+@click.pass_obj
+def tree_remove(config_storage: ConfigStorage, key: str, force: bool) -> None:
+    with config_storage.open() as config:
         tree = config.source_trees.get(key)
         if tree:
             logger.debug(f"Found source tree [blue]{key}[/]: {tree}")
@@ -206,29 +225,32 @@ def tree_remove(key: str, force: bool) -> None:
 
 
 def get_tree_and_label(
-    tree_name: str, label_name: str
+    config: Config, tree_name: str, label_name: str
 ) -> tuple[SourceTree, DeviceLabel]:
-    with ConfigStorage().open() as config:
-        try:
-            tree = config.source_trees[tree_name]
-        except KeyError:
-            print(f":thumbs_down: Source tree [red]{tree_name}[/] does not exist.")
-            exit(1)
+    try:
+        tree = config.source_trees[tree_name]
+    except KeyError:
+        print(f":thumbs_down: Source tree [red]{tree_name}[/] does not exist.")
+        exit(1)
 
-        try:
-            label = config.device_labels[label_name]
-        except KeyError:
-            print(f":thumbs_down: Label [red]{label_name}[/] does not exist.")
-            exit(1)
+    try:
+        label = config.device_labels[label_name]
+    except KeyError:
+        print(f":thumbs_down: Label [red]{label_name}[/] does not exist.")
+        exit(1)
     return (tree, label)
 
 
 @run.command("upload")
 @click.argument("tree_name", required=True)
 @click.argument("label_name", required=True)
-def upload_command(tree_name: str, label_name: str) -> None:
+@click.pass_obj
+def upload_command(
+    config_storage: ConfigStorage, tree_name: str, label_name: str
+) -> None:
     """upload subcommand."""
-    tree, label = get_tree_and_label(tree_name, label_name)
+    with config_storage.open() as config:
+        tree, label = get_tree_and_label(config, tree_name, label_name)
     device = distinct_device(label.query)
     mountpoint = device.mount_if_needed()
     print("Uploading to device: ", device)
@@ -239,9 +261,11 @@ def upload_command(tree_name: str, label_name: str) -> None:
 @run.command
 @click.argument("tree_name", required=True)
 @click.argument("label_name", required=True)
-def watch(tree_name: str, label_name: str) -> None:
+@click.pass_obj
+def watch(config_storage: ConfigStorage, tree_name: str, label_name: str) -> None:
     """watch subcommand."""
-    tree, label = get_tree_and_label(tree_name, label_name)
+    with config_storage.open() as config:
+        tree, label = get_tree_and_label(config, tree_name, label_name)
     device = distinct_device(label.query)
     mountpoint = device.mount_if_needed()
     print("Target device: ")
@@ -266,9 +290,10 @@ def watch(tree_name: str, label_name: str) -> None:
 
 @run.command
 @click.argument("label_name", required=True)
-def connect(label_name: str) -> None:
+@click.pass_obj
+def connect(config_storage: ConfigStorage, label_name: str) -> None:
     """connect subcommand"""
-    with ConfigStorage().open() as config:
+    with config_storage.open() as config:
         label = config.device_labels[label_name]
     device = distinct_device(label.query)
     logger.info("Launching minicom for ")

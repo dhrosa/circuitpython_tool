@@ -22,14 +22,20 @@ dependencies = ["setuptools", "isort", "black", "pylama", "mypy", "types-click"]
 
 [tool.hatch.envs.style.scripts]
 format = [
-       "isort src",
-       "black src",
+       "isort .",
+       "black .",
 ]
 check = [
-      "pylama src",
-      "mypy --strict src",
+      "pylama .",
+      "mypy --strict .",
 ]
 all = [
     "hatch run style:format",
     "hatch run style:check",
 ]
+
+[tool.hatch.envs.test]
+dependencies = ["pytest"]
+
+[tool.hatch.envs.test.scripts]
+all = ["pytest --no-header --verbose"]

@@ -2,7 +2,7 @@ from pathlib import Path
 
 import tomlkit
 
-from circuitpython_tool.config import Config, DeviceLabel, SourceTree
+from circuitpython_tool.config import Config, ConfigStorage, DeviceLabel, SourceTree
 from circuitpython_tool.device import Query
 
 
@@ -64,3 +64,54 @@ def test_config_from_toml() -> None:
     )
 
     assert config == expected_config
+
+
+def test_storage_missing_file(tmp_path: Path):
+    """Non-existant config file should succeed with empty output."""
+    path = tmp_path / "does_not_exist.toml"
+    with ConfigStorage(path).open() as config:
+        assert not config.device_labels
+        assert not config.source_trees
+
+
+def test_storage_read_only(tmp_path: Path):
+    """Read-only config operations should not modify the file at all, even in a no-op way."""
+    path = tmp_path / "config.toml"
+    path.write_text(
+        """
+        [device_labels]
+        label = "v:m:s"
+        [source_trees]
+        tree = ["/tree"]
+        """
+    )
+    original_contents = path.read_text()
+    original_mtime = path.stat().st_mtime
+    with ConfigStorage(path).open() as config:
+        assert config.device_labels == {"label": DeviceLabel(Query("v", "m", "s"))}
+        assert config.source_trees == {"tree": SourceTree([Path("/tree")])}
+    assert path.read_text() == original_contents
+    assert path.stat().st_mtime == original_mtime
+
+
+def test_storage_read_write(tmp_path: Path):
+    path = tmp_path / "config.toml"
+    path.write_text(
+        """
+        [device_labels]
+        label_a = "va:ma:sa"
+        label_b = "vb:mb:sb"
+        [source_trees]
+        tree_a = ["/tree_a"]
+        """
+    )
+    with ConfigStorage(path).open() as config:
+        del config.device_labels["label_a"]
+        config.source_trees["tree_b"] = SourceTree([Path("/tree_b")])
+
+    doc = tomlkit.loads(path.read_text())
+    assert doc["device_labels"].unwrap() == {"label_b": "vb:mb:sb"}
+    assert doc["source_trees"].unwrap() == {
+        "tree_a": ["/tree_a"],
+        "tree_b": ["/tree_b"],
+    }

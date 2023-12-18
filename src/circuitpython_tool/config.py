@@ -71,6 +71,9 @@ class Config:
 
 
 class ConfigStorage:
+    def __init__(self, path_override: Path):
+        self._path_override = path_override
+
     @contextmanager
     def open(self) -> Generator[Config, None, None]:
         document = tomlkit.document()
@@ -104,6 +107,8 @@ class ConfigStorage:
         through parent directories. If no existing file is found, a path to
         (non-existing) config file in current directory is returned.
         """
+        if self._path_override:
+            return self._path_override
         start_dir = Path.cwd()
         name = "circuitpython-tool.toml"
         candidates = [

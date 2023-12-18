@@ -50,3 +50,21 @@ def test_device_list_multiple_devices(capsys, monkeypatch):
         ["va", "ma", "sa", "/partition_a", "None", "/mount_a"]
         + ["vb", "mb", "sb", "None", "/serial_b", "/mount_b"],
     )
+
+
+def test_device_list_query(capsys, monkeypatch):
+    device_a = device.Device("va", "ma", "sa")
+    monkeypatch.setattr(device_a, "get_mountpoint", lambda: Path("/mount_a"))
+
+    device_b = device.Device("vb", "mb", "sb")
+    monkeypatch.setattr(device_b, "get_mountpoint", lambda: Path("/mount_b"))
+
+    monkeypatch.setattr(device, "all_devices", lambda: [device_a, device_b])
+    with exits_with_code(0):
+        cli.run("devices va:ma:".split())
+    out = capsys.readouterr().out
+    assert contains_ordered_substrings(out, ["va", "ma", "sa", "/mount_a"])
+    assert "vb" not in out
+    assert "mb" not in out
+    assert "sb" not in out
+    assert "/mount_b" not in out

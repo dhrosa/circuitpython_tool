@@ -4,7 +4,7 @@ from copy import deepcopy
 from dataclasses import dataclass
 from functools import cached_property
 from pathlib import Path
-from typing import Generator, Iterable
+from typing import Generator, Iterable, Optional
 
 import tomlkit
 from platformdirs import user_config_path
@@ -71,7 +71,7 @@ class Config:
 
 
 class ConfigStorage:
-    def __init__(self, path_override: Path):
+    def __init__(self, path_override: Optional[Path] = None):
         self._path_override = path_override
 
     @contextmanager
@@ -101,7 +101,7 @@ class ConfigStorage:
 
     @cached_property
     def path(self) -> Path:
-        """Search for existing config file.
+        """Search for existing config file if an explicit one was not provided.
 
         Starts searching in the current directory, and then continues to iterate
         through parent directories. If no existing file is found, a path to

@@ -205,14 +205,30 @@ def tree_remove(key: str, force: bool) -> None:
     print(f":thumbs_up: Source tree [blue]{key}[/] [green]successfully[/] deleted.")
 
 
+def get_tree_and_label(
+    tree_name: str, label_name: str
+) -> tuple[SourceTree, DeviceLabel]:
+    with ConfigStorage().open() as config:
+        try:
+            tree = config.source_trees[tree_name]
+        except KeyError:
+            print(f":thumbs_down: Source tree [red]{tree_name}[/] does not exist.")
+            exit(1)
+
+        try:
+            label = config.device_labels[label_name]
+        except KeyError:
+            print(f":thumbs_down: Label [red]{label_name}[/] does not exist.")
+            exit(1)
+    return (tree, label)
+
+
 @run.command("upload")
 @click.argument("tree_name", required=True)
 @click.argument("label_name", required=True)
 def upload_command(tree_name: str, label_name: str) -> None:
     """upload subcommand."""
-    with ConfigStorage().open() as config:
-        tree = config.source_trees[tree_name]
-        label = config.device_labels[label_name]
+    tree, label = get_tree_and_label(tree_name, label_name)
     device = distinct_device(label.query)
     mountpoint = device.mount_if_needed()
     print("Uploading to device: ", device)
@@ -225,9 +241,7 @@ def upload_command(tree_name: str, label_name: str) -> None:
 @click.argument("label_name", required=True)
 def watch(tree_name: str, label_name: str) -> None:
     """watch subcommand."""
-    with ConfigStorage().open() as config:
-        tree = config.source_trees[tree_name]
-        label = config.device_labels[label_name]
+    tree, label = get_tree_and_label(tree_name, label_name)
     device = distinct_device(label.query)
     mountpoint = device.mount_if_needed()
     print("Target device: ")

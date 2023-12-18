@@ -25,19 +25,19 @@ def test_device_list_no_devices(capsys, monkeypatch):
     assert ("No connected CircuitPython devices") in snapshot.out
 
 
-def ordered_substrings_re(substrs: list[str]) -> re.Pattern:
-    """Regex that matches strings containing all of the requested substrings in order."""
-    pattern_str = ".+".join(re.escape(s) for s in substrs)
+def contains_ordered_substrings(string: str, substrs: list[str]) -> bool:
+    """Checks if the input string contains all of the requested substrings in order."""
+    pattern = ".+".join(re.escape(s) for s in substrs)
     # Without DOTALL, '.' does not match across lines
-    return re.compile(pattern_str, flags=re.DOTALL)
+    return re.search(pattern, string, flags=re.DOTALL) is not None
 
 
 def test_device_list_multiple_devices(capsys, monkeypatch):
-    device_a = device.Device("vendor_a", "model_a", "serial_a")
+    device_a = device.Device("va", "ma", "sa")
     monkeypatch.setattr(device_a, "get_mountpoint", lambda: Path("/mount_a"))
     device_a.partition_path = Path("/partition_a")
 
-    device_b = device.Device("vendor_b", "model_b", "serial_b")
+    device_b = device.Device("vb", "mb", "sb")
     monkeypatch.setattr(device_b, "get_mountpoint", lambda: Path("/mount_b"))
     device_b.serial_path = Path("/serial_b")
 
@@ -45,8 +45,8 @@ def test_device_list_multiple_devices(capsys, monkeypatch):
     with exits_with_code(0):
         cli.run("devices".split())
     snapshot = capsys.readouterr()
-    pattern = ordered_substrings_re(
-        ["vendor_a", "model_a", "serial_a", "/partition_a", "None", "/mount_a"]
-        + ["vendor_b", "model_b", "serial_b", "None", "/serial_b", "/mount_b"]
+    assert contains_ordered_substrings(
+        snapshot.out,
+        ["va", "ma", "sa", "/partition_a", "None", "/mount_a"]
+        + ["vb", "mb", "sb", "None", "/serial_b", "/mount_b"],
     )
-    assert pattern.search(snapshot.out)

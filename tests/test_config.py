@@ -66,7 +66,7 @@ def test_config_from_toml() -> None:
     assert config == expected_config
 
 
-def test_storage_missing_file(tmp_path: Path):
+def test_storage_missing_file(tmp_path: Path) -> None:
     """Non-existant config file should succeed with empty output."""
     path = tmp_path / "does_not_exist.toml"
     with ConfigStorage(path).open() as config:
@@ -74,7 +74,7 @@ def test_storage_missing_file(tmp_path: Path):
         assert not config.source_trees
 
 
-def test_storage_read_only(tmp_path: Path):
+def test_storage_read_only(tmp_path: Path) -> None:
     """Read-only config operations should not modify the file at all, even in a no-op way."""
     path = tmp_path / "config.toml"
     path.write_text(
@@ -94,7 +94,7 @@ def test_storage_read_only(tmp_path: Path):
     assert path.stat().st_mtime == original_mtime
 
 
-def test_storage_read_write(tmp_path: Path):
+def test_storage_read_write(tmp_path: Path) -> None:
     path = tmp_path / "config.toml"
     path.write_text(
         """

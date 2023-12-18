@@ -1,14 +1,17 @@
 import re
 from contextlib import contextmanager
 from pathlib import Path
+from typing import Any, Generator, TypeAlias
 
 import pytest
 
 from circuitpython_tool import cli, device
 
+CaptureFixture: TypeAlias = pytest.CaptureFixture[str]
+
 
 @contextmanager
-def exits_with_code(code):
+def exits_with_code(code: int) -> Generator[None, None, None]:
     try:
         yield
     except SystemExit as exit:
@@ -17,7 +20,7 @@ def exits_with_code(code):
         assert False
 
 
-def test_device_list_no_devices(capsys, monkeypatch):
+def test_device_list_no_devices(capsys: CaptureFixture, monkeypatch: Any) -> None:
     monkeypatch.setattr(device, "all_devices", lambda: [])
     with exits_with_code(0):
         cli.run("devices".split())
@@ -32,7 +35,7 @@ def contains_ordered_substrings(string: str, substrs: list[str]) -> bool:
     return re.search(pattern, string, flags=re.DOTALL) is not None
 
 
-def test_device_list_multiple_devices(capsys, monkeypatch):
+def test_device_list_multiple_devices(capsys: CaptureFixture, monkeypatch: Any) -> None:
     device_a = device.Device("va", "ma", "sa")
     monkeypatch.setattr(device_a, "get_mountpoint", lambda: Path("/mount_a"))
     device_a.partition_path = Path("/partition_a")
@@ -52,7 +55,7 @@ def test_device_list_multiple_devices(capsys, monkeypatch):
     )
 
 
-def test_device_list_query(capsys, monkeypatch):
+def test_device_list_query(capsys: CaptureFixture, monkeypatch: Any) -> None:
     device_a = device.Device("va", "ma", "sa")
     monkeypatch.setattr(device_a, "get_mountpoint", lambda: Path("/mount_a"))
 

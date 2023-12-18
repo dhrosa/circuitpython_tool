@@ -18,7 +18,7 @@ dependencies = ["tomlkit", "inotify_simple", "rich", "platformdirs", "click", "r
 circuitpython-tool = "circuitpython_tool:main"
 
 [tool.hatch.envs.style]
-dependencies = ["setuptools", "isort", "black", "pylama", "mypy", "types-click"]
+dependencies = ["setuptools", "isort", "black", "pylama", "mypy", "types-click", "pytest"]
 
 [tool.hatch.envs.style.scripts]
 format = [

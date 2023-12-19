@@ -94,3 +94,32 @@ def test_label_add(capsys: CaptureFixture, config_storage: ConfigStorage) -> Non
     with exits_with_code(0):
         cli.run(f"--config {config_storage.path} label list".split())
     assert contains_ordered_substrings(capsys.readouterr().out, ["label_a", "va:ma:sa"])
+
+
+def test_connect(
+    capsys: CaptureFixture, monkeypatch: MonkeyPatch, config_storage: ConfigStorage
+) -> None:
+    exec_args: list[str] = []
+
+    def fake_exec(*args: str) -> None:
+        nonlocal exec_args
+        exec_args = list(args)
+
+    monkeypatch.setattr(cli, "execlp", fake_exec)
+
+    dev = device.Device("vv", "mm", "ss")
+    dev.serial_path = Path("/serial_path")
+    monkeypatch.setattr(dev, "get_mountpoint", lambda: "/mount")
+    monkeypatch.setattr("circuitpython_tool.cli.all_devices", lambda: [dev])
+    monkeypatch.setattr("circuitpython_tool.device.all_devices", lambda: [dev])
+
+    with exits_with_code(0):
+        cli.run(f"--config {config_storage.path} label add label_a vv:mm:ss".split())
+
+    with exits_with_code(0):
+        cli.run(f"--config {config_storage.path} devices".split())
+
+    with exits_with_code(0):
+        cli.run(f"--config {config_storage.path} connect label_a".split())
+
+    assert exec_args == ["minicom", "minicom", "-D", "/serial_path"]

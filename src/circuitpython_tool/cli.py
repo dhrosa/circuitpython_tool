@@ -294,12 +294,16 @@ def watch(config_storage: ConfigStorage, tree_name: str, label_name: str) -> Non
 def connect(config_storage: ConfigStorage, label_name: str) -> None:
     """connect subcommand"""
     with config_storage.open() as config:
-        label = config.device_labels[label_name]
+        try:
+            label = config.device_labels[label_name]
+        except KeyError:
+            print(f":thumbs_down: Label [red]{label_name}[/] does not exist.")
+            exit(1)
     device = distinct_device(label.query)
     logger.info("Launching minicom for ")
     logger.info(device)
     assert device.serial_path is not None
-    execlp("minicom", "minicom", "-D", device.serial_path)
+    execlp("minicom", "minicom", "-D", str(device.serial_path))
 
 
 def devices_table(devices: Iterable[Device]) -> Table:
@@ -335,6 +339,7 @@ def distinct_device(query: Query) -> Device:
             return device
         case []:
             print(":thumbs_down: [red]0[/red] matching devices found.")
+            print(all_devices())
             exit(1)
         case _:
             count = len(matching_devices)

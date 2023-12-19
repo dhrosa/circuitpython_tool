@@ -6,9 +6,15 @@ from typing import Generator, TypeAlias
 import pytest
 
 from circuitpython_tool import cli, device
+from circuitpython_tool.config import ConfigStorage
 
 CaptureFixture: TypeAlias = pytest.CaptureFixture[str]
 MonkeyPatch: TypeAlias = pytest.MonkeyPatch
+
+
+@pytest.fixture
+def config_storage(tmp_path: Path) -> ConfigStorage:
+    return ConfigStorage(tmp_path / "config.toml")
 
 
 @contextmanager

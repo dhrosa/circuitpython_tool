@@ -62,13 +62,16 @@ class QueryParam(click.ParamType):
 )
 @click.pass_context
 def run(context: click.Context, config_path: Optional[Path]) -> None:
+    """Tool for interfacing with CircuitPython devices."""
     context.obj = ConfigStorage(config_path)
 
 
 @run.command()
 @click.argument("query", type=QueryParam(), default="")
 def devices(query: Query) -> None:
-    """devices subcommand."""
+    """List all connected CircuitPython devices.
+
+    If QUERY is specified, only devices matching that query are listed."""
     devices = matching_devices(query)
     if not devices:
         print(":person_shrugging: [blue]No[/] connected CircuitPython devices found.")
@@ -78,12 +81,14 @@ def devices(query: Query) -> None:
 
 @run.group()
 def label() -> None:
+    """Manage device labels."""
     pass
 
 
 @label.command("list")
 @click.pass_obj
 def label_list(config_storage: ConfigStorage) -> None:
+    """List all device labels."""
     with config_storage.open() as config:
         labels = config.device_labels
     if not labels:
@@ -98,11 +103,21 @@ def label_list(config_storage: ConfigStorage) -> None:
 @label.command("add")
 @click.argument("key", required=True)
 @click.argument("query", type=QueryParam(), required=True)
-@click.option("--force", "-f", is_flag=True)
+@click.option(
+    "--force",
+    "-f",
+    is_flag=True,
+    help="Add the new label even if a label with the same name already exists."
+    "The new QUERY value will override the previous stored value.",
+)
 @click.pass_obj
 def label_add(
     config_storage: ConfigStorage, key: str, query: Query, force: bool
 ) -> None:
+    """Add a new device label.
+
+    Creates a new device label with the name KEY, referencing the given QUERY.
+    """
     with config_storage.open() as config:
         labels = config.device_labels
         old_label = labels.get(key)
@@ -136,6 +151,7 @@ def label_add(
 )
 @click.pass_obj
 def label_remove(config_storage: ConfigStorage, label_name: str, force: bool) -> None:
+    """Delete a device label."""
     with config_storage.open() as config:
         label = config.device_labels.get(label_name)
         if label:
@@ -151,12 +167,14 @@ def label_remove(config_storage: ConfigStorage, label_name: str, force: bool) ->
 
 @run.group()
 def tree() -> None:
+    """Manage source trees."""
     pass
 
 
 @tree.command("list")
 @click.pass_obj
 def tree_list(config_storage: ConfigStorage) -> None:
+    """List all source trees."""
     with config_storage.open() as config:
         trees = config.source_trees
     if not trees:
@@ -171,11 +189,26 @@ def tree_list(config_storage: ConfigStorage) -> None:
 @tree.command("add")
 @click.argument("key", required=True)
 @click.argument("source_dirs", type=Path, required=True, nargs=-1)
-@click.option("--force", "-f", is_flag=True)
+@click.option(
+    "--force",
+    "-f",
+    is_flag=True,
+    help="Add the new tree even if a tree with the same name already exists."
+    "The new SOURCE_DIRS will override the previous stored value.",
+)
 @click.pass_obj
 def tree_add(
     config_storage: ConfigStorage, key: str, source_dirs: list[Path], force: bool
 ) -> None:
+    """Add a new source tree.
+
+    Creates a new source tree with the name KEY, pointing to the paths listed in
+    SOURCE_DIRS.
+
+    The children of each of SOURCE_DIRS will be copied to the device;
+    effectively a union of the children.
+
+    """
     with config_storage.open() as config:
         trees = config.source_trees
         old_tree = trees.get(key)
@@ -211,6 +244,12 @@ def tree_add(
 )
 @click.pass_obj
 def tree_remove(config_storage: ConfigStorage, key: str, force: bool) -> None:
+    """Delete a source tree.
+
+    This command just deletes our internal reference to the source paths. This
+    command does not change the contents of the source paths.
+
+    """
     with config_storage.open() as config:
         tree = config.source_trees.get(key)
         if tree:
@@ -248,7 +287,11 @@ def get_tree_and_label(
 def upload_command(
     config_storage: ConfigStorage, tree_name: str, label_name: str
 ) -> None:
-    """upload subcommand."""
+    """Upload code to device.
+
+    The contents of the source tree TREE_NAME will be copied onto the device
+    with the label LABEL_NAME
+    """
     with config_storage.open() as config:
         tree, label = get_tree_and_label(config, tree_name, label_name)
     device = distinct_device(label.query)
@@ -263,7 +306,17 @@ def upload_command(
 @click.argument("label_name", required=True)
 @click.pass_obj
 def watch(config_storage: ConfigStorage, tree_name: str, label_name: str) -> None:
-    """watch subcommand."""
+    """Continuously upload code to device in response to source file changes.
+
+    The contents of the source tree TREE_NAME will be copied onto the device
+    with the label LABEL_NAME.
+
+    This command will always perform at least one upload. Then this command
+    waits for filesystem events from all paths and descendant paths of the
+    source tree. Currently this command will only properly track file
+    modifications. Creation of new files and folders requires you to rerun this
+    command in order to monitor them.
+    """
     with config_storage.open() as config:
         tree, label = get_tree_and_label(config, tree_name, label_name)
     device = distinct_device(label.query)
@@ -292,7 +345,10 @@ def watch(config_storage: ConfigStorage, tree_name: str, label_name: str) -> Non
 @click.argument("label_name", required=True)
 @click.pass_obj
 def connect(config_storage: ConfigStorage, label_name: str) -> None:
-    """connect subcommand"""
+    """Connect to a device's serial terminal.
+
+    LABEL_NAME is the label of a device query that was added by 'label add'.
+    """
     with config_storage.open() as config:
         try:
             label = config.device_labels[label_name]

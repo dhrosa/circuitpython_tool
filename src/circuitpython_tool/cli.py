@@ -11,6 +11,7 @@ from rich import get_console, print, traceback
 from rich.logging import RichHandler
 from rich.table import Table
 
+from . import completion
 from .config import Config, ConfigStorage, DeviceLabel, SourceTree
 from .device import Device, Query, all_devices, matching_devices
 from .fs import walk_all, watch_all
@@ -101,7 +102,7 @@ def label_list(config_storage: ConfigStorage) -> None:
 
 
 @label.command("add")
-@click.argument("key", required=True)
+@click.argument("key", required=True, shell_complete=completion.device_label)
 @click.argument("query", type=QueryParam(), required=True)
 @click.option(
     "--force",
@@ -142,7 +143,7 @@ def label_add(
 @click.confirmation_option(
     "--yes", "-y", prompt="Are you sure you want to delete this label?"
 )
-@click.argument("label_name")
+@click.argument("label_name", shell_complete=completion.device_label)
 @click.option(
     "--force",
     "-f",
@@ -187,7 +188,7 @@ def tree_list(config_storage: ConfigStorage) -> None:
 
 
 @tree.command("add")
-@click.argument("key", required=True)
+@click.argument("key", required=True, shell_complete=completion.source_tree)
 @click.argument("source_dirs", type=Path, required=True, nargs=-1)
 @click.option(
     "--force",
@@ -235,7 +236,7 @@ def tree_add(
 @click.confirmation_option(
     "--yes", "-y", prompt="Are you sure you want to delete this source tree?"
 )
-@click.argument("key")
+@click.argument("key", shell_complete=completion.source_tree)
 @click.option(
     "--force",
     "-f",
@@ -281,8 +282,8 @@ def get_tree_and_label(
 
 
 @run.command("upload")
-@click.argument("tree_name", required=True)
-@click.argument("label_name", required=True)
+@click.argument("tree_name", shell_complete=completion.source_tree, required=True)
+@click.argument("label_name", shell_complete=completion.device_label, required=True)
 @click.pass_obj
 def upload_command(
     config_storage: ConfigStorage, tree_name: str, label_name: str
@@ -302,8 +303,8 @@ def upload_command(
 
 
 @run.command
-@click.argument("tree_name", required=True)
-@click.argument("label_name", required=True)
+@click.argument("tree_name", required=True, shell_complete=completion.source_tree)
+@click.argument("label_name", required=True, shell_complete=completion.device_label)
 @click.pass_obj
 def watch(config_storage: ConfigStorage, tree_name: str, label_name: str) -> None:
     """Continuously upload code to device in response to source file changes.
@@ -342,7 +343,7 @@ def watch(config_storage: ConfigStorage, tree_name: str, label_name: str) -> Non
 
 
 @run.command
-@click.argument("label_name", required=True)
+@click.argument("label_name", required=True, shell_complete=completion.device_label)
 @click.pass_obj
 def connect(config_storage: ConfigStorage, label_name: str) -> None:
     """Connect to a device's serial terminal.

@@ -82,3 +82,15 @@ def test_device_list_query(capsys: CaptureFixture, monkeypatch: MonkeyPatch) -> 
     assert "mb" not in out
     assert "sb" not in out
     assert "/mount_b" not in out
+
+
+def test_label_add(capsys: CaptureFixture, config_storage: ConfigStorage) -> None:
+    # Add label_a
+    with exits_with_code(0):
+        cli.run(f"--config {config_storage.path} label add label_a va:ma:sa".split())
+    assert "Label label_a added" in capsys.readouterr().out
+
+    # Should be in list output
+    with exits_with_code(0):
+        cli.run(f"--config {config_storage.path} label list".split())
+    assert contains_ordered_substrings(capsys.readouterr().out, ["label_a", "va:ma:sa"])

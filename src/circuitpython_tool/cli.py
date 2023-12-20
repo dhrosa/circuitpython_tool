@@ -4,9 +4,11 @@ from collections.abc import Iterable
 from os import execlp
 from pathlib import Path
 from sys import exit
-from typing import Any, Optional
+from typing import Optional
 
 import rich_click as click
+from click import Context, Parameter
+from click.shell_completion import CompletionItem
 from rich import get_console, print, traceback
 from rich.logging import RichHandler
 from rich.table import Table
@@ -45,11 +47,21 @@ setattr(Device, "__rich__", _render_device)
 class QueryParam(click.ParamType):
     name = "query"
 
-    def convert(self, value: str, param: Any, context: Any) -> Query:
+    def convert(
+        self, value: str, param: Optional[Parameter], context: Optional[Context]
+    ) -> Query:
         try:
             return Query.parse(value)
         except Query.ParseError as error:
             self.fail(str(error))
+
+    def shell_complete(
+        self, context: Context, param: Parameter, incomplete: str
+    ) -> list[CompletionItem]:
+        return [
+            CompletionItem(":".join((d.vendor, d.model, d.serial)))
+            for d in all_devices()
+        ]
 
 
 @click.group(context_settings=dict(help_option_names=["-h", "--help"]))

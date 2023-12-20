@@ -1,10 +1,11 @@
 import logging
 import shutil
 from collections.abc import Iterable
+from functools import wraps
 from os import execlp
 from pathlib import Path
 from sys import exit
-from typing import Callable, Optional, ParamSpec, TypeVar
+from typing import Callable, Concatenate, Optional, ParamSpec, TypeVar
 
 import rich_click as click
 from click import Context, Parameter
@@ -84,6 +85,23 @@ def label_or_query_argument(f: Callable[P, R]) -> Callable[P, R]:
     )(f)
 
 
+# Currently, Context.obj is always a ConfigStorage
+pass_config_storage = click.pass_obj
+"""Decorator for passing appropriate ConfigStorage to a function."""
+
+
+def pass_read_only_config(f: Callable[Concatenate[Config, P], R]) -> Callable[P, R]:
+    """Decorator for supplying a function with a read-only snapshot of our current Config."""
+
+    @pass_config_storage
+    @wraps(f)
+    def inner(config_storage: ConfigStorage, /, *args: P.args, **kwargs: P.kwargs) -> R:
+        with config_storage.open() as config:
+            return f(config, *args, **kwargs)
+
+    return inner
+
+
 @click.group(context_settings=dict(help_option_names=["-h", "--help"]))
 @click.option(
     "--config",
@@ -110,13 +128,12 @@ def run(context: click.Context, config_path: Optional[Path], log_level: str) -> 
 
 @run.command()
 @label_or_query_argument
-@click.pass_obj
-def devices(config_storage: ConfigStorage, label_or_query: str) -> None:
+@pass_read_only_config
+def devices(config: Config, label_or_query: str) -> None:
     """List all connected CircuitPython devices.
 
     If QUERY is specified, only devices matching that query are listed."""
-    with config_storage.open() as config:
-        query = get_query(config.device_labels, label_or_query)
+    query = get_query(config.device_labels, label_or_query)
     devices = matching_devices(query)
     if not devices:
         print(":person_shrugging: [blue]No[/] connected CircuitPython devices found.")
@@ -131,11 +148,10 @@ def label() -> None:
 
 
 @label.command("list")
-@click.pass_obj
-def label_list(config_storage: ConfigStorage) -> None:
+@pass_read_only_config
+def label_list(config: Config) -> None:
     """List all device labels."""
-    with config_storage.open() as config:
-        labels = config.device_labels
+    labels = config.device_labels
     if not labels:
         print(":person_shrugging: [blue]No[/] existing labels found.")
         return
@@ -155,7 +171,7 @@ def label_list(config_storage: ConfigStorage) -> None:
     help="Add the new label even if a label with the same name already exists."
     "The new QUERY value will override the previous stored value.",
 )
-@click.pass_obj
+@pass_config_storage
 def label_add(
     config_storage: ConfigStorage, key: str, query: Query, force: bool
 ) -> None:
@@ -194,7 +210,7 @@ def label_add(
     is_flag=True,
     help="Return success even if there was no matching label to remove.",
 )
-@click.pass_obj
+@pass_config_storage
 def label_remove(config_storage: ConfigStorage, label_name: str, force: bool) -> None:
     """Delete a device label."""
     with config_storage.open() as config:
@@ -217,11 +233,10 @@ def tree() -> None:
 
 
 @tree.command("list")
-@click.pass_obj
-def tree_list(config_storage: ConfigStorage) -> None:
+@pass_read_only_config
+def tree_list(config: Config) -> None:
     """List all source trees."""
-    with config_storage.open() as config:
-        trees = config.source_trees
+    trees = config.source_trees
     if not trees:
         print(":person_shrugging: [blue]No[/] existing source trees found.")
         return
@@ -241,7 +256,7 @@ def tree_list(config_storage: ConfigStorage) -> None:
     help="Add the new tree even if a tree with the same name already exists."
     "The new SOURCE_DIRS will override the previous stored value.",
 )
-@click.pass_obj
+@pass_config_storage
 def tree_add(
     config_storage: ConfigStorage, key: str, source_dirs: list[Path], force: bool
 ) -> None:
@@ -287,7 +302,7 @@ def tree_add(
     is_flag=True,
     help="Return success even if there was no matching source tree to remove.",
 )
-@click.pass_obj
+@pass_config_storage
 def tree_remove(config_storage: ConfigStorage, key: str, force: bool) -> None:
     """Delete a source tree.
 
@@ -324,17 +339,14 @@ def get_tree_and_query(
 @run.command("upload")
 @click.argument("tree_name", shell_complete=completion.source_tree, required=True)
 @label_or_query_argument
-@click.pass_obj
-def upload_command(
-    config_storage: ConfigStorage, tree_name: str, label_or_query: str
-) -> None:
+@pass_read_only_config
+def upload_command(config: Config, tree_name: str, label_or_query: str) -> None:
     """Upload code to device.
 
     The contents of the source tree TREE_NAME will be copied onto the device
     with the label LABEL_NAME
     """
-    with config_storage.open() as config:
-        tree, query = get_tree_and_query(config, tree_name, label_or_query)
+    tree, query = get_tree_and_query(config, tree_name, label_or_query)
     device = distinct_device(query)
     mountpoint = device.mount_if_needed()
     print("Uploading to device: ", device)
@@ -345,8 +357,8 @@ def upload_command(
 @run.command
 @click.argument("tree_name", required=True, shell_complete=completion.source_tree)
 @label_or_query_argument
-@click.pass_obj
-def watch(config_storage: ConfigStorage, tree_name: str, label_or_query: str) -> None:
+@pass_read_only_config
+def watch(config: Config, tree_name: str, label_or_query: str) -> None:
     """Continuously upload code to device in response to source file changes.
 
     The contents of the source tree TREE_NAME will be copied onto the device
@@ -358,8 +370,7 @@ def watch(config_storage: ConfigStorage, tree_name: str, label_or_query: str) ->
     modifications. Creation of new files and folders requires you to rerun this
     command in order to monitor them.
     """
-    with config_storage.open() as config:
-        tree, query = get_tree_and_query(config, tree_name, label_or_query)
+    tree, query = get_tree_and_query(config, tree_name, label_or_query)
     device = distinct_device(query)
     mountpoint = device.mount_if_needed()
     print("Target device: ")
@@ -384,14 +395,13 @@ def watch(config_storage: ConfigStorage, tree_name: str, label_or_query: str) ->
 
 @run.command
 @label_or_query_argument
-@click.pass_obj
-def connect(config_storage: ConfigStorage, label_or_query: str) -> None:
+@pass_read_only_config
+def connect(config: Config, label_or_query: str) -> None:
     """Connect to a device's serial terminal.
 
     LABEL_NAME is the label of a device query that was added by 'label add'.
     """
-    with config_storage.open() as config:
-        query = get_query(config.device_labels, label_or_query)
+    query = get_query(config.device_labels, label_or_query)
     device = distinct_device(query)
     logger.info("Launching minicom for ")
     logger.info(device)

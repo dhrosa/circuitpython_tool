@@ -4,7 +4,7 @@ from collections.abc import Iterable
 from os import execlp
 from pathlib import Path
 from sys import exit
-from typing import Optional
+from typing import Callable, Optional, ParamSpec, TypeVar
 
 import rich_click as click
 from click import Context, Parameter
@@ -17,6 +17,12 @@ from . import completion
 from .config import Config, ConfigStorage, DeviceLabel, SourceTree
 from .device import Device, Query, all_devices, matching_devices
 from .fs import walk_all, watch_all
+
+# These can be removed in python 3.12
+#
+# Type variables for return value and function parameters.
+R = TypeVar("R")
+P = ParamSpec("P")
 
 traceback.install(show_locals=True)
 logging.basicConfig(
@@ -71,6 +77,13 @@ def get_query(device_labels: dict[str, DeviceLabel], arg: str) -> Query:
     return Query.parse(arg)
 
 
+def label_or_query_argument(f: Callable[P, R]) -> Callable[P, R]:
+    """Decorator that adds a 'label_or_query' argument."""
+    return click.argument(
+        "label_or_query", default="", shell_complete=completion.label_or_query
+    )(f)
+
+
 @click.group(context_settings=dict(help_option_names=["-h", "--help"]))
 @click.option(
     "--config",
@@ -96,7 +109,7 @@ def run(context: click.Context, config_path: Optional[Path], log_level: str) -> 
 
 
 @run.command()
-@click.argument("label_or_query", default="", shell_complete=completion.label_or_query)
+@label_or_query_argument
 @click.pass_obj
 def devices(config_storage: ConfigStorage, label_or_query: str) -> None:
     """List all connected CircuitPython devices.
@@ -310,7 +323,7 @@ def get_tree_and_query(
 
 @run.command("upload")
 @click.argument("tree_name", shell_complete=completion.source_tree, required=True)
-@click.argument("label_or_query", required=True)
+@label_or_query_argument
 @click.pass_obj
 def upload_command(
     config_storage: ConfigStorage, tree_name: str, label_or_query: str
@@ -331,7 +344,7 @@ def upload_command(
 
 @run.command
 @click.argument("tree_name", required=True, shell_complete=completion.source_tree)
-@click.argument("label_or_query", required=True)
+@label_or_query_argument
 @click.pass_obj
 def watch(config_storage: ConfigStorage, tree_name: str, label_or_query: str) -> None:
     """Continuously upload code to device in response to source file changes.
@@ -370,20 +383,16 @@ def watch(config_storage: ConfigStorage, tree_name: str, label_or_query: str) ->
 
 
 @run.command
-@click.argument("label_name", required=True, shell_complete=completion.device_label)
+@label_or_query_argument
 @click.pass_obj
-def connect(config_storage: ConfigStorage, label_name: str) -> None:
+def connect(config_storage: ConfigStorage, label_or_query: str) -> None:
     """Connect to a device's serial terminal.
 
     LABEL_NAME is the label of a device query that was added by 'label add'.
     """
     with config_storage.open() as config:
-        try:
-            label = config.device_labels[label_name]
-        except KeyError:
-            print(f":thumbs_down: Label [red]{label_name}[/] does not exist.")
-            exit(1)
-    device = distinct_device(label.query)
+        query = get_query(config.device_labels, label_or_query)
+    device = distinct_device(query)
     logger.info("Launching minicom for ")
     logger.info(device)
     assert device.serial_path is not None

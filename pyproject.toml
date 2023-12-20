@@ -39,3 +39,10 @@ dependencies = ["pytest"]
 
 [tool.hatch.envs.test.scripts]
 all = ["pytest --no-header --verbose"]
+
+[tool.hatch.envs.completions.scripts]
+generate = [
+         "_CIRCUITPYTHON_TOOL_COMPLETE=bash_source circuitpython-tool > completions/complete.bash",
+         "_CIRCUITPYTHON_TOOL_COMPLETE=zsh_source circuitpython-tool > completions/complete.zsh",
+         "_CIRCUITPYTHON_TOOL_COMPLETE=fish_source circuitpython-tool > completions/complete.fish",
+]

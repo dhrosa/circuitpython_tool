@@ -61,10 +61,19 @@ class QueryParam(click.ParamType):
     default=None,
     help="Path to configuration TOML file for device labels and source trees.",
 )
+@click.option(
+    "--log-level",
+    "-l",
+    type=click.Choice(["DEBUG", "INFO", "WARNING", "ERROR"]),
+    default="DEBUG",
+    help="Only display logs at or above ths level.",
+)
 @click.pass_context
-def run(context: click.Context, config_path: Optional[Path]) -> None:
+def run(context: click.Context, config_path: Optional[Path], log_level: str) -> None:
     """Tool for interfacing with CircuitPython devices."""
     context.obj = ConfigStorage(config_path)
+    root_logger = logging.getLogger()
+    root_logger.setLevel(log_level)
 
 
 @run.command()

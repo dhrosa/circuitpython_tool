@@ -58,10 +58,17 @@ class QueryParam(click.ParamType):
     def shell_complete(
         self, context: Context, param: Parameter, incomplete: str
     ) -> list[CompletionItem]:
-        return [
-            CompletionItem(":".join((d.vendor, d.model, d.serial)))
-            for d in all_devices()
-        ]
+        return completion.query(context, param, incomplete)
+
+
+def get_query(device_labels: dict[str, DeviceLabel], arg: str) -> Query:
+    """Extract query from a string specifying either a device label or a query.
+
+    Raises ValueError if the string matched neither."""
+    for k, v in device_labels.items():
+        if arg == k:
+            return v.query
+    return Query.parse(arg)
 
 
 @click.group(context_settings=dict(help_option_names=["-h", "--help"]))
@@ -89,11 +96,14 @@ def run(context: click.Context, config_path: Optional[Path], log_level: str) -> 
 
 
 @run.command()
-@click.argument("query", type=QueryParam(), default="")
-def devices(query: Query) -> None:
+@click.argument("label_or_query", default="", shell_complete=completion.label_or_query)
+@click.pass_obj
+def devices(config_storage: ConfigStorage, label_or_query: str) -> None:
     """List all connected CircuitPython devices.
 
     If QUERY is specified, only devices matching that query are listed."""
+    with config_storage.open() as config:
+        query = get_query(config.device_labels, label_or_query)
     devices = matching_devices(query)
     if not devices:
         print(":person_shrugging: [blue]No[/] connected CircuitPython devices found.")
@@ -285,29 +295,25 @@ def tree_remove(config_storage: ConfigStorage, key: str, force: bool) -> None:
     print(f":thumbs_up: Source tree [blue]{key}[/] [green]successfully[/] deleted.")
 
 
-def get_tree_and_label(
-    config: Config, tree_name: str, label_name: str
-) -> tuple[SourceTree, DeviceLabel]:
+def get_tree_and_query(
+    config: Config, tree_name: str, label_or_query: str
+) -> tuple[SourceTree, Query]:
     try:
         tree = config.source_trees[tree_name]
     except KeyError:
         print(f":thumbs_down: Source tree [red]{tree_name}[/] does not exist.")
         exit(1)
 
-    try:
-        label = config.device_labels[label_name]
-    except KeyError:
-        print(f":thumbs_down: Label [red]{label_name}[/] does not exist.")
-        exit(1)
-    return (tree, label)
+    query = get_query(config.device_labels, label_or_query)
+    return (tree, query)
 
 
 @run.command("upload")
 @click.argument("tree_name", shell_complete=completion.source_tree, required=True)
-@click.argument("label_name", shell_complete=completion.device_label, required=True)
+@click.argument("label_or_query", required=True)
 @click.pass_obj
 def upload_command(
-    config_storage: ConfigStorage, tree_name: str, label_name: str
+    config_storage: ConfigStorage, tree_name: str, label_or_query: str
 ) -> None:
     """Upload code to device.
 
@@ -315,8 +321,8 @@ def upload_command(
     with the label LABEL_NAME
     """
     with config_storage.open() as config:
-        tree, label = get_tree_and_label(config, tree_name, label_name)
-    device = distinct_device(label.query)
+        tree, query = get_tree_and_query(config, tree_name, label_or_query)
+    device = distinct_device(query)
     mountpoint = device.mount_if_needed()
     print("Uploading to device: ", device)
     upload(tree.source_dirs, mountpoint)
@@ -325,9 +331,9 @@ def upload_command(
 
 @run.command
 @click.argument("tree_name", required=True, shell_complete=completion.source_tree)
-@click.argument("label_name", required=True, shell_complete=completion.device_label)
+@click.argument("label_or_query", required=True)
 @click.pass_obj
-def watch(config_storage: ConfigStorage, tree_name: str, label_name: str) -> None:
+def watch(config_storage: ConfigStorage, tree_name: str, label_or_query: str) -> None:
     """Continuously upload code to device in response to source file changes.
 
     The contents of the source tree TREE_NAME will be copied onto the device
@@ -340,8 +346,8 @@ def watch(config_storage: ConfigStorage, tree_name: str, label_name: str) -> Non
     command in order to monitor them.
     """
     with config_storage.open() as config:
-        tree, label = get_tree_and_label(config, tree_name, label_name)
-    device = distinct_device(label.query)
+        tree, query = get_tree_and_query(config, tree_name, label_or_query)
+    device = distinct_device(query)
     mountpoint = device.mount_if_needed()
     print("Target device: ")
     print(device)

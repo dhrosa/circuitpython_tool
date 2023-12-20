@@ -4,6 +4,7 @@ from click import Context, Parameter
 from click.shell_completion import CompletionItem
 
 from .config import ConfigStorage
+from .device import all_devices
 
 
 def all_context_params(context: Optional[Context]) -> dict[str, Any]:
@@ -26,6 +27,27 @@ def device_label(
             completions.append(
                 CompletionItem(key, help="Query: " + label.query.as_str())
             )
+    return completions
+
+
+def query(context: Context, param: Parameter, incomplete: str) -> list[CompletionItem]:
+    return [
+        CompletionItem(":".join((d.vendor, d.model, d.serial))) for d in all_devices()
+    ]
+
+
+def label_or_query(
+    context: Context, param: Parameter, incomplete: str
+) -> list[CompletionItem]:
+    """Shell completion for device labels or queries."""
+    all_params = all_context_params(context)
+    completions: list[CompletionItem] = []
+    with ConfigStorage(all_params["config_path"]).open() as config:
+        for name, label in config.device_labels.items():
+            completions.append(
+                CompletionItem(name, help=f"Label for query {label.query.as_str()}")
+            )
+    completions.extend(query(context, param, incomplete))
     return completions
 
 

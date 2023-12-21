@@ -1,3 +1,4 @@
+import logging
 from typing import Any, Optional
 
 from click import Context, Parameter
@@ -5,6 +6,11 @@ from click.shell_completion import CompletionItem
 
 from .config import ConfigStorage
 from .device import all_devices
+
+
+def disable_config_logging():
+    config_logger = logging.getLogger("circuitpython_tool.config")
+    config_logger.setLevel(logging.CRITICAL)
 
 
 def all_context_params(context: Optional[Context]) -> dict[str, Any]:
@@ -20,6 +26,7 @@ def device_label(
     context: Context, param: Parameter, incomplete: str
 ) -> list[CompletionItem]:
     """Shell completion for device labels."""
+    disable_config_logging()
     all_params = all_context_params(context)
     completions: list[CompletionItem] = []
     with ConfigStorage(all_params["config_path"]).open() as config:
@@ -31,6 +38,7 @@ def device_label(
 
 
 def query(context: Context, param: Parameter, incomplete: str) -> list[CompletionItem]:
+    disable_config_logging()
     return [
         CompletionItem(":".join((d.vendor, d.model, d.serial))) for d in all_devices()
     ]
@@ -40,6 +48,7 @@ def label_or_query(
     context: Context, param: Parameter, incomplete: str
 ) -> list[CompletionItem]:
     """Shell completion for device labels or queries."""
+    disable_config_logging()
     all_params = all_context_params(context)
     completions: list[CompletionItem] = []
     with ConfigStorage(all_params["config_path"]).open() as config:
@@ -54,6 +63,7 @@ def label_or_query(
 def source_tree(
     context: Context, param: Parameter, incomplete: str
 ) -> list[CompletionItem]:
+    disable_config_logging()
     """Shell completion for source trees."""
     all_params = all_context_params(context)
     completions: list[CompletionItem] = []

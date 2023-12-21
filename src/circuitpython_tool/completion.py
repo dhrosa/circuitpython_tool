@@ -8,7 +8,7 @@ from .config import ConfigStorage
 from .device import all_devices
 
 
-def disable_config_logging():
+def disable_config_logging() -> None:
     config_logger = logging.getLogger("circuitpython_tool.config")
     config_logger.setLevel(logging.CRITICAL)
 

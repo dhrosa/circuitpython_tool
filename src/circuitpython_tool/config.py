@@ -4,7 +4,7 @@ from copy import deepcopy
 from dataclasses import dataclass
 from functools import cached_property
 from pathlib import Path
-from typing import Generator, Iterable, Optional
+from typing import Generator, Iterable
 
 import tomlkit
 from platformdirs import user_config_path
@@ -71,7 +71,7 @@ class Config:
 
 
 class ConfigStorage:
-    def __init__(self, path_override: Optional[Path] = None):
+    def __init__(self, path_override: Path | None = None):
         self._path_override = path_override
 
     @contextmanager

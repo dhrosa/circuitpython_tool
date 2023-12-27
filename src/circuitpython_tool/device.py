@@ -4,7 +4,6 @@ import subprocess
 from dataclasses import dataclass
 from pathlib import Path
 from sys import exit
-from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -69,12 +68,12 @@ class Device:
     serial: str
 
     # Path to partition device.
-    partition_path: Optional[Path] = None
+    partition_path: Path | None = None
 
     # Path to serial device.
-    serial_path: Optional[Path] = None
+    serial_path: Path | None = None
 
-    def get_mountpoint(self) -> Optional[Path]:
+    def get_mountpoint(self) -> Path | None:
         """Find mountpoint. Returns None if not mounted."""
         command = f"lsblk {self.partition_path} --output mountpoint --noheadings"
         out = run(command).strip()
@@ -97,7 +96,7 @@ class Device:
         exit(f"{partition_path} somehow not mounted.")
 
 
-def get_device_info(path: Path) -> Optional[dict[str, str]]:
+def get_device_info(path: Path) -> dict[str, str] | None:
     """
     Extract device attributes from udevadm.
 

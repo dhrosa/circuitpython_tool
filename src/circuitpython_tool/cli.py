@@ -5,7 +5,7 @@ from functools import wraps
 from os import execlp
 from pathlib import Path
 from sys import exit
-from typing import Callable, Concatenate, Optional, ParamSpec, TypeVar
+from typing import Callable, Concatenate, ParamSpec, TypeVar
 
 import rich_click as click
 from rich import get_console, print, traceback
@@ -101,7 +101,7 @@ def pass_read_only_config(f: Callable[Concatenate[Config, P], R]) -> Callable[P,
     help="Only display logs at or above ths level.",
 )
 @click.pass_context
-def run(context: click.Context, config_path: Optional[Path], log_level: str) -> None:
+def run(context: click.Context, config_path: Path | None, log_level: str) -> None:
     """Tool for interfacing with CircuitPython devices."""
     context.obj = ConfigStorage(config_path)
     root_logger = logging.getLogger()

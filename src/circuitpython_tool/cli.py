@@ -8,8 +8,6 @@ from sys import exit
 from typing import Callable, Concatenate, Optional, ParamSpec, TypeVar
 
 import rich_click as click
-from click import Context, Parameter
-from click.shell_completion import CompletionItem
 from rich import get_console, print, traceback
 from rich.logging import RichHandler
 from rich.table import Table
@@ -18,6 +16,7 @@ from . import completion
 from .config import Config, ConfigStorage, DeviceLabel, SourceTree
 from .device import Device, Query, all_devices, matching_devices
 from .fs import walk_all, watch_all
+from .params import QueryParam
 
 # These can be removed in python 3.12
 #
@@ -49,23 +48,6 @@ def _render_device(self: Device) -> Table:
 
 
 setattr(Device, "__rich__", _render_device)
-
-
-class QueryParam(click.ParamType):
-    name = "query"
-
-    def convert(
-        self, value: str, param: Optional[Parameter], context: Optional[Context]
-    ) -> Query:
-        try:
-            return Query.parse(value)
-        except Query.ParseError as error:
-            self.fail(str(error))
-
-    def shell_complete(
-        self, context: Context, param: Parameter, incomplete: str
-    ) -> list[CompletionItem]:
-        return completion.query(context, param, incomplete)
 
 
 def get_query(device_labels: dict[str, DeviceLabel], arg: str) -> Query:

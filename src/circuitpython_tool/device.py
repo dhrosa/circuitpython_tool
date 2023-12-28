@@ -45,6 +45,10 @@ class Query:
             )
         return Query(*parts)
 
+    @staticmethod
+    def any() -> "Query":
+        return Query("", "", "")
+
     def as_str(self) -> str:
         return f"{self.vendor}:{self.model}:{self.serial}"
 
@@ -114,7 +118,6 @@ def get_device_info(path: Path) -> dict[str, str] | None:
 
 def all_devices() -> list[Device]:
     """Finds all USB CircuitPython devices."""
-
     devices: list[Device] = []
 
     def find_or_add_device(info: dict[str, str]) -> Device:
@@ -162,5 +165,7 @@ def all_devices() -> list[Device]:
     return devices
 
 
-def matching_devices(query: Query) -> list[Device]:
+def matching_devices(query: Query | None) -> list[Device]:
+    if query is None:
+        raise ValueError("Query cannot be None")
     return [d for d in all_devices() if query.matches(d)]

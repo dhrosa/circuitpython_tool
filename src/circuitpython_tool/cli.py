@@ -16,7 +16,7 @@ from . import completion
 from .config import Config, ConfigStorage, DeviceLabel, SourceTree
 from .device import Device, Query, all_devices, matching_devices
 from .fs import walk_all, watch_all
-from .params import QueryParam
+from .params import label_or_query_argument
 
 # These can be removed in python 3.12
 #
@@ -58,13 +58,6 @@ def get_query(device_labels: dict[str, DeviceLabel], arg: str) -> Query:
         if arg == k:
             return v.query
     return Query.parse(arg)
-
-
-def label_or_query_argument(f: Callable[P, R]) -> Callable[P, R]:
-    """Decorator that adds a 'label_or_query' argument."""
-    return click.argument(
-        "label_or_query", default="", shell_complete=completion.label_or_query
-    )(f)
 
 
 # Currently, Context.obj is always a ConfigStorage
@@ -109,13 +102,12 @@ def run(context: click.Context, config_path: Path | None, log_level: str) -> Non
 
 
 @run.command()
-@label_or_query_argument
+@label_or_query_argument("query", default=Query.any())
 @pass_read_only_config
-def devices(config: Config, label_or_query: str) -> None:
+def devices(config: Config, query: Query) -> None:
     """List all connected CircuitPython devices.
 
     If QUERY is specified, only devices matching that query are listed."""
-    query = get_query(config.device_labels, label_or_query)
     devices = matching_devices(query)
     if not devices:
         print(":person_shrugging: [blue]No[/] connected CircuitPython devices found.")
@@ -145,7 +137,7 @@ def label_list(config: Config) -> None:
 
 @label.command("add")
 @click.argument("key", required=True, shell_complete=completion.device_label)
-@click.argument("query", type=QueryParam(), required=True)
+@label_or_query_argument("query")
 @click.option(
     "--force",
     "-f",
@@ -305,30 +297,25 @@ def tree_remove(config_storage: ConfigStorage, key: str, force: bool) -> None:
     print(f":thumbs_up: Source tree [blue]{key}[/] [green]successfully[/] deleted.")
 
 
-def get_tree_and_query(
-    config: Config, tree_name: str, label_or_query: str
-) -> tuple[SourceTree, Query]:
+def get_tree(config: Config, tree_name: str) -> SourceTree:
     try:
-        tree = config.source_trees[tree_name]
+        return config.source_trees[tree_name]
     except KeyError:
         print(f":thumbs_down: Source tree [red]{tree_name}[/] does not exist.")
         exit(1)
 
-    query = get_query(config.device_labels, label_or_query)
-    return (tree, query)
-
 
 @run.command("upload")
 @click.argument("tree_name", shell_complete=completion.source_tree, required=True)
-@label_or_query_argument
+@label_or_query_argument("query")
 @pass_read_only_config
-def upload_command(config: Config, tree_name: str, label_or_query: str) -> None:
+def upload_command(config: Config, tree_name: str, query: Query) -> None:
     """Upload code to device.
 
     The contents of the source tree TREE_NAME will be copied onto the device
     with the label LABEL_NAME
     """
-    tree, query = get_tree_and_query(config, tree_name, label_or_query)
+    tree = get_tree(config, tree_name)
     device = distinct_device(query)
     mountpoint = device.mount_if_needed()
     print("Uploading to device: ", device)
@@ -338,9 +325,9 @@ def upload_command(config: Config, tree_name: str, label_or_query: str) -> None:
 
 @run.command
 @click.argument("tree_name", required=True, shell_complete=completion.source_tree)
-@label_or_query_argument
+@label_or_query_argument("query")
 @pass_read_only_config
-def watch(config: Config, tree_name: str, label_or_query: str) -> None:
+def watch(config: Config, tree_name: str, query: Query) -> None:
     """Continuously upload code to device in response to source file changes.
 
     The contents of the source tree TREE_NAME will be copied onto the device
@@ -352,7 +339,7 @@ def watch(config: Config, tree_name: str, label_or_query: str) -> None:
     modifications. Creation of new files and folders requires you to rerun this
     command in order to monitor them.
     """
-    tree, query = get_tree_and_query(config, tree_name, label_or_query)
+    tree = get_tree(config, tree_name)
     device = distinct_device(query)
     mountpoint = device.mount_if_needed()
     print("Target device: ")
@@ -376,14 +363,13 @@ def watch(config: Config, tree_name: str, label_or_query: str) -> None:
 
 
 @run.command
-@label_or_query_argument
+@label_or_query_argument("query")
 @pass_read_only_config
-def connect(config: Config, label_or_query: str) -> None:
+def connect(config: Config, query: Query) -> None:
     """Connect to a device's serial terminal.
 
     LABEL_NAME is the label of a device query that was added by 'label add'.
     """
-    query = get_query(config.device_labels, label_or_query)
     device = distinct_device(query)
     logger.info("Launching minicom for ")
     logger.info(device)

@@ -16,7 +16,7 @@ from . import completion
 from .config import Config, ConfigStorage, DeviceLabel, SourceTree
 from .device import Device, Query, all_devices, matching_devices
 from .fs import walk_all, watch_all
-from .params import label_or_query_argument
+from .params import ConfigStorageParam, label_or_query_argument
 
 # These can be removed in python 3.12
 #
@@ -82,8 +82,12 @@ def pass_read_only_config(f: Callable[Concatenate[Config, P], R]) -> Callable[P,
     "--config",
     "-c",
     "config_path",
-    type=Path,
-    default=None,
+    type=ConfigStorageParam(),
+    default=ConfigStorage(),
+    expose_value=False,
+    # Force evaluation of this paramter early so that later parameters can
+    # assume the config has already been found.
+    is_eager=True,
     help="Path to configuration TOML file for device labels and source trees.",
 )
 @click.option(
@@ -93,10 +97,8 @@ def pass_read_only_config(f: Callable[Concatenate[Config, P], R]) -> Callable[P,
     default="DEBUG",
     help="Only display logs at or above ths level.",
 )
-@click.pass_context
-def run(context: click.Context, config_path: Path | None, log_level: str) -> None:
+def run(log_level: str) -> None:
     """Tool for interfacing with CircuitPython devices."""
-    context.obj = ConfigStorage(config_path)
     root_logger = logging.getLogger()
     root_logger.setLevel(log_level)
 

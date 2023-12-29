@@ -1,11 +1,48 @@
-from typing import Any, Callable
+import pathlib
+from typing import Any, Callable, cast
 
 import click
 from click import Context, Parameter, ParamType
 from click.shell_completion import CompletionItem
 
 from . import completion
+from .config import ConfigStorage
 from .device import Query
+
+
+class ConfigStorageParam(click.Path):
+    """Click paramter for parsing paths to ConfigStorage.
+
+    We return a paramter value, but also set the corrent context's object to the
+    ConfigStorage instance.
+    """
+
+    name = "config_file"
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        kwargs["dir_okay"] = False
+        kwargs["path_type"] = pathlib.Path
+        super().__init__(*args, **kwargs)
+
+    def convert(  # type: ignore[override]
+        self,
+        value: str | pathlib.Path | ConfigStorage,
+        param: Parameter | None,
+        context: Context | None,
+    ) -> ConfigStorage:
+        match value:
+            case ConfigStorage():
+                storage = value
+            case pathlib.Path():
+                storage = ConfigStorage(value)
+            case _:
+                assert param is not None
+                assert context is not None
+                path = cast(pathlib.Path, super().convert(value, param, context))
+                storage = ConfigStorage(path)
+        assert context
+        context.obj = storage
+        return storage
 
 
 class QueryParam(ParamType):

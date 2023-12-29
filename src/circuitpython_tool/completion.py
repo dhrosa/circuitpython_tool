@@ -27,9 +27,10 @@ def device_label(
 ) -> list[CompletionItem]:
     """Shell completion for device labels."""
     disable_logging()
-    all_params = all_context_params(context)
+    config_storage = context.find_object(ConfigStorage)
+    assert config_storage
     completions: list[CompletionItem] = []
-    with ConfigStorage(all_params["config_path"]).open() as config:
+    with config_storage.open() as config:
         for key, label in config.device_labels.items():
             completions.append(
                 CompletionItem(key, help="Query: " + label.query.as_str())
@@ -49,9 +50,10 @@ def label_or_query(
 ) -> list[CompletionItem]:
     """Shell completion for device labels or queries."""
     disable_logging()
-    all_params = all_context_params(context)
     completions: list[CompletionItem] = []
-    with ConfigStorage(all_params["config_path"]).open() as config:
+    config_storage = context.find_object(ConfigStorage)
+    assert config_storage
+    with config_storage.open() as config:
         for name, label in config.device_labels.items():
             completions.append(
                 CompletionItem(name, help=f"Label for query {label.query.as_str()}")
@@ -65,9 +67,10 @@ def source_tree(
 ) -> list[CompletionItem]:
     disable_logging()
     """Shell completion for source trees."""
-    all_params = all_context_params(context)
     completions: list[CompletionItem] = []
-    with ConfigStorage(all_params["config_path"]).open() as config:
+    config_storage = context.find_object(ConfigStorage)
+    assert config_storage
+    with config_storage.open() as config:
         for key, tree in config.source_trees.items():
             completions.append(
                 CompletionItem(

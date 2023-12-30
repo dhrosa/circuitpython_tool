@@ -46,3 +46,9 @@ generate = [
          "_CIRCUITPYTHON_TOOL_COMPLETE=zsh_source circuitpython-tool > completions/complete.zsh",
          "_CIRCUITPYTHON_TOOL_COMPLETE=fish_source circuitpython-tool > completions/complete.fish",
 ]
+
+[tool.hatch.envs.docs]
+dependencies = ["rich-codex"]
+
+[tool.hatch.envs.docs.scripts]
+generate = ["rich-codex --use-pty --skip-git-checks --no-confirm --terminal-width 100"]

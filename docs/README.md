@@ -8,3 +8,6 @@ This tool is designed for a workflow where instead of editing files directly on
 the CircuitPython device, you edit files on your computer and sync the code over
 to the device.
 
+## Usage
+![`circuitpython-tool --help`](./images/usage.svg)
+

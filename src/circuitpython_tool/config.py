@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Generator, Iterable
 
 import tomlkit
-from platformdirs import user_config_path
+from click import get_app_dir
 from tomlkit import TOMLDocument
 
 from .device import Query
@@ -116,7 +116,7 @@ class ConfigStorage:
             for d in (
                 start_dir,
                 *start_dir.parents,
-                user_config_path("circuitpython-tool"),
+                Path(get_app_dir("circuitpython-tool")),
             )
         ]
         for path in candidates:

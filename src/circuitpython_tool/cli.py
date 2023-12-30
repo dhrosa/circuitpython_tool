@@ -77,7 +77,11 @@ def pass_read_only_config(f: Callable[Concatenate[Config, P], R]) -> Callable[P,
     return inner
 
 
-@click.group(context_settings=dict(help_option_names=["-h", "--help"]))
+@click.group(
+    context_settings=dict(
+        help_option_names=["-h", "--help"], auto_envvar_prefix="CIRCUITPYTHON_TOOL"
+    )
+)
 @click.option(
     "--config",
     "-c",
@@ -85,6 +89,7 @@ def pass_read_only_config(f: Callable[Concatenate[Config, P], R]) -> Callable[P,
     type=ConfigStorageParam(),
     default=ConfigStorage(),
     expose_value=False,
+    show_envvar=True,
     # Force evaluation of this paramter early so that later parameters can
     # assume the config has already been found.
     is_eager=True,
@@ -95,6 +100,7 @@ def pass_read_only_config(f: Callable[Concatenate[Config, P], R]) -> Callable[P,
     "-l",
     type=click.Choice(["DEBUG", "INFO", "WARNING", "ERROR"]),
     default="DEBUG",
+    show_envvar=True,
     help="Only display logs at or above ths level.",
 )
 def run(log_level: str) -> None:

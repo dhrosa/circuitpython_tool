@@ -99,7 +99,7 @@ def pass_read_only_config(f: Callable[Concatenate[Config, P], R]) -> Callable[P,
     "--log-level",
     "-l",
     type=click.Choice(["DEBUG", "INFO", "WARNING", "ERROR"]),
-    default="DEBUG",
+    default="INFO",
     show_envvar=True,
     help="Only display logs at or above ths level.",
 )

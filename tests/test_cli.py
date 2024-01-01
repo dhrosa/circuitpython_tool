@@ -32,7 +32,7 @@ def test_device_list_no_devices(
 ) -> None:
     monkeypatch.setattr(cli, "all_devices", lambda: [])
     with exits_with_code(0):
-        cli.run("devices".split())
+        cli.main("devices".split())
     snapshot = capsys.readouterr()
     assert ("No connected CircuitPython devices") in snapshot.out
 
@@ -57,7 +57,7 @@ def test_device_list_multiple_devices(
 
     monkeypatch.setattr(cli, "all_devices", lambda: [device_a, device_b])
     with exits_with_code(0):
-        cli.run("devices".split())
+        cli.main("devices".split())
     snapshot = capsys.readouterr()
     assert contains_ordered_substrings(
         snapshot.out,
@@ -75,7 +75,7 @@ def test_device_list_query(capsys: CaptureFixture, monkeypatch: MonkeyPatch) -> 
 
     monkeypatch.setattr(cli, "all_devices", lambda: [device_a, device_b])
     with exits_with_code(0):
-        cli.run("devices va:ma:".split())
+        cli.main("devices va:ma:".split())
     out = capsys.readouterr().out
     assert contains_ordered_substrings(out, ["va", "ma", "sa", "/mount_a"])
     assert "vb" not in out
@@ -87,12 +87,12 @@ def test_device_list_query(capsys: CaptureFixture, monkeypatch: MonkeyPatch) -> 
 def test_label_add(capsys: CaptureFixture, config_storage: ConfigStorage) -> None:
     # Add label_a
     with exits_with_code(0):
-        cli.run(f"--config {config_storage.path} label add label_a va:ma:sa".split())
+        cli.main(f"--config {config_storage.path} label add label_a va:ma:sa".split())
     assert "Label label_a added" in capsys.readouterr().out
 
     # Should be in list output
     with exits_with_code(0):
-        cli.run(f"--config {config_storage.path} label list".split())
+        cli.main(f"--config {config_storage.path} label list".split())
     assert contains_ordered_substrings(capsys.readouterr().out, ["label_a", "va:ma:sa"])
 
 
@@ -113,12 +113,12 @@ def test_connect(
     monkeypatch.setattr(cli, "all_devices", lambda: [dev])
 
     with exits_with_code(0):
-        cli.run(f"--config {config_storage.path} label add label_a vv:mm:ss".split())
+        cli.main(f"--config {config_storage.path} label add label_a vv:mm:ss".split())
 
     with exits_with_code(0):
-        cli.run(f"--config {config_storage.path} devices".split())
+        cli.main(f"--config {config_storage.path} devices".split())
 
     with exits_with_code(0):
-        cli.run(f"--config {config_storage.path} connect label_a".split())
+        cli.main(f"--config {config_storage.path} connect label_a".split())
 
     assert exec_args == ["minicom", "minicom", "-D", "/serial_path"]

@@ -105,13 +105,13 @@ def pass_read_only_config(f: Callable[Concatenate[Config, P], R]) -> Callable[P,
     show_envvar=True,
     help="Only display logs at or above ths level.",
 )
-def run(log_level: str) -> None:
+def main(log_level: str) -> None:
     """Tool for interfacing with CircuitPython devices."""
     root_logger = logging.getLogger()
     root_logger.setLevel(log_level)
 
 
-@run.command()
+@main.command()
 @label_or_query_argument("query", default=Query.any())
 @pass_read_only_config
 def devices(config: Config, query: Query) -> None:
@@ -125,7 +125,7 @@ def devices(config: Config, query: Query) -> None:
     print("Connected CircuitPython devices:", devices_table(devices))
 
 
-@run.group()
+@main.group()
 def label() -> None:
     """Manage device labels."""
     pass
@@ -210,7 +210,7 @@ def label_remove(config_storage: ConfigStorage, label_name: str, force: bool) ->
     print(f":thumbs_up: Label [blue]{label_name}[/] [green]successfully[/] deleted.")
 
 
-@run.group()
+@main.group()
 def tree() -> None:
     """Manage source trees."""
     pass
@@ -315,7 +315,7 @@ def get_tree(config: Config, tree_name: str) -> SourceTree:
         exit(1)
 
 
-@run.command("upload")
+@main.command("upload")
 @click.argument("tree_name", shell_complete=completion.source_tree, required=True)
 @label_or_query_argument("query")
 @pass_read_only_config
@@ -333,7 +333,7 @@ def upload_command(config: Config, tree_name: str, query: Query) -> None:
     print(":thumbs_up: Upload [green]succeeded.")
 
 
-@run.command
+@main.command
 @click.argument("tree_name", required=True, shell_complete=completion.source_tree)
 @label_or_query_argument("query")
 @pass_read_only_config
@@ -372,7 +372,7 @@ def watch(config: Config, tree_name: str, query: Query) -> None:
         print("Watch [magenta]cancelled[/magenta] by keyboard interrupt.")
 
 
-@run.command
+@main.command
 @label_or_query_argument("query")
 @pass_read_only_config
 def connect(config: Config, query: Query) -> None:

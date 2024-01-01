@@ -7,7 +7,7 @@ from click.shell_completion import CompletionItem
 
 from . import completion
 from .config import ConfigStorage
-from .device import Query
+from .query import Query
 
 
 class ConfigStorageParam(click.Path):

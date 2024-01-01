@@ -30,7 +30,7 @@ def exits_with_code(code: int) -> Generator[None, None, None]:
 def test_device_list_no_devices(
     capsys: CaptureFixture, monkeypatch: MonkeyPatch
 ) -> None:
-    monkeypatch.setattr(device, "all_devices", lambda: [])
+    monkeypatch.setattr(cli, "all_devices", lambda: [])
     with exits_with_code(0):
         cli.run("devices".split())
     snapshot = capsys.readouterr()
@@ -55,7 +55,7 @@ def test_device_list_multiple_devices(
     monkeypatch.setattr(device_b, "get_mountpoint", lambda: Path("/mount_b"))
     device_b.serial_path = Path("/serial_b")
 
-    monkeypatch.setattr(device, "all_devices", lambda: [device_a, device_b])
+    monkeypatch.setattr(cli, "all_devices", lambda: [device_a, device_b])
     with exits_with_code(0):
         cli.run("devices".split())
     snapshot = capsys.readouterr()
@@ -73,7 +73,7 @@ def test_device_list_query(capsys: CaptureFixture, monkeypatch: MonkeyPatch) -> 
     device_b = device.Device("vb", "mb", "sb")
     monkeypatch.setattr(device_b, "get_mountpoint", lambda: Path("/mount_b"))
 
-    monkeypatch.setattr(device, "all_devices", lambda: [device_a, device_b])
+    monkeypatch.setattr(cli, "all_devices", lambda: [device_a, device_b])
     with exits_with_code(0):
         cli.run("devices va:ma:".split())
     out = capsys.readouterr().out
@@ -110,8 +110,7 @@ def test_connect(
     dev = device.Device("vv", "mm", "ss")
     dev.serial_path = Path("/serial_path")
     monkeypatch.setattr(dev, "get_mountpoint", lambda: "/mount")
-    monkeypatch.setattr("circuitpython_tool.cli.all_devices", lambda: [dev])
-    monkeypatch.setattr("circuitpython_tool.device.all_devices", lambda: [dev])
+    monkeypatch.setattr(cli, "all_devices", lambda: [dev])
 
     with exits_with_code(0):
         cli.run(f"--config {config_storage.path} label add label_a vv:mm:ss".split())

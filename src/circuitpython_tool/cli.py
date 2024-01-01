@@ -14,9 +14,10 @@ from rich.table import Table
 
 from . import completion
 from .config import Config, ConfigStorage, DeviceLabel, SourceTree
-from .device import Device, Query, all_devices, matching_devices
+from .device import Device, all_devices
 from .fs import walk_all, watch_all
 from .params import ConfigStorageParam, label_or_query_argument
+from .query import Query
 
 # These can be removed in python 3.12
 #
@@ -116,7 +117,7 @@ def devices(config: Config, query: Query) -> None:
     """List all connected CircuitPython devices.
 
     If QUERY is specified, only devices matching that query are listed."""
-    devices = matching_devices(query)
+    devices = query.matching_devices(all_devices())
     if not devices:
         print(":person_shrugging: [blue]No[/] connected CircuitPython devices found.")
         return

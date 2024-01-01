@@ -24,46 +24,6 @@ def run(command: str) -> str:
 
 
 @dataclass
-class Query:
-    """Filter criteria for selecting a CircuitPython device."""
-
-    vendor: str
-    model: str
-    serial: str
-
-    class ParseError(ValueError):
-        pass
-
-    @staticmethod
-    def parse(value: str) -> "Query":
-        if not value:
-            return Query("", "", "")
-        parts = value.split(":")
-        if (count := len(parts)) != 3:
-            raise Query.ParseError(
-                f"Expected 3 query components. Instead found {count}."
-            )
-        return Query(*parts)
-
-    @staticmethod
-    def any() -> "Query":
-        return Query("", "", "")
-
-    def as_str(self) -> str:
-        return f"{self.vendor}:{self.model}:{self.serial}"
-
-    def matches(self, device: "Device") -> bool:
-        """Whether this device is matched by the query."""
-        return all(
-            (
-                self.vendor in device.vendor,
-                self.model in device.model,
-                self.serial in device.serial,
-            )
-        )
-
-
-@dataclass
 class Device:
     """A CircuitPython composite USB device."""
 
@@ -163,9 +123,3 @@ def all_devices() -> list[Device]:
         device.serial_path = path.resolve()
 
     return devices
-
-
-def matching_devices(query: Query | None) -> list[Device]:
-    if query is None:
-        raise ValueError("Query cannot be None")
-    return [d for d in all_devices() if query.matches(d)]

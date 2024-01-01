@@ -10,7 +10,7 @@ import tomlkit
 from click import get_app_dir
 from tomlkit import TOMLDocument
 
-from .device import Query
+from .query import Query
 
 logger = logging.getLogger(__name__)
 

@@ -14,10 +14,11 @@ from rich.table import Table
 
 from . import completion
 from .config import Config, ConfigStorage, DeviceLabel, SourceTree
-from .device import Device, all_devices
+from .device import Device
 from .fs import walk_all, watch_all
 from .params import ConfigStorageParam, label_or_query_argument
 from .query import Query
+from .real_device import all_devices
 
 # These can be removed in python 3.12
 #

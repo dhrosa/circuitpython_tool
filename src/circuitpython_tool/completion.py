@@ -5,7 +5,7 @@ from click import Context, Parameter
 from click.shell_completion import CompletionItem
 
 from .config import ConfigStorage
-from .device import all_devices
+from .real_device import all_devices
 
 
 def disable_logging() -> None:

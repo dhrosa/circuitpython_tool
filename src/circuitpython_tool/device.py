@@ -1,26 +1,8 @@
 import logging
-import shlex
-import subprocess
 from dataclasses import dataclass
 from pathlib import Path
-from sys import exit
 
 logger = logging.getLogger(__name__)
-
-
-def run(command: str) -> str:
-    """Execute command and return its stdout output."""
-    process = subprocess.run(shlex.split(command), capture_output=True, text=True)
-    try:
-        process.check_returncode()
-    except subprocess.CalledProcessError:
-        logger.error(f"Command:\n{command}\nExited with status {process.returncode}")
-        if process.stdout:
-            logger.error(f"stdout:\n{process.stdout}")
-        if process.stderr:
-            logger.error(f"stderr:\n{process.stderr}")
-        raise
-    return process.stdout
 
 
 @dataclass
@@ -39,87 +21,8 @@ class Device:
 
     def get_mountpoint(self) -> Path | None:
         """Find mountpoint. Returns None if not mounted."""
-        command = f"lsblk {self.partition_path} --output mountpoint --noheadings"
-        out = run(command).strip()
-        if not out:
-            return None
-        return Path(out)
+        raise NotImplementedError()
 
     def mount_if_needed(self) -> Path:
         """Mounts the partition device if needed, and returns the mountpoint."""
-        mountpoint = self.get_mountpoint()
-        if mountpoint:
-            return mountpoint
-        partition_path = self.partition_path
-        command = f"udisksctl mount --block-device {partition_path} --options noatime"
-        mount_stdout = run(command)
-        logger.info(f"udisksctl: {mount_stdout}")
-        mountpoint = self.get_mountpoint()
-        if mountpoint:
-            return mountpoint
-        exit(f"{partition_path} somehow not mounted.")
-
-
-def get_device_info(path: Path) -> dict[str, str] | None:
-    """
-    Extract device attributes from udevadm.
-
-    Returns None if the device is not a USB device.
-    """
-    info = {}
-    command = f"udevadm info --query=property --name {path}"
-    for line in run(command).splitlines():
-        key, value = line.split("=", maxsplit=1)
-        info[key] = value
-    if info.get("ID_BUS", None) != "usb":
-        return None
-    return info
-
-
-def all_devices() -> list[Device]:
-    """Finds all USB CircuitPython devices."""
-    devices: list[Device] = []
-
-    def find_or_add_device(info: dict[str, str]) -> Device:
-        vendor = info["ID_USB_VENDOR"]
-        model = info["ID_USB_MODEL"]
-        serial = info["ID_USB_SERIAL_SHORT"]
-
-        for device in devices:
-            if (
-                device.vendor == vendor
-                and device.model == model
-                and device.serial == serial
-            ):
-                return device
-        device = Device(vendor, model, serial)
-        devices.append(device)
-        return device
-
-    # Find CIRCUITPY partition devices.
-    for path in Path("/dev/disk/by-id/").iterdir():
-        info = get_device_info(path)
-        if (
-            info is None
-            or info["DEVTYPE"] != "partition"
-            or info["ID_FS_LABEL"] != "CIRCUITPY"
-        ):
-            continue
-        device = find_or_add_device(info)
-        device.partition_path = path.resolve()
-
-    # Find serial devices.
-
-    # Parent directory might not exist if there are no attached serial devices.
-    serial_dir = Path("/dev/serial/by-id/")
-    if not serial_dir.exists():
-        logging.info("No serial devices found.")
-        return []
-    for path in serial_dir.iterdir():
-        info = get_device_info(path)
-        if info is None:
-            continue
-        device = find_or_add_device(info)
-        device.serial_path = path.resolve()
-
-    return devices
+        raise NotImplementedError

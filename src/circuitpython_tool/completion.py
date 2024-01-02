@@ -1,5 +1,4 @@
 import logging
-from typing import Any
 
 from click import Context, Parameter
 from click.shell_completion import CompletionItem
@@ -11,15 +10,6 @@ from .shared_state import SharedState
 def disable_logging() -> None:
     # Logging interferes with shell output
     logging.disable(logging.CRITICAL)
-
-
-def all_context_params(context: Context | None) -> dict[str, Any]:
-    """Union of recognized parameters from context and all of its ancestors."""
-    params: dict[str, Any] = {}
-    while context is not None:
-        params |= context.params
-        context = context.parent
-    return params
 
 
 def device_label(

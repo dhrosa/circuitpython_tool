@@ -8,6 +8,7 @@ from click.shell_completion import CompletionItem
 from . import completion
 from .config import ConfigStorage
 from .query import Query
+from .shared_state import SharedState
 
 
 class ConfigStorageParam(click.Path):
@@ -41,7 +42,8 @@ class ConfigStorageParam(click.Path):
                 path = cast(pathlib.Path, super().convert(value, param, context))
                 storage = ConfigStorage(path)
         assert context
-        context.obj = storage
+        state = context.ensure_object(SharedState)
+        state.config_storage = storage
         return storage
 
 

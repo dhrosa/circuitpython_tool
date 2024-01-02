@@ -19,6 +19,7 @@ from .fs import walk_all, watch_all
 from .params import ConfigStorageParam, label_or_query_argument
 from .query import Query
 from .real_device import all_devices
+from .shared_state import SharedState
 
 # These can be removed in python 3.12
 #
@@ -62,9 +63,17 @@ def get_query(device_labels: dict[str, DeviceLabel], arg: str) -> Query:
     return Query.parse(arg)
 
 
-# Currently, Context.obj is always a ConfigStorage
-pass_config_storage = click.pass_obj
-"""Decorator for passing appropriate ConfigStorage to a function."""
+def pass_config_storage(
+    f: Callable[Concatenate[ConfigStorage, P], R]
+) -> Callable[P, R]:
+    """Decorator for passing appropriate ConfigStorage to a function."""
+
+    @click.pass_context
+    @wraps(f)
+    def inner(context: click.Context, /, *args: P.args, **kwargs: P.kwargs) -> R:
+        return f(context.ensure_object(SharedState).config_storage, *args, **kwargs)
+
+    return inner
 
 
 def pass_read_only_config(f: Callable[Concatenate[Config, P], R]) -> Callable[P, R]:

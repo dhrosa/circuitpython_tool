@@ -63,15 +63,19 @@ def get_query(device_labels: dict[str, DeviceLabel], arg: str) -> Query:
     return Query.parse(arg)
 
 
+pass_shared_state = click.make_pass_decorator(SharedState, ensure=True)
+"""Decorator for passing SharedState to a function."""
+
+
 def pass_config_storage(
     f: Callable[Concatenate[ConfigStorage, P], R]
 ) -> Callable[P, R]:
-    """Decorator for passing appropriate ConfigStorage to a function."""
+    """Decorator for passing ConfigStorage to a function."""
 
-    @click.pass_context
+    @pass_shared_state
     @wraps(f)
-    def inner(context: click.Context, /, *args: P.args, **kwargs: P.kwargs) -> R:
-        return f(context.ensure_object(SharedState).config_storage, *args, **kwargs)
+    def inner(state: SharedState, /, *args: P.args, **kwargs: P.kwargs) -> R:
+        return f(state.config_storage, *args, **kwargs)
 
     return inner
 

@@ -16,7 +16,7 @@ from . import completion
 from .config import Config, ConfigStorage, DeviceLabel, SourceTree
 from .device import Device
 from .fs import walk_all, watch_all
-from .params import ConfigStorageParam, label_or_query_argument
+from .params import ConfigStorageParam, FakeDeviceParam, label_or_query_argument
 from .query import Query
 from .real_device import all_devices
 from .shared_state import SharedState
@@ -117,6 +117,17 @@ def pass_read_only_config(f: Callable[Concatenate[Config, P], R]) -> Callable[P,
     default="INFO",
     show_envvar=True,
     help="Only display logs at or above ths level.",
+)
+@click.option(
+    "--fake-device-config",
+    "-f",
+    type=FakeDeviceParam(),
+    expose_value=False,
+    show_envvar=True,
+    # Force evaluation of this paramter early so that later parameters can
+    # assume the config has already been found.
+    is_eager=True,
+    help="Path to TOML configuration file for fake devices. For use in tests and demos.",
 )
 def main(log_level: str) -> None:
     """Tool for interfacing with CircuitPython devices."""

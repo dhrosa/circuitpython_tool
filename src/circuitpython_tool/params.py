@@ -5,7 +5,7 @@ import click
 from click import Context, Parameter, ParamType
 from click.shell_completion import CompletionItem
 
-from . import completion
+from . import completion, fake_device
 from .config import ConfigStorage
 from .query import Query
 from .shared_state import SharedState
@@ -45,6 +45,37 @@ class ConfigStorageParam(click.Path):
         state = context.ensure_object(SharedState)
         state.config_storage = storage
         return storage
+
+
+class FakeDeviceParam(click.Path):
+    """Click parameter to setup fake devices for testing and demos."""
+
+    name = "fake_device_config"
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        kwargs["dir_okay"] = False
+        kwargs["path_type"] = pathlib.Path
+        kwargs["exists"] = True
+        super().__init__(*args, **kwargs)
+
+    def convert(  # type: ignore[override]
+        self,
+        value: str | pathlib.Path | None,
+        param: Parameter | None,
+        context: Context | None,
+    ) -> None:
+        match value:
+            case str():
+                value = pathlib.Path(value)
+            case pathlib.Path():
+                pass
+            case None:
+                return
+
+        assert context
+        # Eagerly evaluate here to force file errors to happen here.
+        devices = fake_device.all_devices(value)
+        context.ensure_object(SharedState).all_devices = lambda: devices
 
 
 class QueryParam(ParamType):

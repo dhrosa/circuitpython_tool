@@ -97,41 +97,55 @@ def test_device_list_query(capsys: CaptureFixture, tmp_path: Path) -> None:
     assert "sb" not in out
 
 
-# def test_label_add(capsys: CaptureFixture, config_storage: ConfigStorage) -> None:
-#     # Add label_a
-#     with exits_with_code(0):
-#         cli.main(f"--config {config_storage.path} label add label_a va:ma:sa".split())
-#     assert "Label label_a added" in capsys.readouterr().out
+def test_label_add(capsys: CaptureFixture, config_storage: ConfigStorage) -> None:
+    # Add label_a
+    with exits_with_code(0):
+        cli.main(f"--config {config_storage.path} label add label_a va:ma:sa".split())
+    assert "Label label_a added" in capsys.readouterr().out
 
-#     # Should be in list output
-#     with exits_with_code(0):
-#         cli.main(f"--config {config_storage.path} label list".split())
-#     assert contains_ordered_substrings(capsys.readouterr().out, ["label_a", "va:ma:sa"])
+    # Should be in list output
+    with exits_with_code(0):
+        cli.main(f"--config {config_storage.path} label list".split())
+    assert contains_ordered_substrings(capsys.readouterr().out, ["label_a", "va:ma:sa"])
 
 
-# def test_connect(
-#     capsys: CaptureFixture, monkeypatch: MonkeyPatch, config_storage: ConfigStorage
-# ) -> None:
-#     exec_args: list[str] = []
+def test_connect(
+    capsys: CaptureFixture,
+    tmp_path: Path,
+    monkeypatch: MonkeyPatch,
+    config_storage: ConfigStorage,
+) -> None:
+    # Intercept calls to execlp.
+    exec_args: list[str] = []
 
-#     def fake_exec(*args: str) -> None:
-#         nonlocal exec_args
-#         exec_args = list(args)
+    def fake_exec(*args: str) -> None:
+        nonlocal exec_args
+        exec_args = list(args)
 
-#     monkeypatch.setattr(cli, "execlp", fake_exec)
+    monkeypatch.setattr(cli, "execlp", fake_exec)
 
-#     dev = device.Device("vv", "mm", "ss")
-#     dev.serial_path = Path("/serial_path")
-#     monkeypatch.setattr(dev, "get_mountpoint", lambda: "/mount")
-#     monkeypatch.setattr(cli, "all_devices", lambda: [dev])
+    fake_config = tmp_path / "fake.toml"
+    fake_config.write_text(
+        """
+    [[devices]]
+    vendor = "vv"
+    model = "mm"
+    serial = "ss"
+    serial_path = "/serial_path"
+    """
+    )
 
-#     with exits_with_code(0):
-#         cli.main(f"--config {config_storage.path} label add label_a vv:mm:ss".split())
+    with exits_with_code(0):
+        cli.main(
+            f"-f {fake_config} --config {config_storage.path} label add label_a vv:mm:ss".split()
+        )
 
-#     with exits_with_code(0):
-#         cli.main(f"--config {config_storage.path} devices".split())
+    with exits_with_code(0):
+        cli.main(f"-f {fake_config} --config {config_storage.path} devices".split())
 
-#     with exits_with_code(0):
-#         cli.main(f"--config {config_storage.path} connect label_a".split())
+    with exits_with_code(0):
+        cli.main(
+            f"-f {fake_config} --config {config_storage.path} connect label_a".split()
+        )
 
-#     assert exec_args == ["minicom", "minicom", "-D", "/serial_path"]
+    assert exec_args == ["minicom", "minicom", "-D", "/serial_path"]

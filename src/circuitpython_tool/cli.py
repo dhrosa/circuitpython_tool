@@ -12,9 +12,10 @@ from rich import get_console, print, traceback
 from rich.logging import RichHandler
 from rich.table import Table
 
-from . import completion
+from . import completion, fake_device
 from .config import Config, ConfigStorage, DeviceLabel, SourceTree
 from .device import Device
+from .fake_device import FakeDevice
 from .fs import walk_all, watch_all
 from .params import ConfigStorageParam, FakeDeviceParam, label_or_query_argument
 from .query import Query
@@ -136,17 +137,45 @@ def main(log_level: str) -> None:
 
 @main.command()
 @label_or_query_argument("query", default=Query.any())
+@click.option(
+    "-s",
+    "--save",
+    "fake_device_save_path",
+    type=click.Path(dir_okay=False, path_type=Path),
+    help="If set, save devices to a TOML file for later recall using the --fake-devices flag.",
+)
 @pass_read_only_config
 @pass_shared_state
-def devices(state: SharedState, config: Config, query: Query) -> None:
+def devices(
+    state: SharedState, config: Config, query: Query, fake_device_save_path: Path | None
+) -> None:
     """List all connected CircuitPython devices.
 
     If QUERY is specified, only devices matching that query are listed."""
     devices = query.matching_devices(state.all_devices())
-    if not devices:
+    if devices:
+        print("Connected CircuitPython devices:", devices_table(devices))
+    else:
         print(":person_shrugging: [blue]No[/] connected CircuitPython devices found.")
+
+    if not fake_device_save_path:
         return
-    print("Connected CircuitPython devices:", devices_table(devices))
+
+    logging.info(f"Saving device list to {str(fake_device_save_path)}")
+
+    fake_devices: list[FakeDevice] = []
+    for d in devices:
+        fake = fake_device.FakeDevice(
+            vendor=d.vendor,
+            model=d.model,
+            serial=d.serial,
+            mountpoint=d.get_mountpoint(),
+            partition_path=d.partition_path,
+            serial_path=d.serial_path,
+        )
+        fake_devices.append(fake)
+
+    fake_device_save_path.write_text(fake_device.to_toml(fake_devices))
 
 
 @main.group()

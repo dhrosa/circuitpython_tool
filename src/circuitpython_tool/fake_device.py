@@ -3,7 +3,7 @@ from pathlib import Path
 from typing import Sequence
 
 import tomlkit
-from tomlkit.items import AoT, Table
+from tomlkit.items import Table
 
 from .device import Device
 
@@ -64,7 +64,7 @@ def all_devices(toml: str | Path) -> list[FakeDevice]:
         toml = toml.read_text()
     document = tomlkit.loads(toml)
     tables = document.get("devices", tomlkit.aot())
-    assert isinstance(tables, AoT)
+    assert isinstance(tables, list)
     return [FakeDevice.from_toml(t) for t in tables]
 
 

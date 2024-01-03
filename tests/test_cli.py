@@ -5,7 +5,7 @@ from typing import Generator, TypeAlias
 
 import pytest
 
-from circuitpython_tool import cli
+from circuitpython_tool import cli, fake_device
 from circuitpython_tool.config import ConfigStorage
 
 CaptureFixture: TypeAlias = pytest.CaptureFixture[str]
@@ -149,3 +149,23 @@ def test_connect(
         )
 
     assert exec_args == ["minicom", "minicom", "-D", "/serial_path"]
+
+
+def test_device_save_fake_devices(tmp_path: Path) -> None:
+    fake_config = tmp_path / "fake.toml"
+    toml = """
+devices = [
+    { vendor = "va", model = "ma", serial = "sa" },
+    { vendor = "vb", model = "mb", serial = "sb" }
+]
+"""
+    fake_config.write_text(toml)
+
+    new_fake_config = tmp_path / "new_fake.toml"
+    with exits_with_code(0):
+        cli.main(f"-f {fake_config} devices --save {new_fake_config}".split())
+
+    assert fake_device.all_devices(new_fake_config) == [
+        fake_device.FakeDevice("va", "ma", "sa"),
+        fake_device.FakeDevice("vb", "mb", "sb"),
+    ]

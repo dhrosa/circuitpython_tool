@@ -18,7 +18,6 @@ from .device import Device
 from .fs import walk_all, watch_all
 from .params import ConfigStorageParam, FakeDeviceParam, label_or_query_argument
 from .query import Query
-from .real_device import all_devices
 from .shared_state import SharedState
 
 # These can be removed in python 3.12
@@ -138,11 +137,12 @@ def main(log_level: str) -> None:
 @main.command()
 @label_or_query_argument("query", default=Query.any())
 @pass_read_only_config
-def devices(config: Config, query: Query) -> None:
+@pass_shared_state
+def devices(state: SharedState, config: Config, query: Query) -> None:
     """List all connected CircuitPython devices.
 
     If QUERY is specified, only devices matching that query are listed."""
-    devices = query.matching_devices(all_devices())
+    devices = query.matching_devices(state.all_devices())
     if not devices:
         print(":person_shrugging: [blue]No[/] connected CircuitPython devices found.")
         return
@@ -438,13 +438,15 @@ def devices_table(devices: Iterable[Device]) -> Table:
 
 
 def distinct_device(query: Query) -> Device:
-    matching_devices = [d for d in all_devices() if query.matches(d)]
+    state = click.get_current_context().ensure_object(SharedState)
+    devices = state.all_devices()
+    matching_devices = [d for d in devices if query.matches(d)]
     match matching_devices:
         case [device]:
             return device
         case []:
             print(":thumbs_down: [red]0[/red] matching devices found.")
-            print(all_devices())
+            print(devices)
             exit(1)
         case _:
             count = len(matching_devices)

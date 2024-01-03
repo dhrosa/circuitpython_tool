@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from circuitpython_tool.fake_device import FakeDevice, all_devices
+from circuitpython_tool.fake_device import FakeDevice, all_devices, to_toml
 
 
 def test_empty_str() -> None:
@@ -47,7 +47,7 @@ serial_path = "/serial"
 partition_path = "/partition"
 mountpoint = "/mount"
    """
-    all_devices(toml) == [
+    assert all_devices(toml) == [
         FakeDevice(
             "v",
             "m",
@@ -69,3 +69,24 @@ serial = "s"
     file_path = tmp_path / "devices.toml"
     file_path.write_text(toml)
     assert all_devices(file_path) == [FakeDevice("v", "m", "s")]
+
+
+def test_to_toml() -> None:
+    original_devices = [
+        # All fields set
+        FakeDevice(
+            "va",
+            "ma",
+            "sa",
+            serial_path=Path("/serial"),
+            partition_path=Path("/partition"),
+            mountpoint=Path("/mount"),
+        ),
+        # Optional fields unset
+        FakeDevice("vb", "mb", "sb"),
+    ]
+
+    toml = to_toml(original_devices)
+    devices = all_devices(toml)
+
+    assert devices == original_devices

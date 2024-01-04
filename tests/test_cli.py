@@ -1,12 +1,14 @@
 import re
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Generator, TypeAlias
+from typing import Any, Generator, TypeAlias
 
 import pytest
 
-from circuitpython_tool import cli, fake_device
+import circuitpython_tool.cli as cli_module
+from circuitpython_tool import fake_device, main
 from circuitpython_tool.config import ConfigStorage
+from circuitpython_tool.fake_device import FakeDevice
 
 CaptureFixture: TypeAlias = pytest.CaptureFixture[str]
 MonkeyPatch: TypeAlias = pytest.MonkeyPatch
@@ -15,6 +17,33 @@ MonkeyPatch: TypeAlias = pytest.MonkeyPatch
 @pytest.fixture
 def config_storage(tmp_path: Path) -> ConfigStorage:
     return ConfigStorage(tmp_path / "config.toml")
+
+
+class CliRunner:
+    """Fixture class for executing our CLI while automatically handling fake device creation."""
+
+    def __init__(self, base_path: Path) -> None:
+        self.base_path = base_path
+        self.fake_devices: list[FakeDevice] = []
+
+    def run(self, args_str: str) -> None:
+        """Execute main, automatically filling in fake device information."""
+        fake_config_path = self.base_path / "fake_devices.toml"
+        fake_config_path.write_text(fake_device.to_toml(self.fake_devices))
+
+        args = ["--fake-device-config", fake_config_path, *args_str.split()]
+        main(args)
+
+    def add_device(self, *args: Any, **kwargs: Any) -> None:
+        """Create and add a new FakeDevice.
+
+        All arguments are forwarded to FakeDevice()."""
+        self.fake_devices.append(FakeDevice(*args, **kwargs))
+
+
+@pytest.fixture
+def cli(tmp_path: Path) -> Generator[CliRunner, None, None]:
+    yield CliRunner(tmp_path)
 
 
 @contextmanager
@@ -27,11 +56,9 @@ def exits_with_code(code: int) -> Generator[None, None, None]:
         assert False
 
 
-def test_device_list_no_devices(capsys: CaptureFixture, tmp_path: Path) -> None:
-    fake_config = tmp_path / "fake.toml"
-    fake_config.touch()
+def test_device_list_no_devices(capsys: CaptureFixture, cli: CliRunner) -> None:
     with exits_with_code(0):
-        cli.main(f"-f {str(fake_config)} devices".split())
+        cli.run("devices")
     snapshot = capsys.readouterr()
     assert ("No connected CircuitPython devices") in snapshot.out
 
@@ -43,53 +70,30 @@ def contains_ordered_substrings(string: str, substrs: list[str]) -> bool:
     return re.search(pattern, string, flags=re.DOTALL) is not None
 
 
-def test_device_list_multiple_devices(capsys: CaptureFixture, tmp_path: Path) -> None:
-    fake_config = tmp_path / "fake.toml"
-    fake_config.write_text(
-        """
-    [[devices]]
-    vendor = "va"
-    model = "ma"
-    serial = "sa"
-    partition_path = "/partition_a"
-    mountpoint = "/mount_a"
-
-    [[devices]]
-    vendor = "vb"
-    model = "mb"
-    serial = "sb"
-    mountpoint = "/mount_b"
-    serial_path = "/serial_b"
-    """
+def test_device_list_multiple_devices(capsys: CaptureFixture, cli: CliRunner) -> None:
+    cli.add_device(
+        "va",
+        "ma",
+        "sa",
+        partition_path="/partition_a",
+        mountpoint="/mount_a",
     )
-
+    cli.add_device("vb", "mb", "sb", serial_path="/serial_b")
     with exits_with_code(0):
-        cli.main(f"-f {str(fake_config)} devices".split())
+        cli.run("devices")
     snapshot = capsys.readouterr()
     assert contains_ordered_substrings(
         snapshot.out,
         ["va", "ma", "sa", "/partition_a", "None", "/mount_a"]
-        + ["vb", "mb", "sb", "None", "/serial_b", "/mount_b"],
+        + ["vb", "mb", "sb", "None", "/serial_b", "None"],
     )
 
 
-def test_device_list_query(capsys: CaptureFixture, tmp_path: Path) -> None:
-    fake_config = tmp_path / "fake.toml"
-    fake_config.write_text(
-        """
-    [[devices]]
-    vendor = "va"
-    model = "ma"
-    serial = "sa"
-
-    [[devices]]
-    vendor = "vb"
-    model = "mb"
-    serial = "sb"
-    """
-    )
+def test_device_list_query(capsys: CaptureFixture, cli: CliRunner) -> None:
+    cli.add_device("va", "ma", "sa")
+    cli.add_device("vb", "mb", "sb")
     with exits_with_code(0):
-        cli.main(f"-f {str(fake_config)} devices va:ma:".split())
+        cli.run("devices va:ma:")
     out = capsys.readouterr().out
     assert contains_ordered_substrings(out, ["va", "ma", "sa"])
     assert "vb" not in out
@@ -97,23 +101,25 @@ def test_device_list_query(capsys: CaptureFixture, tmp_path: Path) -> None:
     assert "sb" not in out
 
 
-def test_label_add(capsys: CaptureFixture, config_storage: ConfigStorage) -> None:
+def test_label_add(
+    capsys: CaptureFixture, config_storage: ConfigStorage, cli: CliRunner
+) -> None:
     # Add label_a
     with exits_with_code(0):
-        cli.main(f"--config {config_storage.path} label add label_a va:ma:sa".split())
+        cli.run(f"--config {config_storage.path} label add label_a va:ma:sa")
     assert "Label label_a added" in capsys.readouterr().out
 
     # Should be in list output
     with exits_with_code(0):
-        cli.main(f"--config {config_storage.path} label list".split())
+        cli.run(f"--config {config_storage.path} label list")
     assert contains_ordered_substrings(capsys.readouterr().out, ["label_a", "va:ma:sa"])
 
 
 def test_connect(
     capsys: CaptureFixture,
-    tmp_path: Path,
     monkeypatch: MonkeyPatch,
     config_storage: ConfigStorage,
+    cli: CliRunner,
 ) -> None:
     # Intercept calls to execlp.
     exec_args: list[str] = []
@@ -122,48 +128,28 @@ def test_connect(
         nonlocal exec_args
         exec_args = list(args)
 
-    monkeypatch.setattr(cli, "execlp", fake_exec)
+    monkeypatch.setattr(cli_module, "execlp", fake_exec)
 
-    fake_config = tmp_path / "fake.toml"
-    fake_config.write_text(
-        """
-    [[devices]]
-    vendor = "vv"
-    model = "mm"
-    serial = "ss"
-    serial_path = "/serial_path"
-    """
-    )
+    cli.add_device("vv", "mm", "ss", serial_path="/serial_path")
+    with exits_with_code(0):
+        cli.run(f"--config {config_storage.path} label add label_a vv:mm:ss")
 
     with exits_with_code(0):
-        cli.main(
-            f"-f {fake_config} --config {config_storage.path} label add label_a vv:mm:ss".split()
-        )
+        cli.run(f"--config {config_storage.path} devices")
 
     with exits_with_code(0):
-        cli.main(f"-f {fake_config} --config {config_storage.path} devices".split())
-
-    with exits_with_code(0):
-        cli.main(
-            f"-f {fake_config} --config {config_storage.path} connect label_a".split()
-        )
+        cli.run(f"--config {config_storage.path} connect label_a")
 
     assert exec_args == ["minicom", "minicom", "-D", "/serial_path"]
 
 
-def test_device_save_fake_devices(tmp_path: Path) -> None:
-    fake_config = tmp_path / "fake.toml"
-    toml = """
-devices = [
-    { vendor = "va", model = "ma", serial = "sa" },
-    { vendor = "vb", model = "mb", serial = "sb" }
-]
-"""
-    fake_config.write_text(toml)
+def test_device_save_fake_devices(tmp_path: Path, cli: CliRunner) -> None:
+    cli.add_device("va", "ma", "sa")
+    cli.add_device("vb", "mb", "sb")
 
     new_fake_config = tmp_path / "new_fake.toml"
     with exits_with_code(0):
-        cli.main(f"-f {fake_config} devices --save {new_fake_config}".split())
+        cli.run(f"devices --save {new_fake_config}")
 
     assert fake_device.all_devices(new_fake_config) == [
         fake_device.FakeDevice("va", "ma", "sa"),

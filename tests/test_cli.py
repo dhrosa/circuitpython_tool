@@ -7,16 +7,10 @@ import pytest
 
 import circuitpython_tool.cli as cli_module
 from circuitpython_tool import fake_device, main
-from circuitpython_tool.config import ConfigStorage
 from circuitpython_tool.fake_device import FakeDevice
 
 CaptureFixture: TypeAlias = pytest.CaptureFixture[str]
 MonkeyPatch: TypeAlias = pytest.MonkeyPatch
-
-
-@pytest.fixture
-def config_storage(tmp_path: Path) -> ConfigStorage:
-    return ConfigStorage(tmp_path / "config.toml")
 
 
 class CliRunner:
@@ -31,7 +25,13 @@ class CliRunner:
         fake_config_path = self.base_path / "fake_devices.toml"
         fake_config_path.write_text(fake_device.to_toml(self.fake_devices))
 
-        args = ["--fake-device-config", fake_config_path, *args_str.split()]
+        args = [
+            "--fake-device-config",
+            fake_config_path,
+            "--config",
+            self.base_path / "config.toml",
+            *args_str.split(),
+        ]
         main(args)
 
     def add_device(self, *args: Any, **kwargs: Any) -> None:
@@ -101,24 +101,21 @@ def test_device_list_query(capsys: CaptureFixture, cli: CliRunner) -> None:
     assert "sb" not in out
 
 
-def test_label_add(
-    capsys: CaptureFixture, config_storage: ConfigStorage, cli: CliRunner
-) -> None:
+def test_label_add(capsys: CaptureFixture, cli: CliRunner) -> None:
     # Add label_a
     with exits_with_code(0):
-        cli.run(f"--config {config_storage.path} label add label_a va:ma:sa")
+        cli.run("label add label_a va:ma:sa")
     assert "Label label_a added" in capsys.readouterr().out
 
     # Should be in list output
     with exits_with_code(0):
-        cli.run(f"--config {config_storage.path} label list")
+        cli.run("label list")
     assert contains_ordered_substrings(capsys.readouterr().out, ["label_a", "va:ma:sa"])
 
 
 def test_connect(
     capsys: CaptureFixture,
     monkeypatch: MonkeyPatch,
-    config_storage: ConfigStorage,
     cli: CliRunner,
 ) -> None:
     # Intercept calls to execlp.
@@ -132,13 +129,13 @@ def test_connect(
 
     cli.add_device("vv", "mm", "ss", serial_path="/serial_path")
     with exits_with_code(0):
-        cli.run(f"--config {config_storage.path} label add label_a vv:mm:ss")
+        cli.run("label add label_a vv:mm:ss")
 
     with exits_with_code(0):
-        cli.run(f"--config {config_storage.path} devices")
+        cli.run("devices")
 
     with exits_with_code(0):
-        cli.run(f"--config {config_storage.path} connect label_a")
+        cli.run("connect label_a")
 
     assert exec_args == ["minicom", "minicom", "-D", "/serial_path"]
 

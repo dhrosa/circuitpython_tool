@@ -321,7 +321,7 @@ def tree_add(
                 )
                 exit(1)
 
-        tree = SourceTree(source_dirs)
+        tree = SourceTree([d.resolve() for d in source_dirs])
         trees[key] = tree
     print(
         f":thumbs_up: Source tree [blue]{key}[/] added [green]successfully[/]:\n{tree}"

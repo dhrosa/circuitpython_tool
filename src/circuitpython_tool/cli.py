@@ -7,7 +7,9 @@ from pathlib import Path
 from sys import exit
 from typing import Callable, Concatenate, ParamSpec, TypeVar
 
+import requests
 import rich_click as click
+from bs4 import BeautifulSoup
 from rich import get_console, print, traceback
 from rich.logging import RichHandler
 from rich.table import Table
@@ -438,6 +440,26 @@ def connect(config: Config, query: Query) -> None:
     logger.info(device)
     assert device.serial_path is not None
     execlp("minicom", "minicom", "-D", str(device.serial_path))
+
+
+@main.group
+def uf2() -> None:
+    """Search and download CircuitPython UF2 binaries."""
+    pass
+
+
+@uf2.command
+def boards() -> None:
+    """List available CircuitPython boards."""
+    downloads = BeautifulSoup(
+        requests.get("https://circuitpython.org/downloads").text, features="html.parser"
+    ).find_all(class_="download")
+
+    table = Table("Id", "Name", "URL")
+    for d in downloads[0:5]:
+        url = "https://circuitpython.org" + d.find("a").get("href")
+        table.add_row(d.get("data-id"), d.get("data-name"), url)
+    print(table)
 
 
 def devices_table(devices: Iterable[Device]) -> Table:

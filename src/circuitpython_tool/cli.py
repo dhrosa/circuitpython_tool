@@ -7,14 +7,13 @@ from pathlib import Path
 from sys import exit
 from typing import Callable, Concatenate, ParamSpec, TypeVar
 
-import requests
 import rich_click as click
-from bs4 import BeautifulSoup
 from rich import get_console, print, traceback
 from rich.logging import RichHandler
 from rich.table import Table
 
 from . import completion, fake_device
+from .boards import Board
 from .config import Config, ConfigStorage, DeviceLabel, SourceTree
 from .device import Device
 from .fake_device import FakeDevice
@@ -451,15 +450,18 @@ def uf2() -> None:
 @uf2.command
 def boards() -> None:
     """List available CircuitPython boards."""
-    downloads = BeautifulSoup(
-        requests.get("https://circuitpython.org/downloads").text, features="html.parser"
-    ).find_all(class_="download")
-
     table = Table("Id", "Name", "URL")
-    for d in downloads[0:5]:
-        url = "https://circuitpython.org" + d.find("a").get("href")
-        table.add_row(d.get("data-id"), d.get("data-name"), url)
+    for board in Board.all().values():
+        table.add_row(board.id, board.name, board.url)
     print(table)
+
+
+@uf2.command
+@click.argument("board_name", required=True)
+def versions(board_name: str) -> None:
+    """List available CircuitPython versions for the given board."""
+    board = Board.all()[board_name]
+    print(board.versions())
 
 
 def devices_table(devices: Iterable[Device]) -> Table:

@@ -13,7 +13,7 @@ from rich.logging import RichHandler
 from rich.table import Table
 
 from . import completion, fake_device
-from .boards import Board
+from .uf2 import Board
 from .config import Config, ConfigStorage, DeviceLabel, SourceTree
 from .device import Device
 from .fake_device import FakeDevice

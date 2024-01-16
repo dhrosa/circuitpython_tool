@@ -12,6 +12,7 @@ BASE_URL = "https://circuitpython.org"
 
 
 def cached_boards_json() -> str:
+    # TODO(dhrosa): Re-download when the file is stale.
     path = app_dir / "cached_boards.json"
     if path.exists():
         return path.read_text()
@@ -55,3 +56,11 @@ class Board:
                 continue
             boards[board.id] = board
         return boards
+
+    def download_url(self, version: Version, language: str) -> str:
+        # Derived from
+        # https://github.com/adafruit/circuitpython-org/blob/c98c065889eef027447ff2b2e46cd4f15806e522/tools/generate-board-info.py#L42C1-L43C1
+        prefix = "https://adafruit-circuit-python.s3.amazonaws.com/bin"
+        dir = f"{self.id}/{language}"
+        file = f"adafruit-circuitpython-{self.id}-{language}-{version.label}.uf2"
+        return f"{prefix}/{dir}/{file}"

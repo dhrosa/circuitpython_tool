@@ -471,9 +471,7 @@ def versions() -> None:
 def url(board_id: str, language: str) -> None:
     """Print download URL for CircuitPython image."""
     board = Board.all()[board_id]
-    version = board.unstable_version or board.stable_version
-    assert version
-    print(board.download_url(version, language))
+    print(board.download_url(board.most_recent_version, language))
 
 
 def devices_table(devices: Iterable[Device]) -> Table:

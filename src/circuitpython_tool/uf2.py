@@ -33,8 +33,27 @@ class Version:
 @dataclass
 class Board:
     id: str
+    # Note: at least one of these will always be set.
     stable_version: Version | None = None
     unstable_version: Version | None = None
+
+    @property
+    def versions(self) -> list[Version]:
+        """List of available versions, sorted from most to least stable."""
+        versions: list[Version] = []
+        if self.stable_version:
+            versions.append(self.stable_version)
+        if self.unstable_version:
+            versions.append(self.unstable_version)
+        return versions
+
+    @property
+    def most_stable_version(self) -> Version:
+        return self.versions[0]
+
+    @property
+    def most_recent_version(self) -> Version:
+        return self.versions[-1]
 
     @staticmethod
     def all() -> dict[str, "Board"]:
@@ -48,6 +67,8 @@ class Board:
                 version = Version(
                     label=version_json["version"], languages=version_json["languages"]
                 )
+                # Note: this depends on there being at most one stable and one
+                # unstable version.
                 if version_json["stable"]:
                     board.stable_version = version
                 else:

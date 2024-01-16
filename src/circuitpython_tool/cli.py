@@ -13,7 +13,6 @@ from rich.logging import RichHandler
 from rich.table import Table
 
 from . import completion, fake_device
-from .uf2 import Board
 from .config import Config, ConfigStorage, DeviceLabel, SourceTree
 from .device import Device
 from .fake_device import FakeDevice
@@ -21,6 +20,7 @@ from .fs import walk_all, watch_all
 from .params import ConfigStorageParam, FakeDeviceParam, label_or_query_argument
 from .query import Query
 from .shared_state import SharedState
+from .uf2 import Board
 
 # These can be removed in python 3.12
 #
@@ -448,20 +448,17 @@ def uf2() -> None:
 
 
 @uf2.command
-def boards() -> None:
+def versions() -> None:
     """List available CircuitPython boards."""
-    table = Table("Id", "Name", "URL")
+    table = Table("Id", "Stable Version", "Unstable Version")
     for board in Board.all().values():
-        table.add_row(board.id, board.name, board.url)
-    print(table)
-
-
-@uf2.command
-@click.argument("board_name", required=True)
-def versions(board_name: str) -> None:
-    """List available CircuitPython versions for the given board."""
-    board = Board.all()[board_name]
-    print(board.versions())
+        table.add_row(
+            board.id,
+            board.stable_version.label if board.stable_version else "",
+            board.unstable_version.label if board.unstable_version else "",
+        )
+    with get_console().pager():
+        print(table)
 
 
 def devices_table(devices: Iterable[Device]) -> Table:

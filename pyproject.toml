@@ -12,13 +12,13 @@ keywords = []
 authors = [
   { name = "Diony Rosa", email = "dhrosa+dev@gmail.com" },
 ]
-dependencies = ["tomlkit", "inotify_simple", "rich", "click", "rich-click", "requests", "beautifulsoup4"]
+dependencies = ["tomlkit", "inotify_simple", "rich", "click", "rich-click", "requests"]
 
 [project.scripts]
 circuitpython-tool = "circuitpython_tool:main"
 
 [tool.hatch.envs.style]
-dependencies = ["setuptools", "isort", "black", "pylama", "mypy", "pytest", "types-requests", "types-beautifulsoup4"]
+dependencies = ["setuptools", "isort", "black", "pylama", "mypy", "pytest", "types-requests"]
 
 [tool.hatch.envs.style.scripts]
 format = [

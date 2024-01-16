@@ -9,8 +9,8 @@ from typing import Generator, Iterable
 import tomlkit
 from tomlkit import TOMLDocument
 
-from .query import Query
 from .dirs import app_dir
+from .query import Query
 
 logger = logging.getLogger(__name__)
 

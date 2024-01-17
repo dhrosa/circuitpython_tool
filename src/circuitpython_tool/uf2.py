@@ -2,8 +2,7 @@ import logging
 from collections.abc import Iterator
 from dataclasses import dataclass
 from json import loads
-
-import requests
+from urllib.request import urlopen
 
 from .dirs import app_dir
 from .iter import as_list
@@ -20,7 +19,8 @@ def cached_boards_json() -> str:
         return path.read_text()
     url = "https://raw.githubusercontent.com/adafruit/circuitpython-org/main/_data/files.json"
     logger.info(f"Cached boards path {path} does not exist yet; populating from {url}")
-    json = requests.get(url).text
+    with urlopen(url) as request:
+        json = request.read().decode("utf-8")
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json)
     return json

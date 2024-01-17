@@ -6,12 +6,12 @@ from os import execlp
 from pathlib import Path
 from sys import exit
 from typing import Callable, Concatenate, ParamSpec, TypeVar
+from urllib.request import urlopen
 
 import rich_click as click
-from rich import get_console, print, traceback
+from rich import get_console, print, progress, traceback
 from rich.logging import RichHandler
 from rich.table import Table
-import requests
 
 from . import completion, fake_device
 from .config import Config, ConfigStorage, DeviceLabel, SourceTree
@@ -486,9 +486,12 @@ def url(board: Board, locale: str) -> None:
     """Print download URL for CircuitPython image."""
     print(board.download_url(board.most_recent_version, locale))
 
+
 @uf2.command
 @click.argument("board", type=BoardParam(), required=True)
-@click.argument("destination", type=click.Path(path_type=Path), required=False, default=Path.cwd())
+@click.argument(
+    "destination", type=click.Path(path_type=Path), required=False, default=Path.cwd()
+)
 @click.option(
     "--locale",
     default="en_US",
@@ -503,10 +506,17 @@ def download(board: Board, locale: str, destination: Path) -> None:
     """
     url = board.download_url(board.most_recent_version, locale)
     if destination.is_dir():
-        destination /= url.split('/')[-1]
+        destination /= url.split("/")[-1]
     print(f"Source: {url}")
     print(f"Destination: {destination}")
-    destination.write_bytes(requests.get(url).content)
+    response = urlopen(url)
+    with progress.wrap_file(
+        response,
+        total=int(response.headers["Content-Length"]),
+        description="Downloading",
+    ) as f:
+        f.read()
+    # destination.write_bytes(requests.get(url).content)
 
 
 def devices_table(devices: Iterable[Device]) -> Table:

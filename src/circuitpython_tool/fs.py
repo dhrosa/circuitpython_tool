@@ -1,4 +1,5 @@
 import logging
+import re
 from collections.abc import Iterable, Iterator
 from pathlib import Path
 
@@ -17,6 +18,21 @@ def walk_all(roots: Iterable[Path]) -> Iterator[tuple[Path, Path]]:
                 yield from walk_all([path])
             else:
                 yield root, path
+
+
+def guess_source_dir(start_dir: Path) -> Path | None:
+    """Finds the directory containing the user's CircuitPython code, starting from `start_dir`.
+
+    The search succeeds when we find a directory containing code.py, code.txt, main.py, or main.txt
+
+    If no such file was found, None is returned.
+    """
+    for _, path in walk_all((start_dir,)):
+        if not path.is_file():
+            continue
+        if re.fullmatch(r"(code|main)\.(py|txt)", path.name):
+            return path.parent
+    return None
 
 
 def watch_all(roots: Iterable[Path]) -> Iterator[set[Path]]:

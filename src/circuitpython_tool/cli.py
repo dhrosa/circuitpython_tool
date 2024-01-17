@@ -412,12 +412,11 @@ def watch(config: Config, tree_name: str, query: Query) -> None:
     """
     tree = get_tree(config, tree_name)
     device = distinct_device(query)
-    mountpoint = device.mount_if_needed()
     print("Target device: ")
     print(device)
     # Always do at least one upload at the start.
     source_dirs = tree.source_dirs
-    upload(source_dirs, mountpoint)
+    upload(source_dirs, device.mount_if_needed())
 
     events = iter(watch_all(source_dirs))
     try:
@@ -428,7 +427,7 @@ def watch(config: Config, tree_name: str, query: Query) -> None:
                 modified_paths = next(events)
                 logger.info(f"Modified paths: {[str(p) for p in modified_paths]}")
             with get_console().status("Uploading to device."):
-                upload(source_dirs, mountpoint)
+                upload(source_dirs, device.mount_if_needed())
     except KeyboardInterrupt:
         print("Watch [magenta]cancelled[/magenta] by keyboard interrupt.")
 

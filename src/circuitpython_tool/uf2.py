@@ -27,7 +27,7 @@ def cached_boards_json() -> str:
 @dataclass
 class Version:
     label: str
-    languages: list[str]
+    locales: list[str]
 
 
 @dataclass
@@ -66,7 +66,7 @@ class Board:
                 if "uf2" not in version_json["extensions"]:
                     continue
                 version = Version(
-                    label=version_json["version"], languages=version_json["languages"]
+                    label=version_json["version"], locales=version_json["languages"]
                 )
                 # Note: this depends on there being at most one stable and one
                 # unstable version.
@@ -80,19 +80,19 @@ class Board:
         return boards
 
     @staticmethod
-    def all_languages() -> list[str]:
-        """Set of all potentially valid language codes, sorted alphabetically."""
-        languages: set[str] = set()
+    def all_locales() -> list[str]:
+        """Set of all potentially valid locale codes, sorted alphabetically."""
+        locales: set[str] = set()
         for b in Board.all().values():
             for v in b.versions:
-                languages |= set(v.languages)
-        return sorted(languages)
+                locales |= set(v.locales)
+        return sorted(locales)
 
-    def download_url(self, version: Version, language: str) -> str:
+    def download_url(self, version: Version, locale: str) -> str:
         """URL for downloading CircuitPython UF2 image."""
         # Derived from
         # https://github.com/adafruit/circuitpython-org/blob/c98c065889eef027447ff2b2e46cd4f15806e522/tools/generate-board-info.py#L42C1-L43C1
         prefix = "https://adafruit-circuit-python.s3.amazonaws.com/bin"
-        dir = f"{self.id}/{language}"
-        file = f"adafruit-circuitpython-{self.id}-{language}-{version.label}.uf2"
+        dir = f"{self.id}/{locale}"
+        file = f"adafruit-circuitpython-{self.id}-{locale}-{version.label}.uf2"
         return f"{prefix}/{dir}/{file}"

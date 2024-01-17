@@ -21,7 +21,7 @@ from .params import (
     BoardParam,
     ConfigStorageParam,
     FakeDeviceParam,
-    LanguageParam,
+    LocaleParam,
     label_or_query_argument,
 )
 from .query import Query
@@ -470,14 +470,14 @@ def versions() -> None:
 @uf2.command
 @click.argument("board", type=BoardParam(), required=True)
 @click.option(
-    "--language",
+    "--locale",
     default="en_US",
-    type=LanguageParam(),
-    help="Localization language for CircuitPython install.",
+    type=LocaleParam(),
+    help="Locale for CircuitPython install.",
 )
-def url(board: Board, language: str) -> None:
+def url(board: Board, locale: str) -> None:
     """Print download URL for CircuitPython image."""
-    print(board.download_url(board.most_recent_version, language))
+    print(board.download_url(board.most_recent_version, locale))
 
 
 def devices_table(devices: Iterable[Device]) -> Table:

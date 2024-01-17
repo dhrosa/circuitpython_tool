@@ -21,6 +21,7 @@ from .params import (
     BoardParam,
     ConfigStorageParam,
     FakeDeviceParam,
+    LanguageParam,
     label_or_query_argument,
 )
 from .query import Query
@@ -471,6 +472,7 @@ def versions() -> None:
 @click.option(
     "--language",
     default="en_US",
+    type=LanguageParam(),
     help="Localization language for CircuitPython install.",
 )
 def url(board: Board, language: str) -> None:

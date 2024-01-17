@@ -33,7 +33,8 @@ class Version:
 @dataclass
 class Board:
     id: str
-    # Note: at least one of these will always be set.
+    # Note: at least one of these two fields will always be set for instances
+    # returned by Board.all()
     stable_version: Version | None = None
     unstable_version: Version | None = None
 
@@ -78,7 +79,17 @@ class Board:
             boards[board.id] = board
         return boards
 
+    @staticmethod
+    def all_languages() -> list[str]:
+        """Set of all potentially valid language codes, sorted alphabetically."""
+        languages: set[str] = set()
+        for b in Board.all().values():
+            for v in b.versions:
+                languages |= set(v.languages)
+        return sorted(languages)
+
     def download_url(self, version: Version, language: str) -> str:
+        """URL for downloading CircuitPython UF2 image."""
         # Derived from
         # https://github.com/adafruit/circuitpython-org/blob/c98c065889eef027447ff2b2e46cd4f15806e522/tools/generate-board-info.py#L42C1-L43C1
         prefix = "https://adafruit-circuit-python.s3.amazonaws.com/bin"

@@ -148,6 +148,29 @@ class BoardParam(ParamType):
         ]
 
 
+class LanguageParam(ParamType):
+    """Click parameter for CircuitPython language codes."""
+
+    name = "language"
+
+    def convert(
+        self, value: str, param: Parameter | None, context: Context | None
+    ) -> str:
+        languages = Board.all_languages()
+        if value in languages:
+            return value
+        self.fail(f"Invalid language: '{value}'. Valid options: {languages}")
+
+    def shell_complete(
+        self, context: Context, param: Parameter, incomplete: str
+    ) -> list[CompletionItem]:
+        return [
+            CompletionItem(lang)
+            for lang in Board.all_languages()
+            if lang.startswith(incomplete)
+        ]
+
+
 AnyCallable: TypeAlias = Callable[..., Any]
 
 

@@ -40,6 +40,8 @@ class Board:
     stable_version: Version | None = None
     unstable_version: Version | None = None
 
+    download_count: int = 0
+
     @property
     @as_list
     def versions(self) -> Iterator[Version]:
@@ -60,6 +62,7 @@ class Board:
     @as_list
     @staticmethod
     def all() -> Iterator["Board"]:
+        """All available boards, sorted by decreasing popularity."""
         for board_json in loads(cached_boards_json()):
             board = Board(board_json["id"])
             for version_json in board_json["versions"]:
@@ -76,6 +79,7 @@ class Board:
                     board.unstable_version = version
             if not (board.stable_version or board.unstable_version):
                 continue
+            board.download_count = board_json["downloads"]
             yield board
 
     @staticmethod

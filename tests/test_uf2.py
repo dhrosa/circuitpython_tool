@@ -20,6 +20,7 @@ class FakeVersion:
 @dataclass
 class FakeBoard:
     id: str
+    downloads: int = 0
     versions: list[FakeVersion] = field(default_factory=list)
 
     def add_version(self, *args: Any, **kwargs: Any) -> "FakeBoard":
@@ -31,8 +32,8 @@ class FakeBoardsJson:
     def __init__(self) -> None:
         self.boards: list[Any] = []
 
-    def add_board(self, id: str) -> FakeBoard:
-        board = FakeBoard(id)
+    def add_board(self, id: str, *args: Any, **kwargs: Any) -> FakeBoard:
+        board = FakeBoard(id, *args, **kwargs)
         self.boards.append(board)
         return board
 
@@ -98,6 +99,16 @@ def test_board_stable_and_unstable_version(fake_boards_json: FakeBoardsJson) -> 
     ]
 
 
+def test_board_download_count(fake_boards_json: FakeBoardsJson) -> None:
+    fake_boards_json.add_board("a", downloads=123).add_version(
+        "v1", stable=True, languages=["en_US"]
+    )
+
+    boards = Board.all()
+    assert len(boards) == 1
+    assert boards[0].download_count == 123
+
+
 def test_multiple_boards(fake_boards_json: FakeBoardsJson) -> None:
     fake_boards_json.add_board("a").add_version("v1", stable=True, languages=["en_US"])
     fake_boards_json.add_board("b").add_version("v1", stable=True, languages=["en_US"])
@@ -145,7 +156,9 @@ def test_download_url(fake_boards_json: FakeBoardsJson) -> None:
         "8.2.9", stable=True, languages=["de_DE"]
     )
 
-    board = Board.all()[0]
+    boards = Board.all()
+    assert len(boards) == 1
+    board = boards[0]
 
     expected_url = (
         "https://adafruit-circuit-python.s3.amazonaws.com/bin/raspberry_pi_pico/de_DE/"

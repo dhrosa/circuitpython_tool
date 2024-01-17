@@ -456,10 +456,16 @@ def uf2() -> None:
 @uf2.command
 def versions() -> None:
     """List available CircuitPython boards."""
-    table = Table("Id", "Stable Version", "Unstable Version")
-    for board in Board.all():
+    table = Table()
+    table.add_column("Id")
+    table.add_column("Downloads", justify="right")
+    table.add_column("Stable Version")
+    table.add_column("Unstable Version")
+    # Sort boards by decreasing popularity, then alphabetically.
+    for board in sorted(Board.all(), key=lambda b: (-b.download_count, b.id)):
         table.add_row(
             board.id,
+            str(board.download_count),
             board.stable_version.label if board.stable_version else "",
             board.unstable_version.label if board.unstable_version else "",
         )

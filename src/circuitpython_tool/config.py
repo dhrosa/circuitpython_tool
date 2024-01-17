@@ -1,10 +1,10 @@
 import logging
+from collections.abc import Iterable, Iterator
 from contextlib import contextmanager
 from copy import deepcopy
 from dataclasses import dataclass
 from functools import cached_property
 from pathlib import Path
-from typing import Generator, Iterable
 
 import tomlkit
 from tomlkit import TOMLDocument
@@ -75,7 +75,7 @@ class ConfigStorage:
         self._path_override = path_override
 
     @contextmanager
-    def open(self) -> Generator[Config, None, None]:
+    def open(self) -> Iterator[Config]:
         document = tomlkit.document()
         if self.path.exists():
             with self.path.open("r") as f:

@@ -1,11 +1,11 @@
 import logging
 import shutil
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 from functools import wraps
 from os import execlp
 from pathlib import Path
 from sys import exit
-from typing import Callable, Concatenate, ParamSpec, TypeVar
+from typing import Concatenate, ParamSpec, TypeVar
 from urllib.request import urlopen
 
 import rich_click as click

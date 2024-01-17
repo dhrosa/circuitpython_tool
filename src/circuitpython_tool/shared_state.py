@@ -1,5 +1,5 @@
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass
-from typing import Callable, Sequence
 
 from . import real_device
 from .config import ConfigStorage

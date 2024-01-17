@@ -51,7 +51,7 @@ def fake_boards_json(monkeypatch: pytest.MonkeyPatch) -> FakeBoardsJson:
 
 
 def test_empty_boards(fake_boards_json: FakeBoardsJson) -> None:
-    assert Board.all() == {}
+    assert Board.all() == []
 
 
 def test_board_without_uf2_extension(fake_boards_json: FakeBoardsJson) -> None:
@@ -59,7 +59,7 @@ def test_board_without_uf2_extension(fake_boards_json: FakeBoardsJson) -> None:
         "v1", stable=True, languages=["en_US"], extensions=["bin"]
     )
 
-    assert Board.all() == {}
+    assert Board.all() == []
 
 
 def test_board_multiple_extensions(fake_boards_json: FakeBoardsJson) -> None:
@@ -67,25 +67,21 @@ def test_board_multiple_extensions(fake_boards_json: FakeBoardsJson) -> None:
         "v1", stable=True, languages=["en_US"], extensions=["bin", "uf2"]
     )
 
-    assert Board.all() == {
-        "a": Board("a", stable_version=Version("v1", locales=["en_US"]))
-    }
+    assert Board.all() == [Board("a", stable_version=Version("v1", locales=["en_US"]))]
 
 
 def test_board_only_stable_version(fake_boards_json: FakeBoardsJson) -> None:
     fake_boards_json.add_board("a").add_version("v1", stable=True, languages=["en_US"])
 
-    assert Board.all() == {
-        "a": Board("a", stable_version=Version("v1", locales=["en_US"]))
-    }
+    assert Board.all() == [Board("a", stable_version=Version("v1", locales=["en_US"]))]
 
 
 def test_board_only_unstable_version(fake_boards_json: FakeBoardsJson) -> None:
     fake_boards_json.add_board("a").add_version("v2", stable=False, languages=["en_US"])
 
-    assert Board.all() == {
-        "a": Board("a", unstable_version=Version("v2", locales=["en_US"]))
-    }
+    assert Board.all() == [
+        Board("a", unstable_version=Version("v2", locales=["en_US"]))
+    ]
 
 
 def test_board_stable_and_unstable_version(fake_boards_json: FakeBoardsJson) -> None:
@@ -93,23 +89,23 @@ def test_board_stable_and_unstable_version(fake_boards_json: FakeBoardsJson) -> 
         "v1", stable=True, languages=["en_US"]
     ).add_version("v2", stable=False, languages=["en_US"])
 
-    assert Board.all() == {
-        "a": Board(
+    assert Board.all() == [
+        Board(
             "a",
             stable_version=Version("v1", locales=["en_US"]),
             unstable_version=Version("v2", locales=["en_US"]),
         )
-    }
+    ]
 
 
 def test_multiple_boards(fake_boards_json: FakeBoardsJson) -> None:
     fake_boards_json.add_board("a").add_version("v1", stable=True, languages=["en_US"])
     fake_boards_json.add_board("b").add_version("v1", stable=True, languages=["en_US"])
 
-    assert Board.all() == {
-        "a": Board("a", stable_version=Version("v1", locales=["en_US"])),
-        "b": Board("b", stable_version=Version("v1", locales=["en_US"])),
-    }
+    assert Board.all() == [
+        Board("a", stable_version=Version("v1", locales=["en_US"])),
+        Board("b", stable_version=Version("v1", locales=["en_US"])),
+    ]
 
 
 def test_all_languages(fake_boards_json: FakeBoardsJson) -> None:
@@ -149,7 +145,7 @@ def test_download_url(fake_boards_json: FakeBoardsJson) -> None:
         "8.2.9", stable=True, languages=["de_DE"]
     )
 
-    board = next(iter(Board.all().values()))
+    board = Board.all()[0]
 
     expected_url = (
         "https://adafruit-circuit-python.s3.amazonaws.com/bin/raspberry_pi_pico/de_DE/"

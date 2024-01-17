@@ -457,7 +457,7 @@ def uf2() -> None:
 def versions() -> None:
     """List available CircuitPython boards."""
     table = Table("Id", "Stable Version", "Unstable Version")
-    for board in Board.all().values():
+    for board in Board.all():
         table.add_row(
             board.id,
             board.stable_version.label if board.stable_version else "",

@@ -1,10 +1,12 @@
 import logging
+from collections.abc import Iterator
 from dataclasses import dataclass
 from json import loads
 
 import requests
 
 from .dirs import app_dir
+from .iter import as_list
 
 logger = logging.getLogger(__name__)
 
@@ -39,14 +41,13 @@ class Board:
     unstable_version: Version | None = None
 
     @property
-    def versions(self) -> list[Version]:
+    @as_list
+    def versions(self) -> Iterator[Version]:
         """List of available versions, sorted from most to least stable."""
-        versions: list[Version] = []
         if self.stable_version:
-            versions.append(self.stable_version)
+            yield self.stable_version
         if self.unstable_version:
-            versions.append(self.unstable_version)
-        return versions
+            yield self.unstable_version
 
     @property
     def most_stable_version(self) -> Version:
@@ -56,11 +57,10 @@ class Board:
     def most_recent_version(self) -> Version:
         return self.versions[-1]
 
+    @as_list
     @staticmethod
-    def all() -> dict[str, "Board"]:
-        json = loads(cached_boards_json())
-        boards = {}
-        for board_json in json:
+    def all() -> Iterator["Board"]:
+        for board_json in loads(cached_boards_json()):
             board = Board(board_json["id"])
             for version_json in board_json["versions"]:
                 if "uf2" not in version_json["extensions"]:
@@ -76,14 +76,13 @@ class Board:
                     board.unstable_version = version
             if not (board.stable_version or board.unstable_version):
                 continue
-            boards[board.id] = board
-        return boards
+            yield board
 
     @staticmethod
     def all_locales() -> list[str]:
         """Set of all potentially valid locale codes, sorted alphabetically."""
         locales: set[str] = set()
-        for b in Board.all().values():
+        for b in Board.all():
             for v in b.versions:
                 locales |= set(v.locales)
         return sorted(locales)

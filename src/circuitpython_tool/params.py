@@ -134,17 +134,16 @@ class BoardParam(ParamType):
     ) -> Board:
         if isinstance(value, Board):
             return value
-        try:
-            board = Board.all()[value]
-        except KeyError:
-            self.fail(f"Unknown board_id: {value}")
-        return board
+        for board in Board.all():
+            if board.id == value:
+                return board
+        self.fail(f"Unknown board_id: {value}")
 
     def shell_complete(
         self, context: Context, param: Parameter, incomplete: str
     ) -> list[CompletionItem]:
         return [
-            CompletionItem(id) for id in Board.all().keys() if id.startswith(incomplete)
+            CompletionItem(b.id) for b in Board.all() if b.id.startswith(incomplete)
         ]
 
 

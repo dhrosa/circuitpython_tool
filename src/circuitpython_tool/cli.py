@@ -17,7 +17,12 @@ from .config import Config, ConfigStorage, DeviceLabel, SourceTree
 from .device import Device
 from .fake_device import FakeDevice
 from .fs import walk_all, watch_all
-from .params import ConfigStorageParam, FakeDeviceParam, label_or_query_argument
+from .params import (
+    BoardParam,
+    ConfigStorageParam,
+    FakeDeviceParam,
+    label_or_query_argument,
+)
 from .query import Query
 from .shared_state import SharedState
 from .uf2 import Board
@@ -462,15 +467,14 @@ def versions() -> None:
 
 
 @uf2.command
-@click.argument("board_id", required=True)
+@click.argument("board", type=BoardParam(), required=True)
 @click.option(
     "--language",
     default="en_US",
     help="Localization language for CircuitPython install.",
 )
-def url(board_id: str, language: str) -> None:
+def url(board: Board, language: str) -> None:
     """Print download URL for CircuitPython image."""
-    board = Board.all()[board_id]
     print(board.download_url(board.most_recent_version, language))
 
 

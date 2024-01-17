@@ -1,5 +1,5 @@
 import pathlib
-from typing import Any, Callable, cast
+from typing import Any, Callable, TypeAlias, cast
 
 import click
 from click import Context, Parameter, ParamType
@@ -9,6 +9,7 @@ from . import completion, fake_device
 from .config import ConfigStorage
 from .query import Query
 from .shared_state import SharedState
+from .uf2 import Board
 
 
 class ConfigStorageParam(click.Path):
@@ -123,7 +124,31 @@ class QueryOrLabelParam(ParamType):
         )
 
 
-AnyCallable = Callable[..., Any]
+class BoardParam(ParamType):
+    """Click paramater for CircuitPython board IDs."""
+
+    name = "board_id"
+
+    def convert(
+        self, value: str | Board, param: Parameter | None, context: Context | None
+    ) -> Board:
+        if isinstance(value, Board):
+            return value
+        try:
+            board = Board.all()[value]
+        except KeyError:
+            self.fail(f"Unknown board_id: {value}")
+        return board
+
+    def shell_complete(
+        self, context: Context, param: Parameter, incomplete: str
+    ) -> list[CompletionItem]:
+        return [
+            CompletionItem(id) for id in Board.all().keys() if id.startswith(incomplete)
+        ]
+
+
+AnyCallable: TypeAlias = Callable[..., Any]
 
 
 def label_or_query_argument(

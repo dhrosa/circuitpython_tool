@@ -17,7 +17,7 @@ from . import completion, fake_device
 from .config import Config, ConfigStorage, DeviceLabel, SourceTree
 from .device import Device
 from .fake_device import FakeDevice
-from .fs import walk_all, watch_all
+from .fs import guess_source_dir, walk_all, watch_all
 from .params import (
     BoardParam,
     ConfigStorageParam,
@@ -377,21 +377,37 @@ def get_tree(config: Config, tree_name: str) -> SourceTree:
 
 
 @main.command("upload")
-@click.argument("tree_name", shell_complete=completion.source_tree, required=True)
-@label_or_query_argument("query")
+@click.option(
+    "--dir",
+    "-d",
+    "source_dir",
+    type=click.Path(exists=True, file_okay=False, path_type=Path),
+    required=False,
+    help="Path containing source code to upload. "
+    "If not specified, the source directory is guessed by searching the current directory and "
+    "its descendants for user code (e.g. code.py).",
+)
+@label_or_query_argument("query", required=True)
 @pass_read_only_config
-def upload_command(config: Config, tree_name: str, query: Query) -> None:
-    """Upload code to device.
+def upload_command(config: Config, source_dir: Path | None, query: Query) -> None:
+    """Upload code to device."""
+    source_dir = source_dir or guess_source_dir(Path.cwd())
+    if source_dir is None:
+        print(
+            ":thumbs_down: [red]Failed[/red] to guess source directory. "
+            "Either change the current directory, "
+            "or explicitly specify the directory using [blue]--dir[/]."
+        )
+        exit(1)
 
-    The contents of the source tree TREE_NAME will be copied onto the device
-    with the label LABEL_NAME
-    """
-    tree = get_tree(config, tree_name)
-    device = distinct_device(query)
-    mountpoint = device.mount_if_needed()
-    print("Uploading to device: ", device)
-    upload(tree.source_dirs, mountpoint)
-    print(":thumbs_up: Upload [green]succeeded.")
+    print(source_dir)
+
+    # tree = get_tree(config, tree_name)
+    # device = distinct_device(query)
+    # mountpoint = device.mount_if_needed()
+    # print("Uploading to device: ", device)
+    # upload(tree.source_dirs, mountpoint)
+    # print(":thumbs_up: Upload [green]succeeded.")
 
 
 @main.command
@@ -514,8 +530,7 @@ def download(board: Board, locale: str, destination: Path) -> None:
         total=int(response.headers["Content-Length"]),
         description="Downloading",
     ) as f:
-        f.read()
-    # destination.write_bytes(requests.get(url).content)
+        destination.write_bytes(f.read())
 
 
 def devices_table(devices: Iterable[Device]) -> Table:

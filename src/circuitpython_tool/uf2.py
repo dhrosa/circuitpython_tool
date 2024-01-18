@@ -20,7 +20,7 @@ def cached_boards_json() -> str:
     url = "https://raw.githubusercontent.com/adafruit/circuitpython-org/main/_data/files.json"
     logger.info(f"Cached boards path {path} does not exist yet; populating from {url}")
     with urlopen(url) as request:
-        json = str(request.read())
+        json = str(request.read(), encoding="utf-8")
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json)
     return json

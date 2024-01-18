@@ -368,12 +368,16 @@ def tree_remove(config_storage: ConfigStorage, key: str, force: bool) -> None:
     print(f":thumbs_up: Source tree [blue]{key}[/] [green]successfully[/] deleted.")
 
 
-def get_tree(config: Config, tree_name: str) -> SourceTree:
-    try:
-        return config.source_trees[tree_name]
-    except KeyError:
-        print(f":thumbs_down: Source tree [red]{tree_name}[/] does not exist.")
+def get_source_dir(source_dir: Path | None) -> Path:
+    source_dir = source_dir or guess_source_dir(Path.cwd())
+    if source_dir is None:
+        print(
+            ":thumbs_down: [red]Failed[/red] to guess source directory. "
+            "Either change the current directory, "
+            "or explicitly specify the directory using [blue]--dir[/]."
+        )
         exit(1)
+    return source_dir
 
 
 @main.command("upload")
@@ -388,33 +392,30 @@ def get_tree(config: Config, tree_name: str) -> SourceTree:
     "its descendants for user code (e.g. code.py).",
 )
 @label_or_query_argument("query", required=True)
-@pass_read_only_config
-def upload_command(config: Config, source_dir: Path | None, query: Query) -> None:
+def upload_command(source_dir: Path | None, query: Query) -> None:
     """Upload code to device."""
-    source_dir = source_dir or guess_source_dir(Path.cwd())
-    if source_dir is None:
-        print(
-            ":thumbs_down: [red]Failed[/red] to guess source directory. "
-            "Either change the current directory, "
-            "or explicitly specify the directory using [blue]--dir[/]."
-        )
-        exit(1)
-
-    print(source_dir)
-
-    # tree = get_tree(config, tree_name)
-    # device = distinct_device(query)
-    # mountpoint = device.mount_if_needed()
-    # print("Uploading to device: ", device)
-    # upload(tree.source_dirs, mountpoint)
-    # print(":thumbs_up: Upload [green]succeeded.")
+    source_dir = get_source_dir(source_dir)
+    print(f"Source directory: {source_dir}")
+    device = distinct_device(query)
+    mountpoint = device.mount_if_needed()
+    print("Uploading to device: ", device)
+    upload([source_dir], mountpoint)
+    print(":thumbs_up: Upload [green]succeeded.")
 
 
 @main.command
-@click.argument("tree_name", required=True, shell_complete=completion.source_tree)
+@click.option(
+    "--dir",
+    "-d",
+    "source_dir",
+    type=click.Path(exists=True, file_okay=False, path_type=Path),
+    required=False,
+    help="Path containing source code to upload. "
+    "If not specified, the source directory is guessed by searching the current directory and "
+    "its descendants for user code (e.g. code.py).",
+)
 @label_or_query_argument("query")
-@pass_read_only_config
-def watch(config: Config, tree_name: str, query: Query) -> None:
+def watch(source_dir: Path | None, query: Query) -> None:
     """Continuously upload code to device in response to source file changes.
 
     The contents of the source tree TREE_NAME will be copied onto the device
@@ -426,12 +427,13 @@ def watch(config: Config, tree_name: str, query: Query) -> None:
     modifications. Creation of new files and folders requires you to rerun this
     command in order to monitor them.
     """
-    tree = get_tree(config, tree_name)
+    source_dir = get_source_dir(source_dir)
+    print(f"Source directory: {source_dir}")
     device = distinct_device(query)
     print("Target device: ")
     print(device)
     # Always do at least one upload at the start.
-    source_dirs = tree.source_dirs
+    source_dirs = [source_dir]
     upload(source_dirs, device.mount_if_needed())
 
     events = iter(watch_all(source_dirs))
@@ -450,8 +452,7 @@ def watch(config: Config, tree_name: str, query: Query) -> None:
 
 @main.command
 @label_or_query_argument("query")
-@pass_read_only_config
-def connect(config: Config, query: Query) -> None:
+def connect(query: Query) -> None:
     """Connect to a device's serial terminal.
 
     LABEL_NAME is the label of a device query that was added by 'label add'.

@@ -1,5 +1,5 @@
 import logging
-from collections.abc import Iterable, Iterator
+from collections.abc import Iterator
 from contextlib import contextmanager
 from copy import deepcopy
 from dataclasses import dataclass
@@ -13,18 +13,6 @@ from .dirs import app_dir
 from .query import Query
 
 logger = logging.getLogger(__name__)
-
-
-@dataclass
-class SourceTree:
-    source_dirs: list[Path]
-
-    @staticmethod
-    def from_toml(dirs: Iterable[str]) -> "SourceTree":
-        return SourceTree([Path(d) for d in dirs])
-
-    def to_toml(self) -> list[str]:
-        return [str(p) for p in self.source_dirs]
 
 
 @dataclass
@@ -42,18 +30,13 @@ class DeviceLabel:
 @dataclass
 class Config:
     device_labels: dict[str, DeviceLabel]
-    source_trees: dict[str, SourceTree]
 
     @staticmethod
     def from_toml(document: TOMLDocument) -> "Config":
-        config = Config({}, {})
+        config = Config({})
         config.device_labels = {
             k: DeviceLabel.from_toml(v)
             for k, v in document.get("device_labels", tomlkit.table()).items()
-        }
-        config.source_trees = {
-            k: SourceTree.from_toml(v)
-            for k, v in document.get("source_trees", tomlkit.table()).items()
         }
         return config
 
@@ -63,9 +46,6 @@ class Config:
         document = tomlkit.document()
         document["device_labels"] = {
             k: v.to_toml() for k, v in self.device_labels.items()
-        }
-        document["source_trees"] = {
-            k: v.to_toml() for k, v in self.source_trees.items()
         }
         return document
 

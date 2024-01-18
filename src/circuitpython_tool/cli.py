@@ -14,7 +14,7 @@ from rich.logging import RichHandler
 from rich.table import Table
 
 from . import completion, fake_device
-from .config import Config, ConfigStorage, DeviceLabel, SourceTree
+from .config import Config, ConfigStorage, DeviceLabel
 from .device import Device
 from .fake_device import FakeDevice
 from .fs import guess_source_dir, walk_all, watch_all
@@ -269,103 +269,6 @@ def label_remove(config_storage: ConfigStorage, label_name: str, force: bool) ->
             print(f":thumbs_down: Label [red]{label_name}[/] does not exist.")
             exit(1)
     print(f":thumbs_up: Label [blue]{label_name}[/] [green]successfully[/] deleted.")
-
-
-@main.group()
-def tree() -> None:
-    """Manage source trees."""
-    pass
-
-
-@tree.command("list")
-@pass_read_only_config
-def tree_list(config: Config) -> None:
-    """List all source trees."""
-    trees = config.source_trees
-    if not trees:
-        print(":person_shrugging: [blue]No[/] existing source trees found.")
-        return
-    table = Table("Name", "Source Directories")
-    for name, tree in trees.items():
-        table.add_row(name, "\n".join(str(p) for p in tree.source_dirs))
-    print(table)
-
-
-@tree.command("add")
-@click.argument("key", required=True, shell_complete=completion.source_tree)
-@click.argument("source_dirs", type=Path, required=True, nargs=-1)
-@click.option(
-    "--force",
-    "-f",
-    is_flag=True,
-    help="Add the new tree even if a tree with the same name already exists."
-    "The new SOURCE_DIRS will override the previous stored value.",
-)
-@pass_config_storage
-def tree_add(
-    config_storage: ConfigStorage, key: str, source_dirs: list[Path], force: bool
-) -> None:
-    """Add a new source tree.
-
-    Creates a new source tree with the name KEY, pointing to the paths listed in
-    SOURCE_DIRS.
-
-    The children of each of SOURCE_DIRS will be copied to the device;
-    effectively a union of the children.
-
-    """
-    with config_storage.open() as config:
-        trees = config.source_trees
-        old_tree = trees.get(key)
-        if old_tree:
-            if force:
-                logger.info(
-                    f"Source tree [blue]{key}[/] already exists. Proceeding anyway."
-                )
-            else:
-                print(
-                    f":thumbs_down: Source tree [red]{key}[/] already exists: ",
-                    old_tree,
-                )
-                exit(1)
-
-        tree = SourceTree([d.resolve() for d in source_dirs])
-        trees[key] = tree
-    print(
-        f":thumbs_up: Source tree [blue]{key}[/] added [green]successfully[/]:\n{tree}"
-    )
-
-
-@tree.command("remove")
-@click.confirmation_option(
-    "--yes", "-y", prompt="Are you sure you want to delete this source tree?"
-)
-@click.argument("key", shell_complete=completion.source_tree)
-@click.option(
-    "--force",
-    "-f",
-    is_flag=True,
-    help="Return success even if there was no matching source tree to remove.",
-)
-@pass_config_storage
-def tree_remove(config_storage: ConfigStorage, key: str, force: bool) -> None:
-    """Delete a source tree.
-
-    This command just deletes our internal reference to the source paths. This
-    command does not change the contents of the source paths.
-
-    """
-    with config_storage.open() as config:
-        tree = config.source_trees.get(key)
-        if tree:
-            logger.debug(f"Found source tree [blue]{key}[/]: {tree}")
-            del config.source_trees[key]
-        elif force:
-            logger.info(f"Source tree [blue]{key}[/] not found. Proceeding anyway.")
-        else:
-            print(f":thumbs_down: Source tree [red]{key}[/] does not exist.")
-            exit(1)
-    print(f":thumbs_up: Source tree [blue]{key}[/] [green]successfully[/] deleted.")
 
 
 def get_source_dir(source_dir: Path | None) -> Path:

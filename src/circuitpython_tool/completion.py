@@ -48,22 +48,3 @@ def label_or_query(
             )
     completions.extend(query(context, param, incomplete))
     return completions
-
-
-def source_tree(
-    context: Context, param: Parameter, incomplete: str
-) -> list[CompletionItem]:
-    disable_logging()
-    """Shell completion for source trees."""
-    completions: list[CompletionItem] = []
-    config_storage = context.ensure_object(SharedState).config_storage
-    with config_storage.open() as config:
-        for key, tree in config.source_trees.items():
-            completions.append(
-                CompletionItem(
-                    key,
-                    help="Source paths: "
-                    + " | ".join(str(p) for p in tree.source_dirs),
-                )
-            )
-    return completions

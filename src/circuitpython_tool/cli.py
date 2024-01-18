@@ -339,7 +339,7 @@ def watch(source_dir: Path | None, query: Query) -> None:
     source_dirs = [source_dir]
     upload(source_dirs, device.mount_if_needed())
 
-    events = iter(watch_all(source_dirs))
+    events = watch_all(source_dirs)
     try:
         while True:
             with get_console().status(

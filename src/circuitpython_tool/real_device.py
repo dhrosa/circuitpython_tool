@@ -25,6 +25,8 @@ def _run(command: str) -> str:
 
 class RealDevice(Device):
     def get_mountpoint(self) -> Path | None:
+        if self.partition_path is None:
+            return None
         command = f"lsblk {self.partition_path} --output mountpoint --noheadings"
         out = _run(command).strip()
         if not out:

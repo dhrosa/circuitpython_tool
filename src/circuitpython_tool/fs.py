@@ -15,7 +15,10 @@ def walk_all(roots: Iterable[Path]) -> Iterator[tuple[Path, Path]]:
         # Path.walk requires Python 3.12 or higher, so we roll our own here.
         for path in root.iterdir():
             if path.is_dir():
-                yield from walk_all([path])
+                try:
+                    yield from walk_all([path])
+                except PermissionError as e:
+                    logging.debug(f"Skipping {path}: {e}")
             else:
                 yield root, path
 

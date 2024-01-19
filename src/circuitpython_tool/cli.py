@@ -16,7 +16,6 @@ from rich.table import Table
 from . import completion, fake_device
 from .config import Config, ConfigStorage, DeviceLabel
 from .device import Device
-from .fake_device import FakeDevice
 from .fs import guess_source_dir, walk_all, watch_all
 from .params import (
     BoardParam,
@@ -166,24 +165,9 @@ def devices(
     else:
         print(":person_shrugging: [blue]No[/] connected CircuitPython devices found.")
 
-    if not fake_device_save_path:
-        return
-
-    logging.info(f"Saving device list to {str(fake_device_save_path)}")
-
-    fake_devices: list[FakeDevice] = []
-    for d in devices:
-        fake = fake_device.FakeDevice(
-            vendor=d.vendor,
-            model=d.model,
-            serial=d.serial,
-            mountpoint=d.get_mountpoint(),
-            partition_path=d.partition_path,
-            serial_path=d.serial_path,
-        )
-        fake_devices.append(fake)
-
-    fake_device_save_path.write_text(fake_device.to_toml(fake_devices))
+    if fake_device_save_path:
+        logging.info(f"Saving device list to {str(fake_device_save_path)}")
+        fake_device_save_path.write_text(fake_device.to_toml(devices))
 
 
 @main.group()

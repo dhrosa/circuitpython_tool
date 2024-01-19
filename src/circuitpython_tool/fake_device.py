@@ -68,10 +68,18 @@ def all_devices(toml: str | Path) -> list[FakeDevice]:
     return [FakeDevice.from_toml(t) for t in tables]
 
 
-def to_toml(devices: Sequence[FakeDevice]) -> str:
+def to_toml(devices: Sequence[Device]) -> str:
     doc = tomlkit.document()
     devices_array = tomlkit.aot()
     for d in devices:
-        devices_array.append(d.to_toml())
+        fake = FakeDevice(
+            vendor=d.vendor,
+            model=d.model,
+            serial=d.serial,
+            mountpoint=d.get_mountpoint(),
+            partition_path=d.partition_path,
+            serial_path=d.serial_path,
+        )
+        devices_array.append(fake.to_toml())
     doc["devices"] = devices_array
     return tomlkit.dumps(doc)

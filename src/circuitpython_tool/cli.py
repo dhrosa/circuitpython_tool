@@ -1,5 +1,4 @@
 import logging
-import shutil
 from collections.abc import Callable, Iterable
 from functools import wraps
 from os import execlp
@@ -13,10 +12,9 @@ from rich import get_console, print, progress, traceback
 from rich.logging import RichHandler
 from rich.table import Table
 
-from . import completion, fake_device
+from . import completion, fake_device, fs
 from .config import Config, ConfigStorage, DeviceLabel
 from .device import Device
-from .fs import guess_source_dir, walk_all, watch_all
 from .params import (
     BoardParam,
     ConfigStorageParam,
@@ -256,7 +254,7 @@ def label_remove(config_storage: ConfigStorage, label_name: str, force: bool) ->
 
 
 def get_source_dir(source_dir: Path | None) -> Path:
-    source_dir = source_dir or guess_source_dir(Path.cwd())
+    source_dir = source_dir or fs.guess_source_dir(Path.cwd())
     if source_dir is None:
         print(
             ":thumbs_down: [red]Failed[/red] to guess source directory. "
@@ -267,7 +265,7 @@ def get_source_dir(source_dir: Path | None) -> Path:
     return source_dir
 
 
-@main.command("upload")
+@main.command
 @click.option(
     "--dir",
     "-d",
@@ -279,14 +277,14 @@ def get_source_dir(source_dir: Path | None) -> Path:
     "its descendants for user code (e.g. code.py).",
 )
 @label_or_query_argument("query", required=True)
-def upload_command(source_dir: Path | None, query: Query) -> None:
+def upload(source_dir: Path | None, query: Query) -> None:
     """Upload code to device."""
     source_dir = get_source_dir(source_dir)
     print(f"Source directory: {source_dir}")
     device = distinct_device(query)
     mountpoint = device.mount_if_needed()
     print("Uploading to device: ", device)
-    upload([source_dir], mountpoint)
+    fs.upload([source_dir], mountpoint)
     print(":thumbs_up: Upload [green]succeeded.")
 
 
@@ -321,9 +319,9 @@ def watch(source_dir: Path | None, query: Query) -> None:
     print(device)
     # Always do at least one upload at the start.
     source_dirs = [source_dir]
-    upload(source_dirs, device.mount_if_needed())
+    fs.upload(source_dirs, device.mount_if_needed())
 
-    events = watch_all(source_dirs)
+    events = fs.watch_all(source_dirs)
     try:
         while True:
             with get_console().status(
@@ -332,7 +330,7 @@ def watch(source_dir: Path | None, query: Query) -> None:
                 modified_paths = next(events)
                 logger.info(f"Modified paths: {[str(p) for p in modified_paths]}")
             with get_console().status("Uploading to device."):
-                upload(source_dirs, device.mount_if_needed())
+                fs.upload(source_dirs, device.mount_if_needed())
     except KeyboardInterrupt:
         print("Watch [magenta]cancelled[/magenta] by keyboard interrupt.")
 
@@ -466,23 +464,3 @@ def distinct_device(query: Query) -> Device:
                 devices_table(matching_devices),
             )
             exit(1)
-
-
-def upload(source_dirs: Iterable[Path], mountpoint: Path) -> None:
-    """Copy all source files onto the device."""
-    for source_dir, source in walk_all(source_dirs):
-        if source.name[0] == "." or source.is_dir():
-            continue
-        rel_path = source.relative_to(source_dir)
-        dest = mountpoint / rel_path
-        dest.parent.mkdir(parents=True, exist_ok=True)
-        if dest.exists():
-            # Round source timestamp to 2s resolution to match FAT drive.
-            # This prevents spurious timestamp mismatches.
-            source_mtime = (source.stat().st_mtime // 2) * 2
-            dest_mtime = dest.stat().st_mtime
-            if source_mtime == dest_mtime:
-                continue
-        logger.info(f"Copying {source_dir / rel_path}")
-        shutil.copy2(source, dest)
-    logger.info("Upload complete")

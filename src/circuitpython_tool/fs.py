@@ -1,5 +1,6 @@
 import logging
 import re
+import shutil
 from collections.abc import Iterable, Iterator
 from pathlib import Path
 
@@ -66,3 +67,23 @@ def watch_all(roots: Iterable[Path]) -> Iterator[set[Path]]:
             modified_paths.add(root / event.name)
         if modified_paths:
             yield modified_paths
+
+
+def upload(source_dirs: Iterable[Path], mountpoint: Path) -> None:
+    """Copy all source files onto the device."""
+    for source_dir, source in walk_all(source_dirs):
+        if source.name[0] == "." or source.is_dir():
+            continue
+        rel_path = source.relative_to(source_dir)
+        dest = mountpoint / rel_path
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        if dest.exists():
+            # Round source timestamp to 2s resolution to match FAT drive.
+            # This prevents spurious timestamp mismatches.
+            source_mtime = (source.stat().st_mtime // 2) * 2
+            dest_mtime = dest.stat().st_mtime
+            if source_mtime == dest_mtime:
+                continue
+        logger.info(f"Copying {source_dir / rel_path}")
+        shutil.copy2(source, dest)
+    logger.info("Upload complete")

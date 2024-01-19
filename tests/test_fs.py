@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from circuitpython_tool.fs import guess_source_dir, walk_all
+from circuitpython_tool.fs import guess_source_dir, walk
 
 
 def test_guess_source_dir_empty_dir(tmp_path: Path) -> None:
@@ -40,7 +40,7 @@ def test_guess_source_dir_no_code_file(tmp_path: Path) -> None:
     assert guess_source_dir(tmp_path) is None
 
 
-def test_walk_all(tmp_path: Path) -> None:
+def test_walk(tmp_path: Path) -> None:
     def create_path(path_str: str) -> None:
         path = tmp_path / path_str
         if path_str.endswith("/"):
@@ -49,27 +49,25 @@ def test_walk_all(tmp_path: Path) -> None:
             path.parent.mkdir(exist_ok=True)
             path.touch()
 
-    create_path("root_a/file.txt")
-    create_path("root_a/a/file.txt")
-
-    create_path("root_b/file.txt")
-
-    create_path("root_c/file.txt")
+    create_path("file.txt")
+    create_path("a/file1.txt")
+    create_path("a/file2.txt")
+    create_path("a/b/file.txt")
+    create_path("c/file.txt")
 
     # Strip off temporary path prefix for stable output for failure messages and simpler assertions.
-    entries: list[tuple[str, str]] = []
-    for root, path in walk_all([tmp_path / "root_a", tmp_path / "root_b"]):
-        entries.append(
-            (str(root.relative_to(tmp_path)), str(path.relative_to(tmp_path)))
-        )
+    entries = [str(p.relative_to(tmp_path)) for p in walk(tmp_path)]
 
     assert sorted(entries) == sorted(
         [
-            ("root_a", "root_a"),
-            ("root_a", "root_a/file.txt"),
-            ("root_a", "root_a/a"),
-            ("root_a", "root_a/a/file.txt"),
-            ("root_b", "root_b"),
-            ("root_b", "root_b/file.txt"),
+            ".",
+            "file.txt",
+            "a",
+            "a/file1.txt",
+            "a/file2.txt",
+            "a/b",
+            "a/b/file.txt",
+            "c",
+            "c/file.txt",
         ]
     )

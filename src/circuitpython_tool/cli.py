@@ -239,9 +239,9 @@ def label_add(
 
         label = DeviceLabel(query)
         labels[key] = label
-        print(
-            f":thumbs_up: Label [blue]{key}[/] added [green]successfully[/]: {label.query.as_str()}"
-        )
+    print(
+        f":thumbs_up: Label [blue]{key}[/] added [green]successfully[/]: {label.query.as_str()}"
+    )
 
 
 @label.command("remove")

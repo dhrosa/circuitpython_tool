@@ -17,7 +17,8 @@ def walk_all(roots: Iterable[Path]) -> Iterator[tuple[Path, Path]]:
         for path in root.iterdir():
             if path.is_dir():
                 try:
-                    yield from walk_all([path])
+                    for _, path in walk_all([path]):
+                        yield root, path
                 except PermissionError as e:
                     logging.debug(f"Skipping {path}: {e}")
             else:

@@ -9,10 +9,14 @@ description = 'TODO'
 requires-python = ">=3.11"
 license = "MIT"
 keywords = []
+readme = "docs/README.md"
 authors = [
   { name = "Diony Rosa", email = "dhrosa+dev@gmail.com" },
 ]
 dependencies = ["tomlkit", "inotify_simple", "rich", "click", "rich-click"]
+
+[project.urls]
+"Source code" = "https://github.com/dhrosa/circuitpython_tool"
 
 [project.scripts]
 circuitpython-tool = "circuitpython_tool:main"

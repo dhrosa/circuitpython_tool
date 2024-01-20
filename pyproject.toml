@@ -4,10 +4,10 @@ build-backend = "hatchling.build"
 
 [project]
 name = "circuitpython-tool"
-description = 'TODO'
+description = 'Command-line tool for interfacing with CircuitPython devices.'
 requires-python = ">=3.11"
 license = "MIT"
-keywords = []
+keywords = ["circuitpython", "microcontroller", "rp2040", "adafruit"]
 authors = [
   { name = "Diony Rosa", email = "dhrosa+dev@gmail.com" },
 ]

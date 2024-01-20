@@ -1,5 +1,5 @@
 [build-system]
-requires = ["hatchling"]
+requires = ["hatchling", "hatch-fancy-pypi-readme"]
 build-backend = "hatchling.build"
 
 [project]
@@ -11,13 +11,25 @@ keywords = []
 authors = [
   { name = "Diony Rosa", email = "dhrosa+dev@gmail.com" },
 ]
-readme = "docs/README.md"
-dynamic = ["version"]
+dynamic = ["readme", "version"]
 
 dependencies = ["tomlkit", "inotify_simple", "rich", "click", "rich-click"]
 
 [project.urls]
 "Source code" = "https://github.com/dhrosa/circuitpython_tool"
+
+# Generate a README for pypi that has all relative image links replaced with
+# absolute links to images hosted on GitHub.
+
+[tool.hatch.metadata.hooks.fancy-pypi-readme]
+content-type = "text/markdown"
+
+[[tool.hatch.metadata.hooks.fancy-pypi-readme.fragments]]
+path = "docs/README.md"
+
+[[tool.hatch.metadata.hooks.fancy-pypi-readme.substitutions]]
+pattern = '\[(.+?)\]\(((?!https?://)\S+?)\)'
+replacement = '[\1](https://raw.githubusercontent.com/dhrosa/circuitpython_tool/main/docs/\g<2>)'
 
 [project.scripts]
 circuitpython-tool = "circuitpython_tool:main"

@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "circuitpython-tool"
 description = 'Command-line tool for interfacing with CircuitPython devices.'
-requires-python = ">=3.11"
+requires-python = ">=3.10"
 license = "MIT"
 keywords = ["circuitpython", "microcontroller", "rp2040", "adafruit"]
 authors = [
@@ -20,7 +20,6 @@ dependencies = ["tomlkit", "inotify_simple", "rich", "click", "rich-click"]
 
 # Generate a README for pypi that has all relative image links replaced with
 # absolute links to images hosted on GitHub.
-
 [tool.hatch.metadata.hooks.fancy-pypi-readme]
 content-type = "text/markdown"
 
@@ -36,6 +35,9 @@ circuitpython-tool = "circuitpython_tool:main"
 
 [tool.hatch.version]
 path = "src/circuitpython_tool/__init__.py"
+
+[tool.hatch.envs.default]
+python = '3.10'
 
 [tool.hatch.envs.style]
 dependencies = ["setuptools", "isort", "black", "pylama", "mypy", "pytest"]

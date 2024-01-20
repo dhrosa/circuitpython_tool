@@ -60,7 +60,10 @@ all = [
 dependencies = ["pytest"]
 
 [tool.hatch.envs.test.scripts]
-all = ["pytest --no-header --verbose -vv"]
+all = ["pytest"]
+
+[tool.pytest.ini_options]
+addopts = "--no-header --verbose -vv"
 
 [tool.hatch.envs.completions.scripts]
 generate = [

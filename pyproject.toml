@@ -48,7 +48,7 @@ format = [
        "black .",
 ]
 check = [
-      "pylama .",
+      "pylama --ignore E203 .", # E203 is not pep8-compliant, and black breaks it
       "mypy --strict --pretty .",
 ] 
 all = [

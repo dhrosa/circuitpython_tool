@@ -12,7 +12,7 @@ from rich import get_console, print, progress, traceback
 from rich.logging import RichHandler
 from rich.table import Table
 
-from . import completion, fake_device, fs
+from . import VERSION, completion, fake_device, fs
 from .config import Config, ConfigStorage, DeviceLabel
 from .device import Device
 from .params import (
@@ -97,11 +97,12 @@ def pass_read_only_config(f: Callable[Concatenate[Config, P], R]) -> Callable[P,
     return inner
 
 
-@click.version_option(None, "--version", "-v")
+@click.version_option(VERSION, "--version", "-v")
 @click.group(
     context_settings=dict(
         help_option_names=["-h", "--help"], auto_envvar_prefix="CIRCUITPYTHON_TOOL"
-    )
+    ),
+    epilog=f"Version: {VERSION}",
 )
 @click.option(
     "--config",

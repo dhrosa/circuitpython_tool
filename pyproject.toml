@@ -31,7 +31,7 @@ pattern = '\[(.+?)\]\(((?!https?://)\S+?)\)'
 replacement = '[\1](https://raw.githubusercontent.com/dhrosa/circuitpython_tool/main/docs/\g<2>)'
 
 [project.scripts]
-circuitpython-tool = "circuitpython_tool:main"
+circuitpython-tool = "circuitpython_tool.cli:main"
 
 [tool.hatch.version]
 path = "src/circuitpython_tool/__init__.py"

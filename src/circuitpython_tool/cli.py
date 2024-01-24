@@ -97,6 +97,7 @@ def pass_read_only_config(f: Callable[Concatenate[Config, P], R]) -> Callable[P,
     return inner
 
 
+@click.version_option(None, "--version", "-v")
 @click.group(
     context_settings=dict(
         help_option_names=["-h", "--help"], auto_envvar_prefix="CIRCUITPYTHON_TOOL"

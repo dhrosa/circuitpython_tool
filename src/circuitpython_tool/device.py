@@ -26,3 +26,7 @@ class Device:
     def mount_if_needed(self) -> Path:
         """Mounts the partition device if needed, and returns the mountpoint."""
         raise NotImplementedError
+
+    def unmount_if_needed(self) -> None:
+        """Unmounts the partition device if needed."""
+        raise NotImplementedError

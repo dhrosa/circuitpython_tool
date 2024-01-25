@@ -46,6 +46,13 @@ class RealDevice(Device):
             return mountpoint
         exit(f"{partition_path} somehow not mounted.")
 
+    def unmount_if_needed(self) -> None:
+        if not self.get_mountpoint():
+            return
+        command = f"udisksctl unmount --block-device {self.partition_path}"
+        unmount_stdout = _run(command)
+        logger.info(f"udisksctl: {unmount_stdout}")
+
 
 def all_devices() -> list[RealDevice]:
     """Finds all USB CircuitPython devices."""

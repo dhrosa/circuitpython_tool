@@ -435,6 +435,21 @@ def mount(query: Query) -> None:
     print(f"Device mounted at {mountpoint}")
 
 
+@main.command
+@label_or_query_argument("query")
+def unmount(query: Query) -> None:
+    """Unmounts the specified device if needed."""
+    device = distinct_device(query)
+    print(device)
+    mountpoint = device.get_mountpoint()
+    if not mountpoint:
+        print("Device already not mounted.")
+        return
+    print(f"Device is currently mounted at {mountpoint}")
+    device.unmount_if_needed()
+    print("Device unmounted.")
+
+
 def devices_table(devices: Iterable[Device]) -> Table:
     """Render devices into a table."""
     table = Table()

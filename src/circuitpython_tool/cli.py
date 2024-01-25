@@ -421,6 +421,20 @@ def download(board: Board, locale: str, destination: Path) -> None:
         destination.write_bytes(f.read())
 
 
+@main.command
+@label_or_query_argument("query")
+def mount(query: Query) -> None:
+    """Mounts the specified device if needed, and prints the mountpoint."""
+    device = distinct_device(query)
+    print(device)
+    mountpoint = device.get_mountpoint()
+    if mountpoint:
+        print(f"Device already mounted at {mountpoint}.")
+        return
+    mountpoint = device.mount_if_needed()
+    print(f"Device mounted at {mountpoint}")
+
+
 def devices_table(devices: Iterable[Device]) -> Table:
     """Render devices into a table."""
     table = Table()

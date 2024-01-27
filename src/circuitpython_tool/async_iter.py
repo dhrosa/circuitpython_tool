@@ -1,36 +1,50 @@
 import asyncio
-from collections.abc import AsyncIterator, Callable, Coroutine
+from collections.abc import AsyncIterator, Awaitable, Callable
+from contextlib import suppress
 from typing import TypeVar
 
 T = TypeVar("T")
 
-default_sleep = asyncio.sleep
-
 
 async def time_batched(
-    source: AsyncIterator[T],
-    batch_period: float,
-    sleep: Callable[[float], Coroutine[None, None, None]] = default_sleep,
+    source: AsyncIterator[T], delay: Callable[[], Awaitable[None]]
 ) -> AsyncIterator[list[T]]:
-    async def fetch() -> T:
-        return await anext(source)
+    """Asynchronous iterator that batches together input elements.
 
-    fetch_task = asyncio.create_task(fetch())
+    Each batch contains at least one element. Once the first element of the
+    batch is fetched from the input, we await the result of `delay()`, and all
+    input items that are fetched while waiting are included in the batch.
+
+    e.g. using delay=lambda: asyncio.sleep(1) will group together all items that
+    arrive within 1 second of the first item in the batch.
+    """
+    queue: asyncio.Queue[T] = asyncio.Queue()
+
+    # Using a queue for incoming elements lets us fetch all available elements
+    # without blocking.
+    async def save_to_queue() -> None:
+        async for x in source:
+            queue.put_nowait(x)
 
     async def next_batch() -> list[T]:
-        nonlocal fetch_task
-        batch = [await fetch_task]
-        sleep_task = asyncio.create_task(sleep(batch_period))
-        fetch_task = asyncio.create_task(fetch())
-        while True:
-            done, pending = await asyncio.wait(
-                (sleep_task, fetch_task), return_when=asyncio.FIRST_COMPLETED
-            )
-            if fetch_task in done:
-                batch.append(fetch_task.result())
-                fetch_task = asyncio.create_task(fetch())
-            elif sleep_task in done:
-                return batch
+        # Unconditionally wait for first item in batch.
+        batch = [await queue.get()]
+        # Wait for other items to build up in queue.
+        await delay()
+        # Drain the queue of any pending items.
+        with suppress(asyncio.QueueEmpty):
+            while True:
+                batch.append(queue.get_nowait())
+        return batch
 
-    while True:
-        yield await next_batch()
+    queue_task = asyncio.create_task(save_to_queue())
+
+    try:
+        while True:
+            yield await next_batch()
+    except BaseException as e:
+        print(e)
+    finally:
+        queue_task.cancel()
+        with suppress(asyncio.CancelledError):
+            await queue_task

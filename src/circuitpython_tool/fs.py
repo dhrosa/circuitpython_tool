@@ -4,9 +4,6 @@ import shutil
 from collections.abc import AsyncIterator, Iterable, Iterator
 from pathlib import Path
 
-from inotify_simple import INotify as INotifySimple  # type: ignore
-from inotify_simple import flags
-
 from .inotify import INotify, Mask
 
 logger = logging.getLogger(__name__)
@@ -51,37 +48,7 @@ def guess_source_dir(start_dir: Path) -> Path | None:
     return None
 
 
-def watch_all(roots: Iterable[Path]) -> Iterator[set[Path]]:
-    watcher = INotifySimple()
-
-    # Maps inotify descriptors to roots.
-    descriptor_to_root = {}
-    for _, path in walk_all(roots):
-        if not path.is_dir():
-            continue
-        logger.debug(f"Watching directory {path} for changes.")
-        descriptor = watcher.add_watch(
-            path,
-            flags.CREATE
-            | flags.MODIFY
-            | flags.ATTRIB
-            | flags.DELETE
-            | flags.DELETE_SELF,
-        )
-        descriptor_to_root[descriptor] = path
-
-    while True:
-        modified_paths = set()
-        # Use a small read_delay to coalesce short bursts of events (e.g.
-        # copying multiple files from another location).
-        for event in watcher.read(read_delay=100):
-            root = descriptor_to_root[event.wd]
-            modified_paths.add(root / event.name)
-        if modified_paths:
-            yield modified_paths
-
-
-def watch_all2(roots: Iterable[Path]) -> AsyncIterator[Path]:
+def watch_all(roots: Iterable[Path]) -> AsyncIterator[Path]:
     """Watches a set of directories for changes in any descendant paths."""
 
     # Note: We create the watcher first and then create the coroutine. If we

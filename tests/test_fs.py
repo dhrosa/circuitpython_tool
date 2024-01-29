@@ -1,7 +1,7 @@
 import asyncio
 from pathlib import Path
 
-from circuitpython_tool.fs import guess_source_dir, upload, walk, watch_all2
+from circuitpython_tool.fs import guess_source_dir, upload, walk, watch_all
 
 
 def test_guess_source_dir_empty_dir(tmp_path: Path) -> None:
@@ -127,7 +127,7 @@ def test_watch_all_file_modification(tmp_path: Path) -> None:
     (root / "existing.txt").touch()
 
     async def body() -> None:
-        modifications = watch_all2([root])
+        modifications = watch_all([root])
 
         async def next_modification() -> str:
             return str(
@@ -153,7 +153,7 @@ def test_watch_all_nested_dir(tmp_path: Path) -> None:
     (root / "a" / "b").mkdir(parents=True)
 
     async def body() -> None:
-        modifications = watch_all2([root])
+        modifications = watch_all([root])
 
         async def next_modification() -> str:
             return str(
@@ -172,7 +172,7 @@ def test_watch_all_track_new_dir(tmp_path: Path) -> None:
     (root / "a").mkdir()
 
     async def body() -> None:
-        modifications = watch_all2([root])
+        modifications = watch_all([root])
 
         async def next_modification() -> str:
             return str(

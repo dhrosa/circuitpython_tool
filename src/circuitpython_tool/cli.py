@@ -325,7 +325,7 @@ def watch(source_dir: Path | None, query: Query) -> None:
     source_dirs = [source_dir]
     fs.upload(source_dirs, device.mount_if_needed())
 
-    events = time_batched(fs.watch_all2(source_dirs), delay=lambda: asyncio.sleep(0.5))
+    events = time_batched(fs.watch_all(source_dirs), delay=lambda: asyncio.sleep(0.5))
 
     async def watch_loop() -> None:
         while True:

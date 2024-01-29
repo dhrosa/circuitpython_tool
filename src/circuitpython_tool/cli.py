@@ -1,3 +1,4 @@
+import asyncio
 import logging
 from collections.abc import Callable, Iterable
 from functools import wraps
@@ -13,6 +14,7 @@ from rich.logging import RichHandler
 from rich.table import Table
 
 from . import VERSION, completion, fake_device, fs
+from .async_iter import time_batched
 from .config import Config, ConfigStorage, DeviceLabel
 from .device import Device
 from .params import (
@@ -323,16 +325,20 @@ def watch(source_dir: Path | None, query: Query) -> None:
     source_dirs = [source_dir]
     fs.upload(source_dirs, device.mount_if_needed())
 
-    events = fs.watch_all(source_dirs)
-    try:
+    events = time_batched(fs.watch_all2(source_dirs), delay=lambda: asyncio.sleep(0.5))
+
+    async def watch_loop() -> None:
         while True:
             with get_console().status(
                 "[yellow]Waiting[/yellow] for file modification."
             ):
-                modified_paths = next(events)
+                modified_paths = await anext(events)
                 logger.info(f"Modified paths: {[str(p) for p in modified_paths]}")
             with get_console().status("Uploading to device."):
                 fs.upload(source_dirs, device.mount_if_needed())
+
+    try:
+        asyncio.run(watch_loop())
     except KeyboardInterrupt:
         print("Watch [magenta]cancelled[/magenta] by keyboard interrupt.")
 

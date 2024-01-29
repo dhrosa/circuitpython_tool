@@ -1,6 +1,7 @@
+import asyncio
 from pathlib import Path
 
-from circuitpython_tool.fs import guess_source_dir, upload, walk
+from circuitpython_tool.fs import guess_source_dir, upload, walk, watch_all2
 
 
 def test_guess_source_dir_empty_dir(tmp_path: Path) -> None:
@@ -118,3 +119,27 @@ def test_upload_multiple_dirs(tmp_path: Path) -> None:
             "b.txt",
         ]
     )
+
+
+def test_watch_all_batching(tmp_path: Path) -> None:
+    root = tmp_path / "root"
+    root.mkdir()
+    (root / "existing.txt").touch()
+
+    async def body() -> None:
+        modifications = watch_all2([root], read_delay=0)
+
+        async def next_modification() -> set[str]:
+            return {
+                str(p.relative_to(root))
+                for p in await asyncio.wait_for(anext(modifications), 1)
+            }
+
+        (root / "create1.txt").touch()
+        assert (await next_modification()) == {"create1.txt"}
+
+        (root / "create2.txt").touch()
+        (root / "existing.txt").write_text("new contents")
+        assert (await next_modification()) == {"create2.txt", "existing.txt"}
+
+    asyncio.run(body())

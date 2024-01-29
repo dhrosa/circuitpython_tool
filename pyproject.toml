@@ -63,7 +63,8 @@ dependencies = ["pytest"]
 all = ["pytest"]
 
 [tool.pytest.ini_options]
-addopts = "--no-header --verbose -vv -W error"
+addopts = "--no-header -W error"
+log_level = "DEBUG"
 
 [tool.hatch.envs.completions.scripts]
 generate = [

@@ -1,10 +1,15 @@
 import logging
 import re
 import shutil
-from collections.abc import Iterable, Iterator
+from asyncio import sleep
+from collections.abc import AsyncIterator, Iterable, Iterator
 from pathlib import Path
 
-from inotify_simple import INotify, flags  # type: ignore
+from inotify_simple import INotify as INotifySimple  # type: ignore
+from inotify_simple import flags
+
+from .async_iter import time_batched
+from .inotify import INotify, Mask
 
 logger = logging.getLogger(__name__)
 
@@ -49,14 +54,14 @@ def guess_source_dir(start_dir: Path) -> Path | None:
 
 
 def watch_all(roots: Iterable[Path]) -> Iterator[set[Path]]:
-    watcher = INotify()
+    watcher = INotifySimple()
 
     # Maps inotify descriptors to roots.
     descriptor_to_root = {}
     for _, path in walk_all(roots):
         if not path.is_dir():
             continue
-        logger.info(f"Watching directory {str(path)} changes.")
+        logger.debug(f"Watching directory {path} for changes.")
         descriptor = watcher.add_watch(
             path,
             flags.CREATE
@@ -76,6 +81,35 @@ def watch_all(roots: Iterable[Path]) -> Iterator[set[Path]]:
             modified_paths.add(root / event.name)
         if modified_paths:
             yield modified_paths
+
+
+def watch_all2(roots: Iterable[Path], read_delay: float) -> AsyncIterator[set[Path]]:
+    """Watches a set of directories for changes in any descendant paths."""
+    watcher = INotify()
+    for _, path in walk_all(roots):
+        if not path.is_dir():
+            continue
+        logger.info(f"Watching directory {path} for changes.")
+        watcher.add_watch(
+            path,
+            Mask.CREATE | Mask.MODIFY | Mask.ATTRIB | Mask.DELETE | Mask.DELETE_SELF,
+        )
+
+    async def gen() -> AsyncIterator[set[Path]]:
+        async for event_batch in time_batched(
+            watcher.events(), delay=lambda: sleep(read_delay)
+        ):
+            logging.debug(f"Filesystem event_batch: {event_batch}")
+            modified_paths = set()
+            for event in event_batch:
+                # Don't need to explicitly remove watches; DELETE* events will
+                # automatically do that.
+                #
+                # TODO(dhrosa): Automatically watch new child directories
+                modified_paths.add(event.path)
+            yield modified_paths
+
+    return gen()
 
 
 def upload(source_dirs: Iterable[Path], mountpoint: Path) -> None:

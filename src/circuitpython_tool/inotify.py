@@ -133,9 +133,9 @@ class INotify:
             pos += EVENT_SIZE
             raw_name = data[pos : (pos + name_length)]
             pos += name_length
-            # Name is always null-terminated, but may contain arbitrary extra
+            # Name is null-terminated if non-empty, but may contain arbitrary extra
             # null bytes at the end.
-            name_bytes = raw_name[: raw_name.index(0)]
+            name_bytes = raw_name[: raw_name.find(0)]
             # Event path is relative to the path corresponding to the watch descriptor
             base_path = self.watch_descriptor_to_path[watch_descriptor]
             yield Event(mask=Mask(mask), path=base_path / os.fsdecode(name_bytes))

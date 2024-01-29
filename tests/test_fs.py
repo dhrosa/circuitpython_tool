@@ -121,25 +121,70 @@ def test_upload_multiple_dirs(tmp_path: Path) -> None:
     )
 
 
-def test_watch_all_batching(tmp_path: Path) -> None:
+def test_watch_all_file_modification(tmp_path: Path) -> None:
     root = tmp_path / "root"
     root.mkdir()
     (root / "existing.txt").touch()
 
     async def body() -> None:
-        modifications = watch_all2([root], read_delay=0)
+        modifications = watch_all2([root])
 
-        async def next_modification() -> set[str]:
-            return {
-                str(p.relative_to(root))
-                for p in await asyncio.wait_for(anext(modifications), 1)
-            }
+        async def next_modification() -> str:
+            return str(
+                (await asyncio.wait_for(anext(modifications), 1)).relative_to(root)
+            )
 
-        (root / "create1.txt").touch()
-        assert (await next_modification()) == {"create1.txt"}
+        (root / "create.txt").touch()
+        assert (await next_modification()) == "create.txt"
 
-        (root / "create2.txt").touch()
         (root / "existing.txt").write_text("new contents")
-        assert (await next_modification()) == {"create2.txt", "existing.txt"}
+        assert (await next_modification()) == "existing.txt"
+
+        (root / "existing.txt").unlink()
+        assert (await next_modification()) == "existing.txt"
+
+    asyncio.run(body())
+
+
+def test_watch_all_nested_dir(tmp_path: Path) -> None:
+    root = tmp_path / "root"
+    root.mkdir()
+
+    (root / "a" / "b").mkdir(parents=True)
+
+    async def body() -> None:
+        modifications = watch_all2([root])
+
+        async def next_modification() -> str:
+            return str(
+                (await asyncio.wait_for(anext(modifications), 1)).relative_to(root)
+            )
+
+        (root / "a" / "b" / "create.txt").touch()
+        assert (await next_modification()) == "a/b/create.txt"
+
+    asyncio.run(body())
+
+
+def test_watch_all_track_new_dir(tmp_path: Path) -> None:
+    root = tmp_path / "root"
+    root.mkdir()
+    (root / "a").mkdir()
+
+    async def body() -> None:
+        modifications = watch_all2([root])
+
+        async def next_modification() -> str:
+            return str(
+                (await asyncio.wait_for(anext(modifications), 1)).relative_to(root)
+            )
+
+        (root / "a" / "b").mkdir()
+        assert (await next_modification()) == "a/b"
+
+        # subdir a/b did not exist before, but its contents should now be
+        # watched for changes.
+        (root / "a" / "b" / "create.txt").touch()
+        assert (await next_modification()) == "a/b/create.txt"
 
     asyncio.run(body())

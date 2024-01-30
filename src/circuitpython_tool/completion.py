@@ -1,3 +1,9 @@
+"""
+Shell completion functions for custom `click` parameters.
+"""
+
+# TODO(dhrosa): Merge this into params.py
+
 import logging
 
 from click import Context, Parameter

@@ -1,3 +1,5 @@
+"""Device implementation for real CircuitPython devices."""
+
 import logging
 import shlex
 import subprocess
@@ -10,6 +12,7 @@ logger = logging.getLogger(__name__)
 
 def _run(command: str) -> str:
     """Execute command and return its stdout output."""
+    # TODO(dhrosa): Debug logs of command executions.
     process = subprocess.run(shlex.split(command), capture_output=True, text=True)
     try:
         process.check_returncode()

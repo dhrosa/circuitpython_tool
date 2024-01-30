@@ -1,3 +1,5 @@
+"""Fake Device implementation for testing and demos."""
+
 from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
@@ -69,6 +71,7 @@ def all_devices(toml: str | Path) -> list[FakeDevice]:
 
 
 def to_toml(devices: Sequence[Device]) -> str:
+    """Save arbitrary Device objects to a TOML file."""
     doc = tomlkit.document()
     devices_array = tomlkit.aot()
     for d in devices:

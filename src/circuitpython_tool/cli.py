@@ -1,3 +1,12 @@
+"""User-facing command-line interface using `click`.
+
+This is effectively the top-level code when the tool is executed as a program.
+
+Any code directly interfacing with `rich` is housed here to avoid standalone
+parts of the code being tied up with console output.
+
+"""
+
 import asyncio
 import logging
 from collections.abc import Callable, Iterable
@@ -28,12 +37,7 @@ from .query import Query
 from .shared_state import SharedState
 from .uf2 import Board
 
-# These can be removed in python 3.12
-#
-# Type variables for return value and function parameters.
-R = TypeVar("R")
-P = ParamSpec("P")
-
+# Use `rich` for tracebacks and logging.
 traceback.install(show_locals=True)
 logging.basicConfig(
     level="NOTSET",
@@ -72,6 +76,12 @@ def get_query(device_labels: dict[str, DeviceLabel], arg: str) -> Query:
 
 pass_shared_state = click.make_pass_decorator(SharedState, ensure=True)
 """Decorator for passing SharedState to a function."""
+
+# These can be removed in python 3.12
+#
+# Type variables for return value and function parameters.
+R = TypeVar("R")
+P = ParamSpec("P")
 
 
 def pass_config_storage(
@@ -325,6 +335,7 @@ def watch(source_dir: Path | None, query: Query) -> None:
     source_dirs = [source_dir]
     fs.upload(source_dirs, device.mount_if_needed())
 
+    # TODO(dhrosa): Expose delay as a flag.
     events = time_batched(fs.watch_all(source_dirs), delay=lambda: asyncio.sleep(0.5))
 
     async def watch_loop() -> None:
@@ -346,10 +357,7 @@ def watch(source_dir: Path | None, query: Query) -> None:
 @main.command
 @label_or_query_argument("query")
 def connect(query: Query) -> None:
-    """Connect to a device's serial terminal.
-
-    LABEL_NAME is the label of a device query that was added by 'label add'.
-    """
+    """Connect to a device's serial terminal."""
     device = distinct_device(query)
     logger.info("Launching minicom for ")
     logger.info(device)
@@ -483,6 +491,11 @@ def devices_table(devices: Iterable[Device]) -> Table:
 
 
 def distinct_device(query: Query) -> Device:
+    """Finds the distinct device matching the given query.
+
+    If no devices match the query, or if more than one device matches the query,
+    then we exit the process with an error.
+    """
     state = click.get_current_context().ensure_object(SharedState)
     devices = state.all_devices()
     matching_devices = [d for d in devices if query.matches(d)]

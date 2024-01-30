@@ -1,3 +1,5 @@
+"""Async iterator utilities."""
+
 import asyncio
 from collections.abc import AsyncIterator, Awaitable, Callable
 from contextlib import suppress
@@ -18,10 +20,11 @@ async def time_batched(
     e.g. using delay=lambda: asyncio.sleep(1) will group together all items that
     arrive within 1 second of the first item in the batch.
     """
-    queue: asyncio.Queue[T] = asyncio.Queue()
 
     # Using a queue for incoming elements lets us fetch all available elements
     # without blocking.
+    queue: asyncio.Queue[T] = asyncio.Queue()
+
     async def save_to_queue() -> None:
         async for x in source:
             queue.put_nowait(x)
@@ -37,14 +40,14 @@ async def time_batched(
                 batch.append(queue.get_nowait())
         return batch
 
+    # Collect input into queue in the background.
     queue_task = asyncio.create_task(save_to_queue())
 
     try:
         while True:
             yield await next_batch()
-    except BaseException as e:
-        print(e)
     finally:
+        # Clean up background task before exit.
         queue_task.cancel()
         with suppress(asyncio.CancelledError):
             await queue_task

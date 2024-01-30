@@ -1,3 +1,5 @@
+"""Custom `click` parameters."""
+
 import pathlib
 from collections.abc import Callable
 from typing import Any, TypeAlias, cast

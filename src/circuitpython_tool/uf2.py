@@ -1,3 +1,5 @@
+"""Functions for interacting with UF2 files."""
+
 import logging
 from collections.abc import Iterator
 from dataclasses import dataclass
@@ -13,6 +15,10 @@ BASE_URL = "https://circuitpython.org"
 
 
 def cached_boards_json() -> str:
+    """JSON blob of CircuitPython-supposed boards.
+
+    The data is fetched from circuitpython.org's github repo and cached to disk.
+    """
     # TODO(dhrosa): Re-download when the file is stale.
     path = app_dir / "cached_boards.json"
     if path.exists():
@@ -28,8 +34,13 @@ def cached_boards_json() -> str:
 
 @dataclass
 class Version:
+    """A CircuitPython release for a board."""
+
     label: str
+    """Version string."""
+
     locales: list[str]
+    """Supported locales for this release"""
 
 
 @dataclass

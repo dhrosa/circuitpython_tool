@@ -1,3 +1,5 @@
+"""High-level filesystem operations."""
+
 import logging
 import re
 import shutil
@@ -49,12 +51,20 @@ def guess_source_dir(start_dir: Path) -> Path | None:
 
 
 def watch_all(roots: Iterable[Path]) -> AsyncIterator[Path]:
-    """Watches a set of directories for changes in any descendant paths."""
+    """Watches a set of directories for changes in any descendant paths.
 
-    # Note: We create the watcher first and then create the coroutine. If we
-    # created the watcher directly within the coroutine. This lets us respond to
-    # events that happen between the call to this function and iterating over
-    # the first element of the coroutine.
+    Each time a path is modified, that path is yielded. Any newly created
+    descendant directories are automatically watched.
+
+    """
+
+    # Note: We eagerly create the watcher first and then create the coroutine. If we
+    # created the watcher directly within the coroutine, then the inotify code
+    # would not start up until the first element of the coroutine was requested.
+    #
+    # By eagerly creating the watcher instead, this lets us respond to events
+    # that happen between the call to this function and iterating over the first
+    # element of the coroutine.
     watcher = INotify()
     mask = Mask.CREATE | Mask.MODIFY | Mask.ATTRIB | Mask.DELETE | Mask.DELETE_SELF
     for _, path in walk_all(roots):
@@ -71,7 +81,8 @@ def watch_all(roots: Iterable[Path]) -> AsyncIterator[Path]:
                 watcher.add_watch(event.path, mask)
             # Note: We don't need to specially handle DELETE events on
             # directories; deleted directories are automatically removed from
-            # the watch.
+            # the watch via the IN_IGNORED mask:
+            # https://man7.org/linux/man-pages/man7/inotify.7.html#:~:text=read(2)%3A-,IN_IGNORED,-Watch%20was%20removed
             yield event.path
 
     return gen()
@@ -79,6 +90,8 @@ def watch_all(roots: Iterable[Path]) -> AsyncIterator[Path]:
 
 def upload(source_dirs: Iterable[Path], mountpoint: Path) -> None:
     """Copy all source files onto the device."""
+    # TODO(dhrosa): shutil.copytree() with a custom `copy_function` or `ignore`
+    # argument would probably be simpler.
     for source_dir, source in walk_all(source_dirs):
         if source.name[0] == "." or source.is_dir():
             continue

@@ -1,3 +1,4 @@
+"""State passed through `click` commands."""
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 
@@ -11,3 +12,4 @@ class SharedState:
     config_storage: ConfigStorage = ConfigStorage()
 
     all_devices: Callable[[], Sequence[Device]] = real_device.all_devices
+    """Callable to fetch all devices."""

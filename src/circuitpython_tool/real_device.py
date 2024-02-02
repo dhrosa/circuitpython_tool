@@ -9,21 +9,11 @@ from .device import Device
 
 logger = logging.getLogger(__name__)
 
+SERIAL_DIR = Path("/dev/serial/by-id")
+"""Contains all serial devices. Directory might not exist if none are connected."""
 
-def _run(command: str) -> str:
-    """Execute command and return its stdout output."""
-    # TODO(dhrosa): Debug logs of command executions.
-    process = subprocess.run(shlex.split(command), capture_output=True, text=True)
-    try:
-        process.check_returncode()
-    except subprocess.CalledProcessError:
-        logger.error(f"Command:\n{command}\nExited with status {process.returncode}")
-        if process.stdout:
-            logger.error(f"stdout:\n{process.stdout}")
-        if process.stderr:
-            logger.error(f"stderr:\n{process.stderr}")
-        raise
-    return process.stdout
+PARTITION_DIR = Path("/dev/disk/by-id")
+"""Contains all partition devices on the system."""
 
 
 class RealDevice(Device):
@@ -61,10 +51,10 @@ def all_devices() -> list[RealDevice]:
     """Finds all USB CircuitPython devices."""
     devices: list[RealDevice] = []
 
-    def find_or_add_device(info: dict[str, str]) -> RealDevice:
-        vendor = info["ID_USB_VENDOR"]
-        model = info["ID_USB_MODEL"]
-        serial = info["ID_USB_SERIAL_SHORT"]
+    def find_or_add_device(properties: dict[str, str]) -> RealDevice:
+        vendor = properties["ID_USB_VENDOR"]
+        model = properties["ID_USB_MODEL"]
+        serial = properties["ID_USB_SERIAL_SHORT"]
 
         for device in devices:
             if (
@@ -78,45 +68,69 @@ def all_devices() -> list[RealDevice]:
         return device
 
     # Find CIRCUITPY partition devices.
-    for path in Path("/dev/disk/by-id/").iterdir():
-        info = _get_device_info(path)
+    for path in PARTITION_DIR.iterdir():
+        properties = usb_device_properties(path)
         if (
-            info is None
-            or info["DEVTYPE"] != "partition"
-            or info["ID_FS_LABEL"] != "CIRCUITPY"
+            properties is None
+            or properties["DEVTYPE"] != "partition"
+            or properties["ID_FS_LABEL"] != "CIRCUITPY"
         ):
             continue
-        device = find_or_add_device(info)
+        device = find_or_add_device(properties)
         device.partition_path = path.resolve()
 
     # Find serial devices.
 
     # Parent directory might not exist if there are no attached serial devices.
-    serial_dir = Path("/dev/serial/by-id/")
-    if not serial_dir.exists():
+    if SERIAL_DIR.exists():
+        for path in SERIAL_DIR.iterdir():
+            properties = usb_device_properties(path)
+            if properties is None:
+                continue
+            device = find_or_add_device(properties)
+            device.serial_path = path.resolve()
+    else:
         logging.info("No serial devices found.")
-        return []
-    for path in serial_dir.iterdir():
-        info = _get_device_info(path)
-        if info is None:
-            continue
-        device = find_or_add_device(info)
-        device.serial_path = path.resolve()
 
     return devices
 
 
-def _get_device_info(path: Path) -> dict[str, str] | None:
+def usb_device_properties(path: Path) -> dict[str, str] | None:
     """
-    Extract device attributes from udevadm.
+    Extract device properties from udevadm.
 
     Returns None if the device is not a USB device.
     """
-    info = {}
-    command = f"udevadm info --query=property --name {path}"
-    for line in _run(command).splitlines():
+    properties = {}
+    for line in udevadm_info(path).splitlines():
         key, value = line.split("=", maxsplit=1)
-        info[key] = value
-    if info.get("ID_BUS", None) != "usb":
+        properties[key] = value
+    if properties.get("ID_BUS", None) != "usb":
         return None
-    return info
+    return properties
+
+
+def udevadm_info(path: Path) -> str:
+    """Uses `udevadm info` command to lookup device properties.
+
+    Output consists of KEY=VALUE lines.
+
+    Separated out for patching in unit tests.
+    """
+    return _run("udevadm info --query=property --name {path}")
+
+
+def _run(command: str) -> str:
+    """Execute command and return its stdout output."""
+    # TODO(dhrosa): Debug logs of command executions.
+    process = subprocess.run(shlex.split(command), capture_output=True, text=True)
+    try:
+        process.check_returncode()
+    except subprocess.CalledProcessError:
+        logger.error(f"Command:\n{command}\nExited with status {process.returncode}")
+        if process.stdout:
+            logger.error(f"stdout:\n{process.stdout}")
+        if process.stderr:
+            logger.error(f"stderr:\n{process.stderr}")
+        raise
+    return process.stdout

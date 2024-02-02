@@ -10,7 +10,7 @@ from tomlkit.items import Table
 from .device import Device
 
 
-@dataclass
+@dataclass(frozen=True)
 class FakeDevice(Device):
     """Fake Device implementation for use in tests and demos."""
 

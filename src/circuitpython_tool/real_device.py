@@ -3,7 +3,9 @@
 import logging
 import shlex
 import subprocess
+from dataclasses import replace
 from pathlib import Path
+from typing import TypeAlias
 
 from .device import Device
 
@@ -49,23 +51,21 @@ class RealDevice(Device):
 
 def all_devices() -> list[RealDevice]:
     """Finds all USB CircuitPython devices."""
-    devices: list[RealDevice] = []
+
+    # Maps (vendor, model, serial) to RealDevice instances.
+    Key: TypeAlias = tuple[str, str, str]
+    devices: dict[Key, RealDevice] = {}
+
+    def key(d: RealDevice) -> Key:
+        return (d.vendor, d.model, d.serial)
 
     def find_or_add_device(properties: dict[str, str]) -> RealDevice:
-        vendor = properties["ID_USB_VENDOR"]
-        model = properties["ID_USB_MODEL"]
-        serial = properties["ID_USB_SERIAL_SHORT"]
-
-        for device in devices:
-            if (
-                device.vendor == vendor
-                and device.model == model
-                and device.serial == serial
-            ):
-                return device
-        device = RealDevice(vendor, model, serial)
-        devices.append(device)
-        return device
+        device = RealDevice(
+            vendor=properties["ID_USB_VENDOR"],
+            model=properties["ID_USB_MODEL"],
+            serial=properties["ID_USB_SERIAL_SHORT"],
+        )
+        return devices.setdefault(key(device), device)
 
     # Find CIRCUITPY partition devices.
     for path in PARTITION_DIR.iterdir():
@@ -77,7 +77,7 @@ def all_devices() -> list[RealDevice]:
         ):
             continue
         device = find_or_add_device(properties)
-        device.partition_path = path.resolve()
+        devices[key(device)] = replace(device, partition_path=path)
 
     # Find serial devices.
 
@@ -88,11 +88,11 @@ def all_devices() -> list[RealDevice]:
             if properties is None:
                 continue
             device = find_or_add_device(properties)
-            device.serial_path = path.resolve()
+            devices[key(device)] = replace(device, serial_path=path)
     else:
         logging.info("No serial devices found.")
 
-    return devices
+    return list(devices.values())
 
 
 def usb_device_properties(path: Path) -> dict[str, str] | None:

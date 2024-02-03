@@ -21,6 +21,10 @@ class Device:
     # Path to serial device.
     serial_path: Path | None = None
 
+    def sort_key(self) -> tuple[str, str, str]:
+        """Key for sorting a sequence of devices."""
+        return (self.vendor, self.model, self.serial)
+
     def get_mountpoint(self) -> Path | None:
         """Find mountpoint. Returns None if not mounted."""
         raise NotImplementedError()

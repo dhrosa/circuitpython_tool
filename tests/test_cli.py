@@ -148,7 +148,7 @@ def test_device_save_fake_devices(tmp_path: Path, cli: CliRunner) -> None:
     with exits_with_code(0):
         cli.run(f"devices --save {new_fake_config}")
 
-    assert fake_device.all_devices(new_fake_config) == [
+    assert fake_device.all_devices(new_fake_config) == {
         fake_device.FakeDevice("va", "ma", "sa"),
         fake_device.FakeDevice("vb", "mb", "sb"),
-    ]
+    }

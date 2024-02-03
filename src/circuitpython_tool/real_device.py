@@ -49,7 +49,7 @@ class RealDevice(Device):
         logger.info(f"udisksctl: {unmount_stdout}")
 
 
-def all_devices() -> list[RealDevice]:
+def all_devices() -> set[RealDevice]:
     """Finds all USB CircuitPython devices."""
 
     # Maps (vendor, model, serial) to RealDevice instances.
@@ -92,7 +92,7 @@ def all_devices() -> list[RealDevice]:
     else:
         logging.info("No serial devices found.")
 
-    return list(devices.values())
+    return set(devices.values())
 
 
 def usb_device_properties(path: Path) -> dict[str, str] | None:

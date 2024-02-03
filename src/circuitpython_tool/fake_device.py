@@ -1,7 +1,7 @@
 """Fake Device implementation for testing and demos."""
 
-from collections.abc import Sequence
-from dataclasses import dataclass
+from collections.abc import Iterable
+from dataclasses import astuple, dataclass
 from pathlib import Path
 
 import tomlkit
@@ -60,21 +60,21 @@ class FakeDevice(Device):
         return table
 
 
-def all_devices(toml: str | Path) -> list[FakeDevice]:
+def all_devices(toml: str | Path) -> set[FakeDevice]:
     """Load FakeDevice objects from a TOML file."""
     if isinstance(toml, Path):
         toml = toml.read_text()
     document = tomlkit.loads(toml)
     tables = document.get("devices", tomlkit.aot())
     assert isinstance(tables, list)
-    return [FakeDevice.from_toml(t) for t in tables]
+    return {FakeDevice.from_toml(t) for t in tables}
 
 
-def to_toml(devices: Sequence[Device]) -> str:
+def to_toml(devices: Iterable[Device]) -> str:
     """Save arbitrary Device objects to a TOML file."""
     doc = tomlkit.document()
     devices_array = tomlkit.aot()
-    for d in devices:
+    for d in sorted(devices, key=astuple):
         fake = FakeDevice(
             vendor=d.vendor,
             model=d.model,

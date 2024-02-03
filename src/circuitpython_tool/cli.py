@@ -478,7 +478,7 @@ def devices_table(devices: Iterable[Device]) -> Table:
         # Make sure full paths are rendered even if terminal is too small.
         table.add_column(column_name, overflow="fold")
 
-    for device in devices:
+    for device in sorted(devices, key=Device.sort_key):
         table.add_row(
             device.vendor,
             device.model,

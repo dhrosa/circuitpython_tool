@@ -6,7 +6,7 @@ from circuitpython_tool.fake_device import FakeDevice, all_devices, to_toml
 
 
 def test_empty_str() -> None:
-    assert all_devices("") == []
+    assert all_devices("") == set()
 
 
 def test_required_fields() -> None:
@@ -21,7 +21,7 @@ vendor = "d"
 model = "e"
 serial = "f"
     """
-    assert all_devices(toml) == [FakeDevice("a", "b", "c"), FakeDevice("d", "e", "f")]
+    assert all_devices(toml) == {FakeDevice("a", "b", "c"), FakeDevice("d", "e", "f")}
 
 
 def test_missing_required_fields() -> None:
@@ -47,7 +47,7 @@ serial_path = "/serial"
 partition_path = "/partition"
 mountpoint = "/mount"
    """
-    assert all_devices(toml) == [
+    assert all_devices(toml) == {
         FakeDevice(
             "v",
             "m",
@@ -56,7 +56,7 @@ mountpoint = "/mount"
             partition_path=Path("/partition"),
             mountpoint=Path("/mount"),
         ),
-    ]
+    }
 
 
 def test_file_read(tmp_path: Path) -> None:
@@ -68,11 +68,11 @@ serial = "s"
       """
     file_path = tmp_path / "devices.toml"
     file_path.write_text(toml)
-    assert all_devices(file_path) == [FakeDevice("v", "m", "s")]
+    assert all_devices(file_path) == {FakeDevice("v", "m", "s")}
 
 
 def test_to_toml() -> None:
-    original_devices = [
+    original_devices = {
         # All fields set
         FakeDevice(
             "va",
@@ -84,7 +84,7 @@ def test_to_toml() -> None:
         ),
         # Optional fields unset
         FakeDevice("vb", "mb", "sb"),
-    ]
+    }
 
     toml = to_toml(original_devices)
     devices = all_devices(toml)

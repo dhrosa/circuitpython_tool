@@ -3,6 +3,7 @@ from pathlib import Path
 from pytest import MonkeyPatch, fixture
 
 from circuitpython_tool.hw import real_device
+from circuitpython_tool.hw import udev as udev_module
 from circuitpython_tool.hw.real_device import RealDevice
 
 
@@ -47,7 +48,7 @@ def udev(tmp_path: Path, monkeypatch: MonkeyPatch) -> FakeUdev:
     Fixture is setup as `autouse` so that no tests try to accidentally access real devices.
     """
     fake_udev = FakeUdev(tmp_path)
-    monkeypatch.setattr(real_device, "udevadm_info", fake_udev.info_command)
+    monkeypatch.setattr(udev_module, "udevadm_info", fake_udev.info_command)
     monkeypatch.setattr(real_device, "PARTITION_DIR", fake_udev.partition_dir)
     monkeypatch.setattr(real_device, "SERIAL_DIR", fake_udev.serial_dir)
     return fake_udev

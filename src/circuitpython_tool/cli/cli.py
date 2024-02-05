@@ -27,6 +27,7 @@ from ..async_iter import time_batched
 from ..hw import fake_device
 from ..hw.device import Device
 from ..hw.query import Query
+from ..hw.uf2_device import Uf2Device
 from ..uf2 import Board
 from . import completion
 from .config import Config, ConfigStorage, DeviceLabel
@@ -440,9 +441,16 @@ def download(board: Board, locale: str, destination: Path) -> None:
 @uf2.command
 @label_or_query_argument("query")
 def enter(query: Query) -> None:
+    """Restart selected device into UF2 bootloader."""
     device = distinct_device(query)
     print(device)
     device.uf2_enter()
+    # TODO(dhrosa): Wait for bootloader device to come online before exiting.
+
+
+@uf2.command("devices")
+def uf2_devices() -> None:
+    print(Uf2Device.all())
 
 
 @main.command

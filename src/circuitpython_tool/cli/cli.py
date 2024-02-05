@@ -487,6 +487,17 @@ def uf2_unmount() -> None:
     print("Device unmounted.")
 
 
+@uf2.command
+@label_or_query_argument("query")
+def boot_info(query: Query) -> None:
+    """Lookup UF2 bootloader info of the specified CircuitPython device."""
+    device = distinct_device(query)
+    print("Selected CircuitPython device: ", device)
+    boot_info = device.get_boot_info()
+    print("Version: ", boot_info.version)
+    print("Board ID: ", boot_info.board_id)
+
+
 @main.command
 @label_or_query_argument("query")
 def mount(query: Query) -> None:

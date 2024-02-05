@@ -9,6 +9,15 @@ logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
+class BootInfo:
+    version: str
+    """Version of CircuitPython running on the board."""
+
+    board_id: str
+    """CircuitPython board identifier."""
+
+
+@dataclass(frozen=True)
 class Device:
     """A CircuitPython composite USB device."""
 
@@ -49,3 +58,7 @@ class Device:
     def uf2_enter(self) -> None:
         """Restart device into the UF2 bootloader."""
         raise NotImplementedError
+
+    def get_boot_info(self) -> BootInfo:
+        """Lookup the adafruit board ID."""
+        raise NotImplementedError()

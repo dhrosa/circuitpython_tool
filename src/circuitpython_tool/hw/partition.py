@@ -1,5 +1,7 @@
 """Library for interacting with partition devices (e.g. /dev/sda1)."""
 
+from collections.abc import Iterator
+from contextlib import contextmanager
 from logging import getLogger
 from pathlib import Path
 
@@ -43,3 +45,25 @@ def unmount_if_needed(partition_path: Path) -> None:
     command = f"udisksctl unmount --block-device {partition_path}"
     unmount_stdout = run(command)
     logger.info(f"udisksctl: {unmount_stdout}")
+
+
+@contextmanager
+def temporarily_mount(partition_path: Path) -> Iterator[Path]:
+    """Temporarily mount the given partition.
+
+    The mountpoint is yielded to the caller.
+
+    If the partition was already mounted we yield the existing mountpoint, and
+    leave the partition mounted on exit.
+
+    If the partition was not already mounted we mount it, yield the mountpoint,
+    and then unmount on exit.
+    """
+    if existing_mountpoint := mountpoint(partition_path):
+        yield existing_mountpoint
+        return
+
+    try:
+        yield mount_if_needed(partition_path)
+    finally:
+        unmount_if_needed(partition_path)

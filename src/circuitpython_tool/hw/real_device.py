@@ -2,12 +2,13 @@
 
 import logging
 import os
+import re
 import termios
 from dataclasses import replace
 from pathlib import Path
 
 from . import partition
-from .device import Device
+from .device import BootInfo, Device
 from .partition import PARTITION_DIR
 from .udev import usb_device_properties
 
@@ -40,6 +41,18 @@ class RealDevice(Device):
             termios.tcsetattr(fd, termios.TCSANOW, attributes)
         finally:
             os.close(fd)
+
+    def get_boot_info(self) -> BootInfo:
+        with partition.temporarily_mount(self.partition_path) as mountpoint:
+            boot_out = (mountpoint / "boot_out.txt").read_text()
+        [version_line, board_id_line, *rest] = boot_out.splitlines()
+        version_match = re.match(r"^Adafruit CircuitPython ([^\s]*)", version_line)
+        if not version_match:
+            raise ValueError(f"Unable to parse version info from line: {version_line}")
+        board_id_match = re.match(r"^Board ID:([^\s]*)", board_id_line)
+        if not board_id_match:
+            raise ValueError(f"Unable to parse board id from line: {board_id_line}")
+        return BootInfo(version_match[1], board_id_match[1])
 
     @staticmethod
     def all() -> set["RealDevice"]:

@@ -39,8 +39,8 @@ class RealDevice(Device):
         # connection is set to a baudrate of 1200.
         if not self.serial_path:
             raise ValueError("No serial path associated with device: {self}")
+        fd = os.open(self.serial_path, os.O_RDWR)
         try:
-            fd = os.open(self.serial_path, os.O_RDWR)
             attributes = termios.tcgetattr(fd)
             # Input and output speeds.
             attributes[4:6] = (termios.B1200, termios.B1200)

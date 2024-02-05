@@ -24,7 +24,7 @@ from rich.table import Table
 
 from .. import VERSION, fs
 from ..async_iter import time_batched
-from ..hw import fake_device
+from ..hw import fake_device, partition
 from ..hw.device import Device
 from ..hw.query import Query
 from ..hw.uf2_device import Uf2Device
@@ -450,7 +450,35 @@ def enter(query: Query) -> None:
 
 @uf2.command("devices")
 def uf2_devices() -> None:
+    """List connected devices that are in UF2 bootloader mode."""
     print(Uf2Device.all())
+
+
+@uf2.command("mount")
+def uf2_mount() -> None:
+    """Mount connected UF2 bootloader device if needed and print the mountpoint."""
+    device = distinct_uf2_device()
+    print(device)
+    mountpoint = partition.mountpoint(device.partition_path)
+    if mountpoint:
+        print(f"Device already mounted at {mountpoint}.")
+        return
+    mountpoint = partition.mount_if_needed(device.partition_path)
+    print(f"Device mounted at {mountpoint}")
+
+
+@uf2.command("unmount")
+def uf2_unmount() -> None:
+    """Unmount connected UF2 bootloader device if needed."""
+    device = distinct_uf2_device()
+    print(device)
+    mountpoint = partition.mountpoint(device.partition_path)
+    if not mountpoint:
+        print("Device already not mounted.")
+        return
+    print(f"Device is currently mounted at {mountpoint}")
+    partition.unmount_if_needed(device.partition_path)
+    print("Device unmounted.")
 
 
 @main.command
@@ -530,5 +558,28 @@ def distinct_device(query: Query) -> Device:
                 ":thumbs_down: Ambiguous filter. ",
                 f"[red]{count}[/red] matching devices found:",
                 devices_table(matching_devices),
+            )
+            exit(1)
+
+
+def distinct_uf2_device() -> Uf2Device:
+    """Returns connected UF2 device.
+
+    If there are no connected devices, or there are multiple devices, we exit
+    the process with an error.
+
+    """
+    devices = Uf2Device.all()
+    match count := len(devices):
+        case 1:
+            return next(iter(devices))
+        case 0:
+            print(":thumbs_down: [red]0[/red] UF2 bootloader devices found.")
+            exit(1)
+        case _:
+            print(
+                ":thumbs_down: Ambiguous device. "
+                f"[red]{count}[/] UF2 bootloader devices found: ",
+                devices,
             )
             exit(1)

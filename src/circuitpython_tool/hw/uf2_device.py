@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from pathlib import Path
 
-from .partition import PARTITION_DIR
+from . import partition
 from .udev import usb_device_properties
 
 
@@ -15,11 +15,20 @@ class Uf2Device:
 
     partition_path: Path
 
+    def get_mountpoint(self) -> Path | None:
+        return partition.mountpoint(self.partition_path)
+
+    def mount_if_needed(self) -> Path:
+        return partition.mount_if_needed(self.partition_path)
+
+    def unmount_if_needed(self) -> None:
+        partition.unmount_if_needed(self.partition_path)
+
     @staticmethod
     def all() -> set["Uf2Device"]:
         """Find all devices waiting in UF2 bootloader mode."""
         devices: set[Uf2Device] = set()
-        for path in PARTITION_DIR.iterdir():
+        for path in partition.PARTITION_DIR.iterdir():
             properties = usb_device_properties(path)
             if (
                 properties is None

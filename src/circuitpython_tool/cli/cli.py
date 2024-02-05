@@ -24,7 +24,7 @@ from rich.table import Table
 
 from .. import VERSION, fs
 from ..async_iter import time_batched
-from ..hw import fake_device, partition
+from ..hw import fake_device
 from ..hw.device import Device
 from ..hw.query import Query
 from ..hw.uf2_device import Uf2Device
@@ -463,11 +463,11 @@ def uf2_mount() -> None:
     """Mount connected UF2 bootloader device if needed and print the mountpoint."""
     device = distinct_uf2_device()
     print(device)
-    mountpoint = partition.mountpoint(device.partition_path)
+    mountpoint = device.get_mountpoint()
     if mountpoint:
         print(f"Device already mounted at {mountpoint}.")
         return
-    mountpoint = partition.mount_if_needed(device.partition_path)
+    mountpoint = device.mount_if_needed()
     print(f"Device mounted at {mountpoint}")
 
 
@@ -476,12 +476,12 @@ def uf2_unmount() -> None:
     """Unmount connected UF2 bootloader device if needed."""
     device = distinct_uf2_device()
     print(device)
-    mountpoint = partition.mountpoint(device.partition_path)
+    mountpoint = device.get_mountpoint()
     if not mountpoint:
         print("Device already not mounted.")
         return
     print(f"Device is currently mounted at {mountpoint}")
-    partition.unmount_if_needed(device.partition_path)
+    device.unmount_if_needed()
     print("Device unmounted.")
 
 
@@ -546,7 +546,7 @@ def uf2_devices_table(devices: Iterable[Uf2Device]) -> Table:
             device.model,
             device.serial,
             str(device.partition_path),
-            str(partition.mountpoint(device.partition_path)),
+            str(device.get_mountpoint()),
         )
     return table
 

@@ -9,7 +9,7 @@ import logging
 from click import Context, Parameter
 from click.shell_completion import CompletionItem
 
-from .real_device import all_devices
+from .hw.real_device import all_devices
 from .shared_state import SharedState
 
 

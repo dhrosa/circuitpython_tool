@@ -8,9 +8,10 @@ import click
 from click import Context, Parameter, ParamType
 from click.shell_completion import CompletionItem
 
-from . import completion, fake_device
+from . import completion
 from .config import ConfigStorage
-from .query import Query
+from .hw import fake_device
+from .hw.query import Query
 from .shared_state import SharedState
 from .uf2 import Board
 

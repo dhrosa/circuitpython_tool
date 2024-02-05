@@ -4,7 +4,7 @@ import pytest
 import tomlkit
 
 from circuitpython_tool.config import Config, ConfigStorage, DeviceLabel
-from circuitpython_tool.query import Query
+from circuitpython_tool.hw.query import Query
 
 
 @pytest.fixture

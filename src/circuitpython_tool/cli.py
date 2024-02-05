@@ -22,10 +22,12 @@ from rich import get_console, print, progress, traceback
 from rich.logging import RichHandler
 from rich.table import Table
 
-from . import VERSION, completion, fake_device, fs
+from . import VERSION, completion, fs
 from .async_iter import time_batched
 from .config import Config, ConfigStorage, DeviceLabel
-from .device import Device
+from .hw import fake_device
+from .hw.device import Device
+from .hw.query import Query
 from .params import (
     BoardParam,
     ConfigStorageParam,
@@ -33,7 +35,6 @@ from .params import (
     LocaleParam,
     label_or_query_argument,
 )
-from .query import Query
 from .shared_state import SharedState
 from .uf2 import Board
 

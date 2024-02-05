@@ -6,8 +6,8 @@ from typing import Any, Generator, TypeAlias
 import pytest
 
 import circuitpython_tool.cli as cli_module
-from circuitpython_tool import fake_device
-from circuitpython_tool.fake_device import FakeDevice
+from circuitpython_tool.hw import fake_device
+from circuitpython_tool.hw.fake_device import FakeDevice
 
 CaptureFixture: TypeAlias = pytest.CaptureFixture[str]
 MonkeyPatch: TypeAlias = pytest.MonkeyPatch

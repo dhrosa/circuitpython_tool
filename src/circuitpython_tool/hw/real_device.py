@@ -5,7 +5,6 @@ import os
 import termios
 from dataclasses import replace
 from pathlib import Path
-from typing import TypeAlias
 
 from . import partition
 from .device import Device
@@ -53,11 +52,7 @@ def all_devices() -> set[RealDevice]:
     """Finds all USB CircuitPython devices."""
 
     # Maps (vendor, model, serial) to RealDevice instances.
-    Key: TypeAlias = tuple[str, str, str]
-    devices: dict[Key, RealDevice] = {}
-
-    def key(d: RealDevice) -> Key:
-        return (d.vendor, d.model, d.serial)
+    devices: dict[tuple[str, str, str], RealDevice] = {}
 
     def find_or_add_device(properties: dict[str, str]) -> RealDevice:
         device = RealDevice(
@@ -65,7 +60,7 @@ def all_devices() -> set[RealDevice]:
             model=properties["ID_USB_MODEL"],
             serial=properties["ID_USB_SERIAL_SHORT"],
         )
-        return devices.setdefault(key(device), device)
+        return devices.setdefault(device.key, device)
 
     # Find CIRCUITPY partition devices.
     for path in PARTITION_DIR.iterdir():
@@ -77,7 +72,7 @@ def all_devices() -> set[RealDevice]:
         ):
             continue
         device = find_or_add_device(properties)
-        devices[key(device)] = replace(device, partition_path=path)
+        devices[device.key] = replace(device, partition_path=path)
 
     # Find serial devices.
 
@@ -88,7 +83,7 @@ def all_devices() -> set[RealDevice]:
             if properties is None:
                 continue
             device = find_or_add_device(properties)
-            devices[key(device)] = replace(device, serial_path=path)
+            devices[device.key] = replace(device, serial_path=path)
     else:
         logging.info("No serial devices found.")
 

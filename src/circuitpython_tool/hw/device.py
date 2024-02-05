@@ -21,8 +21,9 @@ class Device:
     # Path to serial device.
     serial_path: Path | None = None
 
-    def sort_key(self) -> tuple[str, str, str]:
-        """Key for sorting a sequence of devices."""
+    @property
+    def key(self) -> tuple[str, str, str]:
+        """Unique and sortable identifier for this device."""
         return (self.vendor, self.model, self.serial)
 
     def get_mountpoint(self) -> Path | None:

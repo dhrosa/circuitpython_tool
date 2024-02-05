@@ -32,7 +32,7 @@ class Uf2Device:
                     vendor=properties["ID_USB_VENDOR"],
                     model=properties["ID_USB_MODEL"],
                     serial=properties["ID_USB_SERIAL_SHORT"],
-                    partition_path=path,
+                    partition_path=path.resolve(),
                 )
             )
         return devices

@@ -70,7 +70,7 @@ class RealDevice(Device):
             ):
                 continue
             device = find_or_add_device(properties)
-            devices[device.key] = replace(device, partition_path=path)
+            devices[device.key] = replace(device, partition_path=path.resolve())
 
         # Find serial devices.
 
@@ -81,7 +81,7 @@ class RealDevice(Device):
                 if properties is None:
                     continue
                 device = find_or_add_device(properties)
-                devices[device.key] = replace(device, serial_path=path)
+                devices[device.key] = replace(device, serial_path=path.resolve())
         else:
             logging.info("No serial devices found.")
 

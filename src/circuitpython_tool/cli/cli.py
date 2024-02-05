@@ -451,7 +451,11 @@ def enter(query: Query) -> None:
 @uf2.command("devices")
 def uf2_devices() -> None:
     """List connected devices that are in UF2 bootloader mode."""
-    print(Uf2Device.all())
+    devices = Uf2Device.all()
+    if devices:
+        print("Connected UF2 bootloader devices:", uf2_devices_table(devices))
+    else:
+        print(":person_shrugging: [blue]No[/] connected UF2 bootloader devices found.")
 
 
 @uf2.command("mount")
@@ -512,17 +516,14 @@ def unmount(query: Query) -> None:
 
 def devices_table(devices: Iterable[Device]) -> Table:
     """Render devices into a table."""
-    table = Table()
-    for column_name in (
+    table = Table(
         "Vendor",
         "Model",
         "Serial",
         "Partition Path",
         "Serial Path",
         "Mountpoint",
-    ):
-        # Make sure full paths are rendered even if terminal is too small.
-        table.add_column(column_name, overflow="fold")
+    )
 
     for device in sorted(devices, key=lambda d: d.key):
         table.add_row(
@@ -532,6 +533,20 @@ def devices_table(devices: Iterable[Device]) -> Table:
             str(device.partition_path),
             str(device.serial_path),
             str(device.get_mountpoint()),
+        )
+    return table
+
+
+def uf2_devices_table(devices: Iterable[Uf2Device]) -> Table:
+    """Render UF2 bootloader devices into a table."""
+    table = Table("Vendor", "Model", "Serial", "Partition Path", "Mountpoint")
+    for device in devices:
+        table.add_row(
+            device.vendor,
+            device.model,
+            device.serial,
+            str(device.partition_path),
+            str(partition.mountpoint(device.partition_path)),
         )
     return table
 
@@ -580,6 +595,6 @@ def distinct_uf2_device() -> Uf2Device:
             print(
                 ":thumbs_down: Ambiguous device. "
                 f"[red]{count}[/] UF2 bootloader devices found: ",
-                devices,
+                uf2_devices_table(devices),
             )
             exit(1)

@@ -2,8 +2,8 @@
 from collections.abc import Callable, Set
 from dataclasses import dataclass
 
-from ..hw import real_device
 from ..hw.device import Device
+from ..hw.real_device import RealDevice
 from .config import ConfigStorage
 
 
@@ -11,5 +11,5 @@ from .config import ConfigStorage
 class SharedState:
     config_storage: ConfigStorage = ConfigStorage()
 
-    all_devices: Callable[[], Set[Device]] = real_device.all_devices
+    all_devices: Callable[[], Set[Device]] = RealDevice.all
     """Callable to fetch all devices."""

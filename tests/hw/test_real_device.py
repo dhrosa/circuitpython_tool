@@ -3,7 +3,7 @@ from pathlib import Path
 from pytest import MonkeyPatch, fixture
 
 from circuitpython_tool.hw import real_device
-from circuitpython_tool.hw.real_device import RealDevice, all_devices
+from circuitpython_tool.hw.real_device import RealDevice
 
 
 class FakeUdev:
@@ -55,7 +55,7 @@ def udev(tmp_path: Path, monkeypatch: MonkeyPatch) -> FakeUdev:
 
 def test_no_devices() -> None:
     """Without any udev setup, no devices should be returned."""
-    assert all_devices() == set()
+    assert RealDevice.all() == set()
 
 
 def test_device_without_serial(udev: FakeUdev) -> None:
@@ -70,7 +70,7 @@ def test_device_without_serial(udev: FakeUdev) -> None:
         ID_FS_LABEL="CIRCUITPY",
     )
 
-    assert all_devices() == {
+    assert RealDevice.all() == {
         RealDevice("v", "m", "s", partition_path=udev.partition_dir / "device")
     }
 
@@ -85,7 +85,7 @@ def test_device_without_partition(udev: FakeUdev) -> None:
         ID_USB_SERIAL_SHORT="s",
     )
 
-    assert all_devices() == {
+    assert RealDevice.all() == {
         RealDevice("v", "m", "s", serial_path=udev.serial_dir / "device")
     }
 
@@ -110,7 +110,7 @@ def test_device_partition_and_serial(udev: FakeUdev) -> None:
         ID_USB_SERIAL_SHORT="s",
     )
 
-    assert all_devices() == {
+    assert RealDevice.all() == {
         RealDevice(
             "v",
             "m",
@@ -142,7 +142,7 @@ def test_partition_only_and_serial_only_devices(udev: FakeUdev) -> None:
         ID_USB_SERIAL_SHORT="ss",
     )
 
-    assert all_devices() == {
+    assert RealDevice.all() == {
         RealDevice(
             "vp", "mp", "sp", partition_path=udev.partition_dir / "partition_only"
         ),

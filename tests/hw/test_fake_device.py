@@ -2,11 +2,11 @@ from pathlib import Path
 
 import pytest
 
-from circuitpython_tool.hw.fake_device import FakeDevice, all_devices, to_toml
+from circuitpython_tool.hw.fake_device import FakeDevice, to_toml
 
 
 def test_empty_str() -> None:
-    assert all_devices("") == set()
+    assert FakeDevice.all("") == set()
 
 
 def test_required_fields() -> None:
@@ -21,7 +21,10 @@ vendor = "d"
 model = "e"
 serial = "f"
     """
-    assert all_devices(toml) == {FakeDevice("a", "b", "c"), FakeDevice("d", "e", "f")}
+    assert FakeDevice.all(toml) == {
+        FakeDevice("a", "b", "c"),
+        FakeDevice("d", "e", "f"),
+    }
 
 
 def test_missing_required_fields() -> None:
@@ -32,7 +35,7 @@ vendor = "v"
 serial = "s"
    """
     with pytest.raises(KeyError) as exception_info:
-        all_devices(toml)
+        FakeDevice.all(toml)
     assert "model" in str(exception_info.value)
 
 
@@ -47,7 +50,7 @@ serial_path = "/serial"
 partition_path = "/partition"
 mountpoint = "/mount"
    """
-    assert all_devices(toml) == {
+    assert FakeDevice.all(toml) == {
         FakeDevice(
             "v",
             "m",
@@ -68,7 +71,7 @@ serial = "s"
       """
     file_path = tmp_path / "devices.toml"
     file_path.write_text(toml)
-    assert all_devices(file_path) == {FakeDevice("v", "m", "s")}
+    assert FakeDevice.all(file_path) == {FakeDevice("v", "m", "s")}
 
 
 def test_to_toml() -> None:
@@ -87,6 +90,6 @@ def test_to_toml() -> None:
     }
 
     toml = to_toml(original_devices)
-    devices = all_devices(toml)
+    devices = FakeDevice.all(toml)
 
     assert devices == original_devices

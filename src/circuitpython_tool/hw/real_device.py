@@ -47,47 +47,47 @@ class RealDevice(Device):
         finally:
             os.close(fd)
 
+    @staticmethod
+    def all() -> set["RealDevice"]:
+        """Finds all USB CircuitPython devices."""
 
-def all_devices() -> set[RealDevice]:
-    """Finds all USB CircuitPython devices."""
+        # Maps (vendor, model, serial) to RealDevice instances.
+        devices: dict[tuple[str, str, str], RealDevice] = {}
 
-    # Maps (vendor, model, serial) to RealDevice instances.
-    devices: dict[tuple[str, str, str], RealDevice] = {}
+        def find_or_add_device(properties: dict[str, str]) -> RealDevice:
+            device = RealDevice(
+                vendor=properties["ID_USB_VENDOR"],
+                model=properties["ID_USB_MODEL"],
+                serial=properties["ID_USB_SERIAL_SHORT"],
+            )
+            return devices.setdefault(device.key, device)
 
-    def find_or_add_device(properties: dict[str, str]) -> RealDevice:
-        device = RealDevice(
-            vendor=properties["ID_USB_VENDOR"],
-            model=properties["ID_USB_MODEL"],
-            serial=properties["ID_USB_SERIAL_SHORT"],
-        )
-        return devices.setdefault(device.key, device)
-
-    # Find CIRCUITPY partition devices.
-    for path in PARTITION_DIR.iterdir():
-        properties = usb_device_properties(path)
-        if (
-            properties is None
-            or properties["DEVTYPE"] != "partition"
-            or properties["ID_FS_LABEL"] != "CIRCUITPY"
-        ):
-            continue
-        device = find_or_add_device(properties)
-        devices[device.key] = replace(device, partition_path=path)
-
-    # Find serial devices.
-
-    # Parent directory might not exist if there are no attached serial devices.
-    if SERIAL_DIR.exists():
-        for path in SERIAL_DIR.iterdir():
+        # Find CIRCUITPY partition devices.
+        for path in PARTITION_DIR.iterdir():
             properties = usb_device_properties(path)
-            if properties is None:
+            if (
+                properties is None
+                or properties["DEVTYPE"] != "partition"
+                or properties["ID_FS_LABEL"] != "CIRCUITPY"
+            ):
                 continue
             device = find_or_add_device(properties)
-            devices[device.key] = replace(device, serial_path=path)
-    else:
-        logging.info("No serial devices found.")
+            devices[device.key] = replace(device, partition_path=path)
 
-    return set(devices.values())
+        # Find serial devices.
+
+        # Parent directory might not exist if there are no attached serial devices.
+        if SERIAL_DIR.exists():
+            for path in SERIAL_DIR.iterdir():
+                properties = usb_device_properties(path)
+                if properties is None:
+                    continue
+                device = find_or_add_device(properties)
+                devices[device.key] = replace(device, serial_path=path)
+        else:
+            logging.info("No serial devices found.")
+
+        return set(devices.values())
 
 
 def usb_device_properties(path: Path) -> dict[str, str] | None:

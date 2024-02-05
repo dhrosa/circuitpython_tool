@@ -8,7 +8,7 @@ import click
 from click import Context, Parameter, ParamType
 from click.shell_completion import CompletionItem
 
-from ..hw import fake_device
+from ..hw.fake_device import FakeDevice
 from ..hw.query import Query
 from ..uf2 import Board
 from . import completion
@@ -79,7 +79,7 @@ class FakeDeviceParam(click.Path):
 
         assert context
         # Eagerly evaluate here to force file errors to happen here.
-        devices = fake_device.all_devices(value)
+        devices = FakeDevice.all(value)
         context.ensure_object(SharedState).all_devices = lambda: devices
 
 

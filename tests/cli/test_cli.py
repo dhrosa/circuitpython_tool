@@ -6,8 +6,7 @@ from typing import Any, Generator, TypeAlias
 import pytest
 
 import circuitpython_tool.cli.cli as cli_module
-from circuitpython_tool.hw import fake_device
-from circuitpython_tool.hw.fake_device import FakeDevice
+from circuitpython_tool.hw.fake_device import FakeDevice, to_toml
 
 CaptureFixture: TypeAlias = pytest.CaptureFixture[str]
 MonkeyPatch: TypeAlias = pytest.MonkeyPatch
@@ -23,7 +22,7 @@ class CliRunner:
     def run(self, args_str: str) -> None:
         """Execute main, automatically filling in fake device information."""
         fake_config_path = self.base_path / "fake_devices.toml"
-        fake_config_path.write_text(fake_device.to_toml(self.fake_devices))
+        fake_config_path.write_text(to_toml(self.fake_devices))
 
         args = [
             "--fake-device-config",
@@ -148,7 +147,7 @@ def test_device_save_fake_devices(tmp_path: Path, cli: CliRunner) -> None:
     with exits_with_code(0):
         cli.run(f"devices --save {new_fake_config}")
 
-    assert fake_device.all_devices(new_fake_config) == {
-        fake_device.FakeDevice("va", "ma", "sa"),
-        fake_device.FakeDevice("vb", "mb", "sb"),
+    assert FakeDevice.all(new_fake_config) == {
+        FakeDevice("va", "ma", "sa"),
+        FakeDevice("vb", "mb", "sb"),
     }

@@ -9,7 +9,7 @@ import logging
 from click import Context, Parameter
 from click.shell_completion import CompletionItem
 
-from ..hw.real_device import all_devices
+from ..hw.real_device import RealDevice
 from .shared_state import SharedState
 
 
@@ -36,7 +36,8 @@ def device_label(
 def query(context: Context, param: Parameter, incomplete: str) -> list[CompletionItem]:
     disable_logging()
     return [
-        CompletionItem(":".join((d.vendor, d.model, d.serial))) for d in all_devices()
+        CompletionItem(":".join((d.vendor, d.model, d.serial)))
+        for d in RealDevice.all()
     ]
 
 

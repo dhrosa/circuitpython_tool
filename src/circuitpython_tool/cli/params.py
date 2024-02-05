@@ -8,12 +8,12 @@ import click
 from click import Context, Parameter, ParamType
 from click.shell_completion import CompletionItem
 
+from ..hw import fake_device
+from ..hw.query import Query
+from ..uf2 import Board
 from . import completion
 from .config import ConfigStorage
-from .hw import fake_device
-from .hw.query import Query
 from .shared_state import SharedState
-from .uf2 import Board
 
 
 class ConfigStorageParam(click.Path):

@@ -5,7 +5,7 @@ from typing import Any, Generator, TypeAlias
 
 import pytest
 
-import circuitpython_tool.cli as cli_module
+import circuitpython_tool.cli.cli as cli_module
 from circuitpython_tool.hw import fake_device
 from circuitpython_tool.hw.fake_device import FakeDevice
 

@@ -22,12 +22,14 @@ from rich import get_console, print, progress, traceback
 from rich.logging import RichHandler
 from rich.table import Table
 
-from . import VERSION, completion, fs
-from .async_iter import time_batched
+from .. import VERSION, fs
+from ..async_iter import time_batched
+from ..hw import fake_device
+from ..hw.device import Device
+from ..hw.query import Query
+from ..uf2 import Board
+from . import completion
 from .config import Config, ConfigStorage, DeviceLabel
-from .hw import fake_device
-from .hw.device import Device
-from .hw.query import Query
 from .params import (
     BoardParam,
     ConfigStorageParam,
@@ -36,7 +38,6 @@ from .params import (
     label_or_query_argument,
 )
 from .shared_state import SharedState
-from .uf2 import Board
 
 # Use `rich` for tracebacks and logging.
 traceback.install(show_locals=True)

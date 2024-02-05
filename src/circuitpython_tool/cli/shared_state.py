@@ -2,9 +2,9 @@
 from collections.abc import Callable, Set
 from dataclasses import dataclass
 
+from ..hw import real_device
+from ..hw.device import Device
 from .config import ConfigStorage
-from .hw import real_device
-from .hw.device import Device
 
 
 @dataclass

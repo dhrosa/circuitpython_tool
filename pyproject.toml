@@ -13,7 +13,7 @@ authors = [
 ]
 dynamic = ["readme", "version"]
 
-dependencies = ["tomlkit", "rich", "click", "rich-click"]
+dependencies = ["tomlkit", "rich", "click", "rich-click", "humanize"]
 
 [project.urls]
 "Source code" = "https://github.com/dhrosa/circuitpython_tool"

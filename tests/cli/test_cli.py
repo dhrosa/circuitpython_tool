@@ -4,12 +4,19 @@ from pathlib import Path
 from typing import Any, Iterator, TypeAlias
 
 import pytest
+import rich
 
 import circuitpython_tool.cli.cli as cli_module
 from circuitpython_tool.hw.fake_device import FakeDevice, to_toml
 
 CaptureFixture: TypeAlias = pytest.CaptureFixture[str]
 MonkeyPatch: TypeAlias = pytest.MonkeyPatch
+
+
+@pytest.fixture(autouse=True)
+def disable_wrapping() -> None:
+    """Prevents line wrapping in rich output."""
+    rich.reconfigure(width=1000)
 
 
 class CliRunner:

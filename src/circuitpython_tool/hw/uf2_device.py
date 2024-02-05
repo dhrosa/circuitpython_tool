@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from datetime import datetime
 from pathlib import Path
 
 from . import partition
@@ -14,6 +15,11 @@ class Uf2Device:
     serial: str
 
     partition_path: Path
+
+    @property
+    def connection_time(self) -> datetime:
+        """The timestamp at which the device was connected to the system."""
+        return datetime.fromtimestamp(self.partition_path.stat().st_mtime)
 
     def get_mountpoint(self) -> Path | None:
         return partition.mountpoint(self.partition_path)

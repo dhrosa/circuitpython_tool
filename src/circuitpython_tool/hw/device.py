@@ -2,6 +2,7 @@
 
 import logging
 from dataclasses import dataclass
+from datetime import datetime
 from pathlib import Path
 
 logger = logging.getLogger(__name__)
@@ -25,6 +26,13 @@ class Device:
     def key(self) -> tuple[str, str, str]:
         """Unique and sortable identifier for this device."""
         return (self.vendor, self.model, self.serial)
+
+    @property
+    def connection_time(self) -> datetime:
+        """The timestamp at which the device was connected to the system."""
+        if not self.partition_path.exists():
+            return datetime.fromtimestamp(0)
+        return datetime.fromtimestamp(self.partition_path.stat().st_mtime)
 
     def get_mountpoint(self) -> Path | None:
         """Find mountpoint. Returns None if not mounted."""

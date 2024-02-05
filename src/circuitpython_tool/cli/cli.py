@@ -10,6 +10,7 @@ parts of the code being tied up with console output.
 import asyncio
 import logging
 from collections.abc import Callable, Iterable
+from datetime import datetime
 from functools import wraps
 from os import execlp
 from pathlib import Path
@@ -18,6 +19,7 @@ from typing import Concatenate, ParamSpec, TypeVar
 from urllib.request import urlopen
 
 import rich_click as click
+from humanize import naturaltime
 from rich import get_console, print, progress, traceback
 from rich.logging import RichHandler
 from rich.table import Table
@@ -514,6 +516,12 @@ def unmount(query: Query) -> None:
     print("Device unmounted.")
 
 
+def pretty_datetime(timestamp: datetime) -> str:
+    """Human-readable rendering of a timestamp and its delta from now."""
+    delta = naturaltime(datetime.now() - timestamp)
+    return f"{timestamp:%x %X} ({delta})"
+
+
 def devices_table(devices: Iterable[Device]) -> Table:
     """Render devices into a table."""
     table = Table(
@@ -523,7 +531,11 @@ def devices_table(devices: Iterable[Device]) -> Table:
         "Partition Path",
         "Serial Path",
         "Mountpoint",
+        "Connection Time",
     )
+
+    for column in table.columns:
+        column.overflow = "fold"
 
     for device in sorted(devices, key=lambda d: d.key):
         table.add_row(
@@ -533,13 +545,18 @@ def devices_table(devices: Iterable[Device]) -> Table:
             str(device.partition_path),
             str(device.serial_path),
             str(device.get_mountpoint()),
+            pretty_datetime(device.connection_time),
         )
     return table
 
 
 def uf2_devices_table(devices: Iterable[Uf2Device]) -> Table:
     """Render UF2 bootloader devices into a table."""
-    table = Table("Vendor", "Model", "Serial", "Partition Path", "Mountpoint")
+    table = Table(
+        "Vendor", "Model", "Serial", "Partition Path", "Mountpoint", "Connection Time"
+    )
+    for column in table.columns:
+        column.overflow = "fold"
     for device in devices:
         table.add_row(
             device.vendor,
@@ -547,6 +564,7 @@ def uf2_devices_table(devices: Iterable[Uf2Device]) -> Table:
             device.serial,
             str(device.partition_path),
             str(device.get_mountpoint()),
+            pretty_datetime(device.connection_time),
         )
     return table
 

@@ -8,15 +8,13 @@ from pathlib import Path
 
 from . import partition
 from .device import Device
+from .partition import PARTITION_DIR
 from .udev import usb_device_properties
 
 logger = logging.getLogger(__name__)
 
 SERIAL_DIR = Path("/dev/serial/by-id")
 """Contains all serial devices. Directory might not exist if none are connected."""
-
-PARTITION_DIR = Path("/dev/disk/by-id")
-"""Contains all partition devices on the system."""
 
 
 class RealDevice(Device):

@@ -7,6 +7,9 @@ from .shell import run
 
 logger = getLogger(__name__)
 
+PARTITION_DIR = Path("/dev/disk/by-id")
+"""Contains all partition devices on the system."""
+
 
 def mountpoint(partition_path: Path) -> Path | None:
     """Find the mountpoint of the given partition device.

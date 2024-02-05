@@ -1,10 +1,8 @@
 from dataclasses import dataclass
 from pathlib import Path
 
+from .partition import PARTITION_DIR
 from .udev import usb_device_properties
-
-PARTITION_DIR = Path("/dev/disk/by-id")
-"""Contains all partition devices on the system."""
 
 
 @dataclass(frozen=True)

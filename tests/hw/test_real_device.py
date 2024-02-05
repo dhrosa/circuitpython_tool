@@ -77,7 +77,7 @@ def test_device_without_serial(udev: FakeUdev) -> None:
 
 
 def test_device_without_partition(udev: FakeUdev) -> None:
-    """Lookup a valid device with a serial device but no partition device."""
+    """Devices with serial port and no partition should be skipped."""
     udev.add_serial_device(
         "device",
         ID_BUS="usb",
@@ -86,9 +86,7 @@ def test_device_without_partition(udev: FakeUdev) -> None:
         ID_USB_SERIAL_SHORT="s",
     )
 
-    assert RealDevice.all() == {
-        RealDevice("v", "m", "s", serial_path=udev.serial_dir / "device")
-    }
+    assert RealDevice.all() == set()
 
 
 def test_device_partition_and_serial(udev: FakeUdev) -> None:
@@ -119,33 +117,4 @@ def test_device_partition_and_serial(udev: FakeUdev) -> None:
             partition_path=udev.partition_dir / "device",
             serial_path=udev.serial_dir / "device",
         ),
-    }
-
-
-def test_partition_only_and_serial_only_devices(udev: FakeUdev) -> None:
-    """Test lookup of a partition-only device and an unrelated serial-only device."""
-
-    udev.add_partition_device(
-        "partition_only",
-        ID_BUS="usb",
-        ID_USB_VENDOR="vp",
-        ID_USB_MODEL="mp",
-        ID_USB_SERIAL_SHORT="sp",
-        DEVTYPE="partition",
-        ID_FS_LABEL="CIRCUITPY",
-    )
-
-    udev.add_serial_device(
-        "serial_only",
-        ID_BUS="usb",
-        ID_USB_VENDOR="vs",
-        ID_USB_MODEL="ms",
-        ID_USB_SERIAL_SHORT="ss",
-    )
-
-    assert RealDevice.all() == {
-        RealDevice(
-            "vp", "mp", "sp", partition_path=udev.partition_dir / "partition_only"
-        ),
-        RealDevice("vs", "ms", "ss", serial_path=udev.serial_dir / "serial_only"),
     }

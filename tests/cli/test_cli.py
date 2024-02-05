@@ -77,24 +77,26 @@ def test_device_list_multiple_devices(capsys: CaptureFixture, cli: CliRunner) ->
         partition_path="/partition_a",
         mountpoint="/mount_a",
     )
-    cli.add_device("vb", "mb", "sb", serial_path="/serial_b")
+    cli.add_device(
+        "vb", "mb", "sb", partition_path="/partition_b", serial_path="/serial_b"
+    )
     with exits_with_code(0):
         cli.run("devices")
     snapshot = capsys.readouterr()
     assert contains_ordered_substrings(
         snapshot.out,
         ["va", "ma", "sa", "/partition_a", "None", "/mount_a"]
-        + ["vb", "mb", "sb", "None", "/serial_b", "None"],
+        + ["vb", "mb", "sb", "/partition_b", "/serial_b", "None"],
     )
 
 
 def test_device_list_query(capsys: CaptureFixture, cli: CliRunner) -> None:
-    cli.add_device("va", "ma", "sa")
-    cli.add_device("vb", "mb", "sb")
+    cli.add_device("va", "ma", "sa", Path("/partition1"))
+    cli.add_device("vb", "mb", "sb", Path("/partition2"))
     with exits_with_code(0):
         cli.run("devices va:ma:")
     out = capsys.readouterr().out
-    assert contains_ordered_substrings(out, ["va", "ma", "sa"])
+    assert contains_ordered_substrings(out, ["va", "ma", "sa", "/partition1"])
     assert "vb" not in out
     assert "mb" not in out
     assert "sb" not in out
@@ -126,7 +128,7 @@ def test_connect(
 
     monkeypatch.setattr(cli_module, "execlp", fake_exec)
 
-    cli.add_device("vv", "mm", "ss", serial_path="/serial_path")
+    cli.add_device("vv", "mm", "ss", "/partition", serial_path="/serial_path")
     with exits_with_code(0):
         cli.run("label add label_a vv:mm:ss")
 
@@ -140,14 +142,14 @@ def test_connect(
 
 
 def test_device_save_fake_devices(tmp_path: Path, cli: CliRunner) -> None:
-    cli.add_device("va", "ma", "sa")
-    cli.add_device("vb", "mb", "sb")
+    cli.add_device("va", "ma", "sa", Path("/partition1"))
+    cli.add_device("vb", "mb", "sb", Path("/partition2"))
 
     new_fake_config = tmp_path / "new_fake.toml"
     with exits_with_code(0):
         cli.run(f"devices --save {new_fake_config}")
 
     assert FakeDevice.all(new_fake_config) == {
-        FakeDevice("va", "ma", "sa"),
-        FakeDevice("vb", "mb", "sb"),
+        FakeDevice("va", "ma", "sa", Path("/partition1")),
+        FakeDevice("vb", "mb", "sb", Path("/partition2")),
     }

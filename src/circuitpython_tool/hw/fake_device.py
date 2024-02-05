@@ -51,7 +51,7 @@ class FakeDevice(Device):
             vendor=get("vendor"),
             model=get("model"),
             serial=get("serial"),
-            partition_path=get_optional_path("partition_path"),
+            partition_path=Path(get("partition_path")),
             serial_path=get_optional_path("serial_path"),
             mountpoint=get_optional_path("mountpoint"),
         )

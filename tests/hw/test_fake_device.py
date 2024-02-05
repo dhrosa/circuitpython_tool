@@ -15,15 +15,17 @@ def test_required_fields() -> None:
 vendor = "a"
 model = "b"
 serial = "c"
+partition_path = "/partition1"
 
 [[devices]]
 vendor = "d"
 model = "e"
 serial = "f"
+partition_path = "/partition2"
     """
     assert FakeDevice.all(toml) == {
-        FakeDevice("a", "b", "c"),
-        FakeDevice("d", "e", "f"),
+        FakeDevice("a", "b", "c", Path("/partition1")),
+        FakeDevice("d", "e", "f", Path("/partition2")),
     }
 
 
@@ -33,6 +35,7 @@ def test_missing_required_fields() -> None:
 vendor = "v"
 # model = "m"
 serial = "s"
+partition_path = "/partition"
    """
     with pytest.raises(KeyError) as exception_info:
         FakeDevice.all(toml)
@@ -68,10 +71,11 @@ def test_file_read(tmp_path: Path) -> None:
 vendor = "v"
 model = "m"
 serial = "s"
+partition_path = "/partition"
       """
     file_path = tmp_path / "devices.toml"
     file_path.write_text(toml)
-    assert FakeDevice.all(file_path) == {FakeDevice("v", "m", "s")}
+    assert FakeDevice.all(file_path) == {FakeDevice("v", "m", "s", Path("/partition"))}
 
 
 def test_to_toml() -> None:
@@ -86,7 +90,7 @@ def test_to_toml() -> None:
             mountpoint=Path("/mount"),
         ),
         # Optional fields unset
-        FakeDevice("vb", "mb", "sb"),
+        FakeDevice("vb", "mb", "sb", Path("/partition")),
     }
 
     toml = to_toml(original_devices)

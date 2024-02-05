@@ -16,7 +16,7 @@ class Device:
     serial: str
 
     # Path to partition device.
-    partition_path: Path | None = None
+    partition_path: Path
 
     # Path to serial device.
     serial_path: Path | None = None

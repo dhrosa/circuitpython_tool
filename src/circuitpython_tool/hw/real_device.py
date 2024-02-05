@@ -19,16 +19,12 @@ SERIAL_DIR = Path("/dev/serial/by-id")
 
 class RealDevice(Device):
     def get_mountpoint(self) -> Path | None:
-        if not self.partition_path:
-            return None
         return partition.mountpoint(self.partition_path)
 
     def mount_if_needed(self) -> Path:
-        assert self.partition_path
         return partition.mount_if_needed(self.partition_path)
 
     def unmount_if_needed(self) -> None:
-        assert self.partition_path
         partition.unmount_if_needed(self.partition_path)
 
     def uf2_enter(self) -> None:
@@ -52,13 +48,14 @@ class RealDevice(Device):
         # Maps (vendor, model, serial) to RealDevice instances.
         devices: dict[tuple[str, str, str], RealDevice] = {}
 
-        def find_or_add_device(properties: dict[str, str]) -> RealDevice:
-            device = RealDevice(
-                vendor=properties["ID_USB_VENDOR"],
-                model=properties["ID_USB_MODEL"],
-                serial=properties["ID_USB_SERIAL_SHORT"],
-            )
-            return devices.setdefault(device.key, device)
+        def vendor(properties: dict[str, str]) -> str:
+            return properties["ID_USB_VENDOR"]
+
+        def model(properties: dict[str, str]) -> str:
+            return properties["ID_USB_MODEL"]
+
+        def serial(properties: dict[str, str]) -> str:
+            return properties["ID_USB_SERIAL_SHORT"]
 
         # Find CIRCUITPY partition devices.
         for path in PARTITION_DIR.iterdir():
@@ -69,10 +66,15 @@ class RealDevice(Device):
                 or properties["ID_FS_LABEL"] != "CIRCUITPY"
             ):
                 continue
-            device = find_or_add_device(properties)
-            devices[device.key] = replace(device, partition_path=path.resolve())
+            device = RealDevice(
+                vendor=vendor(properties),
+                model=model(properties),
+                serial=serial(properties),
+                partition_path=path.resolve(),
+            )
+            devices[device.key] = device
 
-        # Find serial devices.
+        # Find corresponding serial devices.
 
         # Parent directory might not exist if there are no attached serial devices.
         if SERIAL_DIR.exists():
@@ -80,8 +82,10 @@ class RealDevice(Device):
                 properties = usb_device_properties(path)
                 if properties is None:
                     continue
-                device = find_or_add_device(properties)
-                devices[device.key] = replace(device, serial_path=path.resolve())
+                key = vendor(properties), model(properties), serial(properties)
+                if key not in devices:
+                    continue
+                devices[key] = replace(devices[key], serial_path=path.resolve())
         else:
             logging.info("No serial devices found.")
 

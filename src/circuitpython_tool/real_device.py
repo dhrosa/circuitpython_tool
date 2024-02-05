@@ -117,7 +117,7 @@ def udevadm_info(path: Path) -> str:
 
     Separated out for patching in unit tests.
     """
-    return _run("udevadm info --query=property --name {path}")
+    return _run(f"udevadm info --query=property --name {path}")
 
 
 def _run(command: str) -> str:

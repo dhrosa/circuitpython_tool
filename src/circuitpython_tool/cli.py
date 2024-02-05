@@ -435,6 +435,14 @@ def download(board: Board, locale: str, destination: Path) -> None:
         destination.write_bytes(f.read())
 
 
+@uf2.command
+@label_or_query_argument("query")
+def enter(query: Query) -> None:
+    device = distinct_device(query)
+    print(device)
+    device.uf2_enter()
+
+
 @main.command
 @label_or_query_argument("query")
 def mount(query: Query) -> None:

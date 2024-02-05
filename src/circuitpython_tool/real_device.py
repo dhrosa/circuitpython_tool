@@ -1,8 +1,10 @@
 """Device implementation for real CircuitPython devices."""
 
 import logging
+import os
 import shlex
 import subprocess
+import termios
 from dataclasses import replace
 from pathlib import Path
 from typing import TypeAlias
@@ -20,7 +22,7 @@ PARTITION_DIR = Path("/dev/disk/by-id")
 
 class RealDevice(Device):
     def get_mountpoint(self) -> Path | None:
-        if self.partition_path is None:
+        if not self.partition_path:
             return None
         command = f"lsblk {self.partition_path} --output mountpoint --noheadings"
         out = _run(command).strip()
@@ -47,6 +49,20 @@ class RealDevice(Device):
         command = f"udisksctl unmount --block-device {self.partition_path}"
         unmount_stdout = _run(command)
         logger.info(f"udisksctl: {unmount_stdout}")
+
+    def uf2_enter(self) -> None:
+        # RP2040-based builds enter the UF2 bootloader when the USB CDC
+        # connection is set to a baudrate of 1200.
+        if not self.serial_path:
+            raise ValueError("No serial path associated with device: {self}")
+        try:
+            fd = os.open(self.serial_path, os.O_RDWR)
+            attributes = termios.tcgetattr(fd)
+            # Input and output speeds.
+            attributes[4:6] = (termios.B1200, termios.B1200)
+            termios.tcsetattr(fd, termios.TCSANOW, attributes)
+        finally:
+            os.close(fd)
 
 
 def all_devices() -> set[RealDevice]:

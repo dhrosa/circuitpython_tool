@@ -36,3 +36,7 @@ class Device:
     def unmount_if_needed(self) -> None:
         """Unmounts the partition device if needed."""
         raise NotImplementedError
+
+    def uf2_enter(self) -> None:
+        """Restart device into the UF2 bootloader."""
+        raise NotImplementedError

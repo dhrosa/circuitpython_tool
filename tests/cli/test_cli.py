@@ -1,7 +1,7 @@
 import re
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Any, Generator, TypeAlias
+from typing import Any, Iterator, TypeAlias
 
 import pytest
 
@@ -41,12 +41,12 @@ class CliRunner:
 
 
 @pytest.fixture
-def cli(tmp_path: Path) -> Generator[CliRunner, None, None]:
+def cli(tmp_path: Path) -> Iterator[CliRunner]:
     yield CliRunner(tmp_path)
 
 
 @contextmanager
-def exits_with_code(code: int) -> Generator[None, None, None]:
+def exits_with_code(code: int) -> Iterator[None]:
     try:
         yield
     except SystemExit as exit:

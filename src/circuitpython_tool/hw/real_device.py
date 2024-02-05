@@ -2,14 +2,14 @@
 
 import logging
 import os
-import shlex
-import subprocess
 import termios
 from dataclasses import replace
 from pathlib import Path
 from typing import TypeAlias
 
+from . import partition
 from .device import Device
+from .shell import run
 
 logger = logging.getLogger(__name__)
 
@@ -24,31 +24,15 @@ class RealDevice(Device):
     def get_mountpoint(self) -> Path | None:
         if not self.partition_path:
             return None
-        command = f"lsblk {self.partition_path} --output mountpoint --noheadings"
-        out = _run(command).strip()
-        if not out:
-            return None
-        return Path(out)
+        return partition.mountpoint(self.partition_path)
 
     def mount_if_needed(self) -> Path:
-        mountpoint = self.get_mountpoint()
-        if mountpoint:
-            return mountpoint
-        partition_path = self.partition_path
-        command = f"udisksctl mount --block-device {partition_path} --options noatime"
-        mount_stdout = _run(command)
-        logger.info(f"udisksctl: {mount_stdout}")
-        mountpoint = self.get_mountpoint()
-        if mountpoint:
-            return mountpoint
-        exit(f"{partition_path} somehow not mounted.")
+        assert self.partition_path
+        return partition.mount_if_needed(self.partition_path)
 
     def unmount_if_needed(self) -> None:
-        if not self.get_mountpoint():
-            return
-        command = f"udisksctl unmount --block-device {self.partition_path}"
-        unmount_stdout = _run(command)
-        logger.info(f"udisksctl: {unmount_stdout}")
+        assert self.partition_path
+        partition.unmount_if_needed(self.partition_path)
 
     def uf2_enter(self) -> None:
         # RP2040-based builds enter the UF2 bootloader when the USB CDC
@@ -133,20 +117,4 @@ def udevadm_info(path: Path) -> str:
 
     Separated out for patching in unit tests.
     """
-    return _run(f"udevadm info --query=property --name {path}")
-
-
-def _run(command: str) -> str:
-    """Execute command and return its stdout output."""
-    # TODO(dhrosa): Debug logs of command executions.
-    process = subprocess.run(shlex.split(command), capture_output=True, text=True)
-    try:
-        process.check_returncode()
-    except subprocess.CalledProcessError:
-        logger.error(f"Command:\n{command}\nExited with status {process.returncode}")
-        if process.stdout:
-            logger.error(f"stdout:\n{process.stdout}")
-        if process.stderr:
-            logger.error(f"stderr:\n{process.stderr}")
-        raise
-    return process.stdout
+    return run(f"udevadm info --query=property --name {path}")

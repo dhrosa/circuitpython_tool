@@ -134,8 +134,13 @@ class BoardParam(ParamType):
     name = "board_id"
 
     def convert(
-        self, value: str | Board, param: Parameter | None, context: Context | None
-    ) -> Board:
+        self,
+        value: str | Board | None,
+        param: Parameter | None,
+        context: Context | None,
+    ) -> Board | None:
+        if value is None:
+            return None
         if isinstance(value, Board):
             return value
         for board in Board.all():

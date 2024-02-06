@@ -6,7 +6,7 @@ from typing import Any, Iterator, TypeAlias
 import pytest
 import rich
 
-import circuitpython_tool.cli.cli as cli_module
+from circuitpython_tool.cli import commands
 from circuitpython_tool.hw.fake_device import FakeDevice, to_toml
 
 CaptureFixture: TypeAlias = pytest.CaptureFixture[str]
@@ -38,7 +38,7 @@ class CliRunner:
             self.base_path / "config.toml",
             *args_str.split(),
         ]
-        cli_module.main(args)
+        commands.main(args)
 
     def add_device(self, *args: Any, **kwargs: Any) -> None:
         """Create and add a new FakeDevice.
@@ -60,6 +60,19 @@ def exits_with_code(code: int) -> Iterator[None]:
         assert exit.code == code
     else:
         assert False
+
+
+def test_subcommands() -> None:
+    assert set(commands.main.commands.keys()) == {
+        "devices",
+        "label",
+        "upload",
+        "watch",
+        "connect",
+        "mount",
+        "unmount",
+        "uf2",
+    }
 
 
 def test_device_list_no_devices(capsys: CaptureFixture, cli: CliRunner) -> None:
@@ -133,7 +146,7 @@ def test_connect(
         nonlocal exec_args
         exec_args = list(args)
 
-    monkeypatch.setattr(cli_module, "execlp", fake_exec)
+    monkeypatch.setattr(commands, "execlp", fake_exec)
 
     cli.add_device("vv", "mm", "ss", "/partition", serial_path="/serial_path")
     with exits_with_code(0):

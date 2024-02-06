@@ -35,12 +35,16 @@ class RealDevice(Device):
             raise ValueError("No serial path associated with device: {self}")
         fd = os.open(self.serial_path, os.O_RDWR)
         try:
+            logging.info(
+                f"Triggering bootloader restart by setting baud rate on {self.serial_path} to 1200."
+            )
             attributes = termios.tcgetattr(fd)
             # Input and output speeds.
             attributes[4:6] = (termios.B1200, termios.B1200)
             termios.tcsetattr(fd, termios.TCSANOW, attributes)
         finally:
             os.close(fd)
+        logging.info(f"Closed {self.serial_path}")
 
     def get_boot_info(self) -> BootInfo:
         with partition.temporarily_mount(self.partition_path) as mountpoint:

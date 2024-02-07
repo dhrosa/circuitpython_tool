@@ -80,13 +80,18 @@ def download(board: Board, locale: str, destination: Path) -> Path:
         destination /= url.split("/")[-1]
     print(f"Source: {url}")
     print(f"Destination: {destination}")
+
     response = urlopen(url)
-    with progress.wrap_file(
-        response,
-        total=int(response.headers["Content-Length"]),
-        description="Downloading",
-    ) as f:
-        destination.write_bytes(f.read())
+    with (
+        progress.wrap_file(
+            response,
+            total=int(response.headers["Content-Length"]),
+            description="Downloading",
+        ) as response,
+        destination.open("wb") as output,
+    ):
+        while chunk := response.read(4 * 1024):
+            output.write(chunk)
     return destination
 
 

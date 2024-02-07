@@ -127,6 +127,31 @@ def auto_download(
 
 
 @uf2.command
+@click.argument(
+    "image_path",
+    type=click.Path(path_type=Path, dir_okay=False, exists=True),
+    required=True,
+)
+def install(image_path: Path) -> None:
+    """Install the given UF2 image onto connected UF2 bootloader device."""
+    uf2_device = distinct_uf2_device()
+    mountpoint = uf2_device.mount_if_needed()
+
+    destination = mountpoint / image_path.name
+
+    print("Source: ", image_path)
+    print("Destination: ", destination)
+
+    # TODO(dhrosa): This progress bar spends most of
+    # its time at the 100% stage.
+    with (
+        progress.open(str(image_path), "rb", description="Flashing") as input_file,
+        destination.open("wb") as output_file,
+    ):
+        output_file.write(input_file.read())
+
+
+@uf2.command
 @label_or_query_argument("query")
 def enter(query: Query) -> None:
     """Restart selected device into UF2 bootloader."""

@@ -9,6 +9,7 @@ from humanize import naturaldelta
 from rich import get_console, print, progress
 from rich.table import Table
 
+from ..hw.device import Device
 from ..hw.query import Query
 from ..hw.uf2_device import Uf2Device
 from ..uf2 import Board
@@ -90,42 +91,14 @@ def download(board: Board, locale: str, destination: Path) -> None:
 @label_or_query_argument("query")
 def enter(query: Query) -> None:
     """Restart selected device into UF2 bootloader."""
-    if uf2_devices := Uf2Device.all():
-        print(
-            ":thumbs_down: UF2 bootloader device(s) [red]already connected[/]: ",
-            uf2_devices_table(uf2_devices),
-        )
-        exit(1)
     device = distinct_device(query)
     print("Selected CircuitPython device: ", device)
-    device.uf2_enter()
-
-    start_time = time.time()
-
-    def elapsed_str() -> str:
-        return naturaldelta(time.time() - start_time)
-
     try:
-        with get_console().status("Waiting for device restart") as status:
-            while True:
-                status.update(
-                    f"Waiting for device restart. Elapsed time: {elapsed_str()}"
-                )
-                uf2_devices = Uf2Device.all()
-                if not uf2_devices:
-                    time.sleep(0.1)
-                    continue
-                if len(uf2_devices) > 1:
-                    print("[red]Multiple[/] UF2 bootloader devices appeared.")
-                    exit(1)
-                print(
-                    f":thumbs_up: [green]Successfully[/] entered UF2 bootloader "
-                    f"in elapsed time of {elapsed_str()}."
-                )
-                print("UF2 bootloader device: ", next(iter(uf2_devices)))
-                break
+        uf2_device = enter_uf2_bootloader(device)
     except KeyboardInterrupt:
         print("Wait [magenta]cancelled[/magenta] by keyboard interrupt.")
+        return
+    print("UF2 bootloader device: ", uf2_device)
 
 
 @uf2.command("devices")
@@ -174,3 +147,38 @@ def boot_info(query: Query) -> None:
     boot_info = device.get_boot_info()
     print("Version: ", boot_info.version)
     print("Board ID: ", boot_info.board_id)
+
+
+def enter_uf2_bootloader(device: Device) -> Uf2Device:
+    """Restarts the given device into its UF2 bootloader, and returns the resulting Uf2Device."""
+    if uf2_devices := Uf2Device.all():
+        print(
+            ":thumbs_down: UF2 bootloader device(s) [red]already connected[/]: ",
+            uf2_devices_table(uf2_devices),
+        )
+        exit(1)
+
+    device.uf2_enter()
+
+    start_time = time.time()
+
+    def elapsed_str() -> str:
+        return naturaldelta(time.time() - start_time)
+
+    with get_console().status("Waiting for device restart") as status:
+        while True:
+            status.update(f"Waiting for device restart. Elapsed time: {elapsed_str()}")
+            uf2_devices = Uf2Device.all()
+            if not uf2_devices:
+                time.sleep(0.1)
+                continue
+            if len(uf2_devices) > 1:
+                print("[red]Multiple[/] UF2 bootloader devices appeared.")
+                exit(1)
+            # One connected device.
+            uf2_device = next(iter(uf2_devices))
+            print(
+                f":thumbs_up: [green]Successfully[/] entered UF2 bootloader "
+                f"in elapsed time of {elapsed_str()}."
+            )
+            return uf2_device

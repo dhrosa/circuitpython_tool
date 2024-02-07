@@ -32,7 +32,7 @@ def mount_if_needed(partition_path: Path) -> Path:
     if existing_mountpoint:
         return existing_mountpoint
     command = f"udisksctl mount --block-device {partition_path} --options noatime"
-    mount_stdout = run(command)
+    mount_stdout = run(command).strip()
     logger.info(f"udisksctl: {mount_stdout}")
     new_mountpoint = mountpoint(partition_path)
     if new_mountpoint:
@@ -43,7 +43,7 @@ def mount_if_needed(partition_path: Path) -> Path:
 def unmount_if_needed(partition_path: Path) -> None:
     """Unmount the given device if needed."""
     command = f"udisksctl unmount --block-device {partition_path}"
-    unmount_stdout = run(command)
+    unmount_stdout = run(command).strip()
     logger.info(f"udisksctl: {unmount_stdout}")
 
 

@@ -94,6 +94,12 @@ class Board:
             yield board
 
     @staticmethod
+    def by_id(board_id: str) -> "Board":
+        """Lookup a Board by ID."""
+        boards = {b.id: b for b in Board.all()}
+        return boards[board_id]
+
+    @staticmethod
     def all_locales() -> list[str]:
         """Set of all potentially valid locale codes, sorted alphabetically."""
         locales: set[str] = set()

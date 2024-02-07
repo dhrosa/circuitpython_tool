@@ -2,6 +2,7 @@
 
 import time
 from pathlib import Path
+from typing import cast
 from urllib.request import urlopen
 
 import rich_click as click
@@ -67,13 +68,14 @@ def url(board: Board, locale: str) -> None:
     type=LocaleParam(),
     help="Locale for CircuitPython install.",
 )
-def download(board: Board, locale: str, destination: Path) -> None:
+def download(board: Board, locale: str, destination: Path) -> Path:
     """Download CircuitPython image for the requested board.
 
     If DESTINATION is not provided, the file is downloaded to the current directory.
     If DESTINATION is a directory, the filename is automatically generated.
     """
     url = board.download_url(board.most_recent_version, locale)
+    destination = download_path(url, destination)
     if destination.is_dir():
         destination /= url.split("/")[-1]
     print(f"Source: {url}")
@@ -85,6 +87,43 @@ def download(board: Board, locale: str, destination: Path) -> None:
         description="Downloading",
     ) as f:
         destination.write_bytes(f.read())
+    return destination
+
+
+@uf2.command
+@click.pass_context
+@label_or_query_argument("query")
+@click.argument(
+    "destination", type=click.Path(path_type=Path), required=False, default=Path.cwd()
+)
+@click.option(
+    "--locale",
+    default="en_US",
+    type=LocaleParam(),
+    help="Locale for CircuitPython install.",
+)
+def auto_download(
+    context: click.Context, query: Query, locale: str, destination: Path
+) -> Path:
+    """Download the appropriate CircuitPython image for the selected CircuitPython device.
+
+    Automatically detects the Adafruit board ID of the connected device and
+    downloads the respective CircuitPython distribution.
+
+    If DESTINATION is not provided, the file is downloaded to the current directory.
+    If DESTINATION is a directory, the filename is automatically generated.
+    """
+    device = distinct_device(query)
+    print("Selected CircuitPython device: ", device)
+
+    board_id = device.get_boot_info().board_id
+    print("Device board ID: ", board_id)
+    board = Board.by_id(board_id)
+
+    return cast(
+        Path,
+        context.invoke(download, board=board, locale=locale, destination=destination),
+    )
 
 
 @uf2.command
@@ -147,6 +186,17 @@ def boot_info(query: Query) -> None:
     boot_info = device.get_boot_info()
     print("Version: ", boot_info.version)
     print("Board ID: ", boot_info.board_id)
+
+
+def download_path(url: str, destination: Path) -> Path:
+    """Determine the destination file path for the download.
+
+    If `destination` is already a file path, it is returned unchanged. If
+      `destination` is a directory, the file name is derived from the URL.
+    """
+    if destination.is_dir():
+        return destination / url.split("/")[-1]
+    return destination
 
 
 def enter_uf2_bootloader(device: Device) -> Uf2Device:

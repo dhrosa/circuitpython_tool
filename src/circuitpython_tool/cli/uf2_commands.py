@@ -97,7 +97,7 @@ def download(board: Board, locale: str, destination: Path) -> Path:
 
 @uf2.command
 @click.pass_context
-@label_or_query_argument("query")
+@label_or_query_argument("query", required=True)
 @click.argument(
     "destination", type=click.Path(path_type=Path), required=False, default=Path.cwd()
 )
@@ -137,11 +137,28 @@ def auto_download(
     type=click.Path(path_type=Path, dir_okay=False, exists=True),
     required=True,
 )
-def install(image_path: Path) -> None:
-    """Install the given UF2 image onto connected UF2 bootloader device."""
-    uf2_device = distinct_uf2_device()
-    mountpoint = uf2_device.mount_if_needed()
+@label_or_query_argument("query")
+def install(image_path: Path, query: Query | None) -> None:
+    """Install the given UF2 image onto connected UF2 bootloader device.
 
+    If a CircuitPython device is not specified, we assume there is already a
+    connected UF2 bootloader device to use as the target.
+
+    If a CircuitPython device is specified, it is restarted into its UF2
+    bootloader and is used as the target.
+    """
+    if query:
+        device = distinct_device(query)
+        print(
+            "Restarting the following CircuitPython device into UF2 bootloader: ",
+            device,
+        )
+        uf2_device = enter_uf2_bootloader(device)
+    else:
+        uf2_device = distinct_uf2_device()
+
+    print("Selected UF2 bootloader device: ", uf2_device)
+    mountpoint = uf2_device.mount_if_needed()
     destination = mountpoint / image_path.name
 
     print("Source: ", image_path)
@@ -157,8 +174,8 @@ def install(image_path: Path) -> None:
 
 
 @uf2.command
-@label_or_query_argument("query")
-def enter(query: Query) -> None:
+@label_or_query_argument("query", required=True)
+def restart(query: Query) -> None:
     """Restart selected device into UF2 bootloader."""
     device = distinct_device(query)
     print("Selected CircuitPython device: ", device)
@@ -208,7 +225,7 @@ def uf2_unmount() -> None:
 
 
 @uf2.command
-@label_or_query_argument("query")
+@label_or_query_argument("query", required=True)
 def boot_info(query: Query) -> None:
     """Lookup UF2 bootloader info of the specified CircuitPython device."""
     device = distinct_device(query)

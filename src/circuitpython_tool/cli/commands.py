@@ -158,7 +158,7 @@ def upload(source_dir: Path | None, query: Query) -> None:
     "If not specified, the source directory is guessed by searching the current directory and "
     "its descendants for user code (e.g. code.py).",
 )
-@label_or_query_argument("query")
+@label_or_query_argument("query", required=True)
 def watch(source_dir: Path | None, query: Query) -> None:
     """Continuously upload code to device in response to source file changes.
 
@@ -200,7 +200,7 @@ def watch(source_dir: Path | None, query: Query) -> None:
 
 
 @main.command
-@label_or_query_argument("query")
+@label_or_query_argument("query", required=True)
 def connect(query: Query) -> None:
     """Connect to a device's serial terminal."""
     device = distinct_device(query)
@@ -211,7 +211,7 @@ def connect(query: Query) -> None:
 
 
 @main.command
-@label_or_query_argument("query")
+@label_or_query_argument("query", required=True)
 def mount(query: Query) -> None:
     """Mounts the specified device if needed, and prints the mountpoint."""
     device = distinct_device(query)
@@ -225,7 +225,7 @@ def mount(query: Query) -> None:
 
 
 @main.command
-@label_or_query_argument("query")
+@label_or_query_argument("query", required=True)
 def unmount(query: Query) -> None:
     """Unmounts the specified device if needed."""
     device = distinct_device(query)

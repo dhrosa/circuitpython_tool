@@ -109,8 +109,13 @@ class QueryOrLabelParam(ParamType):
     name = "label_or_query"
 
     def convert(
-        self, value: str | Query, param: Parameter | None, context: Context | None
-    ) -> Query:
+        self,
+        value: str | Query | None,
+        param: Parameter | None,
+        context: Context | None,
+    ) -> Query | None:
+        if value is None:
+            return None
         if isinstance(value, Query):
             return value
         try:
@@ -190,8 +195,12 @@ def label_or_query_argument(
     """Decorator that accepts a device label or a raw query string, and passes
     an argument of type Query to the command."""
 
+    kwargs.setdefault("required", False)
     # The return value will be a Query, likely with the name 'query', but we
     # want to communicate to the user that either a device label or query string
     # works.
-    kwargs.setdefault("metavar", "LABEL_OR_QUERY")
+    metavar = "LABEL_OR_QUERY"
+    if not kwargs.get("required"):
+        metavar = f"[{metavar}]"
+    kwargs.setdefault("metavar", metavar)
     return click.argument(name, *args, type=QueryOrLabelParam(), **kwargs)

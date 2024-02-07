@@ -1,9 +1,11 @@
 """'uf2' subcommands."""
 
+import time
 from pathlib import Path
 from urllib.request import urlopen
 
 import rich_click as click
+from humanize import naturaldelta
 from rich import get_console, print, progress
 from rich.table import Table
 
@@ -88,10 +90,42 @@ def download(board: Board, locale: str, destination: Path) -> None:
 @label_or_query_argument("query")
 def enter(query: Query) -> None:
     """Restart selected device into UF2 bootloader."""
+    if uf2_devices := Uf2Device.all():
+        print(
+            ":thumbs_down: UF2 bootloader device(s) [red]already connected[/]: ",
+            uf2_devices_table(uf2_devices),
+        )
+        exit(1)
     device = distinct_device(query)
-    print(device)
+    print("Selected CircuitPython device: ", device)
     device.uf2_enter()
-    # TODO(dhrosa): Wait for bootloader device to come online before exiting.
+
+    start_time = time.time()
+
+    def elapsed_str() -> str:
+        return naturaldelta(time.time() - start_time)
+
+    try:
+        with get_console().status("Waiting for device restart") as status:
+            while True:
+                status.update(
+                    f"Waiting for device restart. Elapsed time: {elapsed_str()}"
+                )
+                uf2_devices = Uf2Device.all()
+                if not uf2_devices:
+                    time.sleep(0.1)
+                    continue
+                if len(uf2_devices) > 1:
+                    print("[red]Multiple[/] UF2 bootloader devices appeared.")
+                    exit(1)
+                print(
+                    f":thumbs_up: [green]Successfully[/] entered UF2 bootloader "
+                    f"in elapsed time of {elapsed_str()}."
+                )
+                print("UF2 bootloader device: ", next(iter(uf2_devices)))
+                break
+    except KeyboardInterrupt:
+        print("Wait [magenta]cancelled[/magenta] by keyboard interrupt.")
 
 
 @uf2.command("devices")

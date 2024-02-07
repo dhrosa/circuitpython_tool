@@ -123,6 +123,7 @@ class QueryOrLabelParam(ParamType):
                 return Query.parse(value)
         except Query.ParseError as error:
             self.fail(str(error))
+        # TODO(dhrosa): Actually implement device label lookup
         return Query("", "", "")
 
     def shell_complete(

@@ -1,7 +1,9 @@
 """'uf2' subcommands."""
 
 import time
+from logging import getLogger
 from pathlib import Path
+from tempfile import mkdtemp
 from typing import cast
 from urllib.request import urlopen
 
@@ -16,6 +18,8 @@ from ..hw.uf2_device import Uf2Device
 from ..uf2 import Board
 from . import distinct_device, distinct_uf2_device, uf2_devices_table
 from .params import BoardParam, LocaleParam, label_or_query_argument
+
+logger = getLogger(__name__)
 
 
 @click.group
@@ -171,6 +175,42 @@ def install(image_path: Path, query: Query | None) -> None:
         destination.open("wb") as output_file,
     ):
         output_file.write(input_file.read())
+
+
+@uf2.command
+@click.pass_context
+@label_or_query_argument("query", required=True)
+@click.option(
+    "--locale",
+    default="en_US",
+    type=LocaleParam(),
+    help="Locale for CircuitPython install.",
+)
+@click.option(
+    "--delete-download/--no-delete-download",
+    default=True,
+    help="Delete downloaded UF2 image on exit.",
+)
+def auto_install(
+    context: click.Context, query: Query, locale: str, delete_download: bool
+) -> None:
+    """Automatically detect the appropriate CircuitPython distribution and install it."""
+    temp_dir = Path(mkdtemp("-circuitpython-tool-uf2-download"))
+    image_path: Path | None = None
+    try:
+        image_path = context.invoke(
+            auto_download, query=query, locale=locale, destination=temp_dir
+        )
+        context.invoke(install, query=query, image_path=image_path)
+    finally:
+        if delete_download:
+            if image_path:
+                logger.debug(f"Deleting {image_path}")
+                image_path.unlink()
+            logger.debug(f"Deleting {temp_dir}")
+            temp_dir.rmdir()
+        else:
+            logger.debug("Keeping temporary download file.")
 
 
 @uf2.command

@@ -168,13 +168,17 @@ def install(image_path: Path, query: Query | None) -> None:
     print("Source: ", image_path)
     print("Destination: ", destination)
 
-    # TODO(dhrosa): This progress bar spends most of
-    # its time at the 100% stage.
-    with (
-        progress.open(str(image_path), "rb", description="Flashing") as input_file,
-        destination.open("wb") as output_file,
-    ):
-        output_file.write(input_file.read())
+    try:
+        output_file = destination.open("wb")
+        with progress.open(str(image_path), "rb", description="Flashing") as input_file:
+            while chunk := input_file.read(1024):
+                output_file.write(chunk)
+    finally:
+        with get_console().status(
+            "Closed destination file. Waiting for copy to complete."
+        ):
+            output_file.close()
+    print("Install complete.")
 
 
 @uf2.command

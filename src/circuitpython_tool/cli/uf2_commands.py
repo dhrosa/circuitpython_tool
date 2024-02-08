@@ -198,10 +198,12 @@ def auto_install(
     temp_dir = Path(mkdtemp("-circuitpython-tool-uf2-download"))
     image_path: Path | None = None
     try:
+        device = distinct_device(query)
         image_path = context.invoke(
             auto_download, query=query, locale=locale, destination=temp_dir
         )
-        context.invoke(install, query=query, image_path=image_path)
+        enter_uf2_bootloader(device)
+        context.invoke(install, query=None, image_path=image_path)
     finally:
         if delete_download:
             if image_path:

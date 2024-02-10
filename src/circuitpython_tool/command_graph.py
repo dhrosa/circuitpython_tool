@@ -18,12 +18,36 @@ class Argument:
     name: str
     required: bool
 
+    @staticmethod
+    def from_dict(p: dict[str, Any]) -> "Argument":
+        return Argument(
+            p["name"],
+            required=p["required"],
+        )
+
+    def render(self) -> str:
+        s = self.name.upper()
+        if not self.required:
+            s = f"[{s}]"
+        return s
+
 
 @dataclass
 class Option:
     name: str
     opts: list[str]
     required: bool
+
+    @staticmethod
+    def from_dict(p: dict[str, Any]) -> "Option":
+        return Option(
+            name=p["name"],
+            opts=p["opts"],
+            required=p["required"],
+        )
+
+    def render(self) -> str:
+        return self.opts[0]
 
 
 @dataclass
@@ -52,30 +76,24 @@ class Node:
 
     def param_strings(self) -> Iterator[str]:
         for a in self.arguments:
-            arg_str = f"{a.name.upper()}"
-            if not a.required:
-                arg_str = f"[{arg_str}]"
-            yield arg_str
+            yield a.render()
         for o in self.options:
-            yield f"{o.opts[0]}"
+            yield o.render()
 
     def contents(self) -> Iterator[str]:
         yield " ".join(self.param_strings())
 
 
 def to_node(command: dict[str, Any]) -> Node:
+    params = [p for p in command["params"] if p["name"] != "help"]
     return Node(
         name=command["name"],
         children=[to_node(i) for i in command.get("commands", {}).values()],
         options=[
-            Option(name=p["name"], opts=p["opts"], required=p["required"])
-            for p in command["params"]
-            if p["param_type_name"] == "option" and p["name"] != "help"
+            Option.from_dict(p) for p in params if p["param_type_name"] == "option"
         ],
         arguments=[
-            Argument(p["name"], required=p["required"])
-            for p in command["params"]
-            if p["param_type_name"] == "argument" and p["name"] != "help"
+            Argument.from_dict(p) for p in params if p["param_type_name"] == "argument"
         ],
     )
 

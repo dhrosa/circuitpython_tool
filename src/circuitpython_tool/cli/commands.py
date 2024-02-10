@@ -87,8 +87,8 @@ main.add_command(label_commands.label)
 @main.command()
 @label_or_query_argument("query", default=Query.any())
 @click.option(
-    "-s",
     "--save",
+    "-s",
     "fake_device_save_path",
     type=click.Path(dir_okay=False, path_type=Path),
     help="If set, save devices to a TOML file for later recall using the --fake-devices flag.",

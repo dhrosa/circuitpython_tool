@@ -28,6 +28,9 @@ class Parameter:
     name: str
     required: bool
     raw_param_type: str
+    raw_default: Any
+    # TODO(dhrosa): This doesn't actually appear in the command metadata for some reason.
+    envvar: str | None
 
     @property
     def param_type(self) -> str:
@@ -43,6 +46,16 @@ class Parameter:
     def param_type_style(self) -> str:
         return f"param.{self.param_type.lower()}"
 
+    @property
+    def default(self) -> str | None:
+        if self.raw_default is None:
+            return None
+        if self.raw_param_type == "ConfigStorageParam":
+            return str(self.raw_default.path)
+        if self.raw_param_type == "QueryOrLabelParam":
+            return str(self.raw_default.as_str())
+        return str(self.raw_default)
+
 
 @dataclass(frozen=True)
 class Argument(Parameter):
@@ -52,10 +65,16 @@ class Argument(Parameter):
             p["name"],
             required=p["required"],
             raw_param_type=p["type"]["param_type"],
+            raw_default=p["default"],
+            envvar=p["envvar"],
         )
 
     def render(self) -> Text:
         t = Text.styled(self.name.upper(), style="bold")
+        if self.default:
+            t.append(f" (default: {self.default})")
+        if self.envvar:
+            t.append(f" (envvar: {self.envvar}")
         t.stylize(self.param_type_style)
         if not self.required:
             t = Text.assemble("[", t, "]")
@@ -73,14 +92,20 @@ class Option(Parameter):
             name=p["name"],
             required=p["required"],
             raw_param_type=p["type"]["param_type"],
+            raw_default=p["default"],
             opts=p["opts"],
             is_flag=p["is_flag"],
+            envvar=p["envvar"],
         )
 
     def render(self) -> Text:
         t = Text.styled(self.opts[0], style="bold")
         if not self.is_flag:
             t.append(" " + self.name, style="italic")
+        if self.default:
+            t.append(f" (default: {self.default})")
+        if self.envvar:
+            t.append(f" (envvar: {self.envvar}")
         t.stylize(self.param_type_style)
         if not self.required:
             t = Text.assemble("[", t, "]")
@@ -90,9 +115,9 @@ class Option(Parameter):
 @dataclass
 class Node:
     name: str
-    children: list["Node"]
     arguments: list[Argument]
     options: list[Option]
+    children: list["Node"]
 
     @property
     def parameters(self) -> Sequence[Parameter]:

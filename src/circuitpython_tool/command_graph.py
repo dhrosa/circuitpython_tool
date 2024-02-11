@@ -1,53 +1,90 @@
 """Visualization of CLI command structure."""
 
-from collections.abc import Iterator
+from collections.abc import Iterator, Sequence
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, cast
 
 import rich_click as click
 from click import Context
 from rich import get_console, print
 from rich.panel import Panel
+from rich.text import Text
+from rich.theme import Theme
 from rich.tree import Tree
 
 from .cli import commands
 
+THEME = Theme(
+    {
+        "param.path": "blue",
+        "param.string": "yellow",
+        "param.bool": "green",
+    }
+)
 
-@dataclass
-class Argument:
+
+@dataclass(frozen=True)
+class Parameter:
     name: str
     required: bool
+    raw_param_type: str
 
+    @property
+    def param_type(self) -> str:
+        match self.raw_param_type:
+            case "ConfigStorageParam" | "FakeDeviceParam":
+                return "Path"
+            case "Choice" | "QueryOrLabelParam" | "LocaleParam" | "BoardParam":
+                return "String"
+            case x:
+                return x
+
+    @property
+    def param_type_style(self) -> str:
+        return f"param.{self.param_type.lower()}"
+
+
+@dataclass(frozen=True)
+class Argument(Parameter):
     @staticmethod
     def from_dict(p: dict[str, Any]) -> "Argument":
         return Argument(
             p["name"],
             required=p["required"],
+            raw_param_type=p["type"]["param_type"],
         )
 
-    def render(self) -> str:
-        s = self.name.upper()
+    def render(self) -> Text:
+        t = Text.styled(self.name.upper(), style="bold")
+        t.stylize(self.param_type_style)
         if not self.required:
-            s = f"[{s}]"
-        return s
+            t = Text.assemble("[", t, "]")
+        return t
 
 
-@dataclass
-class Option:
-    name: str
+@dataclass(frozen=True)
+class Option(Parameter):
     opts: list[str]
-    required: bool
+    is_flag: bool
 
     @staticmethod
     def from_dict(p: dict[str, Any]) -> "Option":
         return Option(
             name=p["name"],
-            opts=p["opts"],
             required=p["required"],
+            raw_param_type=p["type"]["param_type"],
+            opts=p["opts"],
+            is_flag=p["is_flag"],
         )
 
-    def render(self) -> str:
-        return self.opts[0]
+    def render(self) -> Text:
+        t = Text.styled(self.opts[0], style="bold")
+        if not self.is_flag:
+            t.append(" " + self.name, style="italic")
+        t.stylize(self.param_type_style)
+        if not self.required:
+            t = Text.assemble("[", t, "]")
+        return t
 
 
 @dataclass
@@ -57,10 +94,16 @@ class Node:
     arguments: list[Argument]
     options: list[Option]
 
+    @property
+    def parameters(self) -> Sequence[Parameter]:
+        return cast(list[Parameter], self.arguments) + cast(
+            list[Parameter], self.options
+        )
+
     def to_tree(self, tree: Tree | None = None) -> Tree:
-        label: Any
+        label: Panel | str
         if self.arguments or self.options:
-            label = Panel.fit("".join(self.contents()), title=self.name)
+            label = Panel.fit(Text("\n").join(self.contents()), title=self.name)
         else:
             label = self.name
 
@@ -74,14 +117,11 @@ class Node:
             child.to_tree(subtree)
         return tree
 
-    def param_strings(self) -> Iterator[str]:
-        for a in self.arguments:
-            yield a.render()
+    def contents(self) -> Iterator[Text]:
+        if self.arguments:
+            yield Text(" ").join([a.render() for a in self.arguments])
         for o in self.options:
             yield o.render()
-
-    def contents(self) -> Iterator[str]:
-        yield " ".join(self.param_strings())
 
 
 def to_node(command: dict[str, Any]) -> Node:
@@ -104,7 +144,7 @@ def commands_context() -> Context:
 
 @click.group
 def main() -> None:
-    pass
+    get_console().push_theme(THEME)
 
 
 @main.command

@@ -1,8 +1,11 @@
 """'uf2' subcommands."""
 
 import time
+from collections.abc import Iterator
+from contextlib import contextmanager
 from logging import getLogger
 from pathlib import Path
+from shutil import rmtree
 from tempfile import mkdtemp
 from typing import cast
 from urllib.request import urlopen
@@ -17,7 +20,7 @@ from ..hw.query import Query
 from ..hw.uf2_device import Uf2Device
 from ..uf2 import Board
 from . import distinct_device, distinct_uf2_device, uf2_devices_table
-from .params import BoardParam, LocaleParam, label_or_query_argument
+from .params import BoardParam, LocaleParam, QueryParam, label_or_query_argument
 
 logger = getLogger(__name__)
 
@@ -136,21 +139,77 @@ def auto_download(
 
 
 @uf2.command
-@click.argument(
-    "image_path",
+@click.pass_context
+@click.option(
+    "--image_path",
+    "-i",
     type=click.Path(path_type=Path, dir_okay=False, exists=True),
-    required=True,
+    help="If specified, install this already-existing UF2 image.",
 )
-@label_or_query_argument("query")
-def install(image_path: Path, query: Query | None) -> None:
-    """Install the given UF2 image onto connected UF2 bootloader device.
+@click.option(
+    "--board",
+    "-b",
+    type=BoardParam(),
+    help="If specified, automatically download and install appropriate CircuitPython UF2 image "
+    "for this board ID.",
+)
+@click.option(
+    "--device",
+    "-d",
+    "query",
+    type=QueryParam(),
+    help="If specified, this device will be restarted into its UF2 bootloader and "
+    "be used as the target device for installing the image.",
+)
+@click.option(
+    "--locale",
+    default="en_US",
+    type=LocaleParam(),
+    help="Locale for CircuitPython install. Not used if an explicit image is given "
+    "using --image_path.",
+)
+@click.option(
+    "--delete-download/--no-delete-download",
+    default=True,
+    help="Delete any downloaded UF2 images on exit.",
+)
+def install(
+    context: click.Context,
+    image_path: Path | None,
+    board: Board | None,
+    query: Query | None,
+    locale: str,
+    delete_download: bool,
+) -> None:
+    """Install a UF2 image onto a connected UF2 bootloader device.
 
-    If a CircuitPython device is not specified, we assume there is already a
-    connected UF2 bootloader device to use as the target.
-
-    If a CircuitPython device is specified, it is restarted into its UF2
-    bootloader and is used as the target.
+    If a CircuitPython device is specified with `--device`, then we restart that
+    device into its UF2 bootloader and install the image onto it. If `--device`
+    is not specified, we assume there is already a connected UF2 bootloader device.
     """
+    if not image_path and not board:
+        print(
+            "👎 Must specify [red]at least one[/] of: "
+            "[blue]--image_path[/], [blue]--board[/]"
+        )
+        exit(1)
+    if image_path and board:
+        print(
+            "👎 [red]Conflicting[/] options: "
+            "[blue]--image_path[/] and [blue]--board[/]"
+        )
+        exit(1)
+    if board:
+        # Download UF2 image for this board.
+        temp_dir = context.with_resource(temporary_directory(delete=delete_download))
+        image_path = context.invoke(
+            download, board=board, locale=locale, destination=temp_dir
+        )
+
+    # At this point image_path should either have been specified by the user or
+    # automatically generated.
+    assert image_path
+
     if query:
         device = distinct_device(query)
         print(
@@ -179,44 +238,6 @@ def install(image_path: Path, query: Query | None) -> None:
         ):
             output_file.close()
     print("Install complete.")
-
-
-@uf2.command
-@click.pass_context
-@label_or_query_argument("query", required=True)
-@click.option(
-    "--locale",
-    default="en_US",
-    type=LocaleParam(),
-    help="Locale for CircuitPython install.",
-)
-@click.option(
-    "--delete-download/--no-delete-download",
-    default=True,
-    help="Delete downloaded UF2 image on exit.",
-)
-def auto_install(
-    context: click.Context, query: Query, locale: str, delete_download: bool
-) -> None:
-    """Automatically detect the appropriate CircuitPython distribution and install it."""
-    temp_dir = Path(mkdtemp("-circuitpython-tool-uf2-download"))
-    image_path: Path | None = None
-    try:
-        device = distinct_device(query)
-        image_path = context.invoke(
-            auto_download, query=query, locale=locale, destination=temp_dir
-        )
-        enter_uf2_bootloader(device)
-        context.invoke(install, query=None, image_path=image_path)
-    finally:
-        if delete_download:
-            if image_path:
-                logger.debug(f"Deleting {image_path}")
-                image_path.unlink()
-            logger.debug(f"Deleting {temp_dir}")
-            temp_dir.rmdir()
-        else:
-            logger.debug("Keeping temporary download file.")
 
 
 @uf2.command
@@ -325,3 +346,18 @@ def enter_uf2_bootloader(device: Device) -> Uf2Device:
                 f"in elapsed time of {elapsed_str()}."
             )
             return uf2_device
+
+
+@contextmanager
+def temporary_directory(delete: bool) -> Iterator[Path]:
+    """Automatically create an empty directory and yield it.
+
+    If `delete` is True, the directory is automatically deleted on exit.
+    """
+    path = Path(mkdtemp())
+    try:
+        yield path
+    finally:
+        if delete:
+            logger.debug(f"Deleting temporary directory: {path}")
+            rmtree(path)

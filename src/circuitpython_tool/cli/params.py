@@ -19,7 +19,7 @@ from .shared_state import SharedState
 class ConfigStorageParam(click.Path):
     """Click paramter for parsing paths to ConfigStorage.
 
-    We return a paramter value, but also set the corrent context's object to the
+    We return a parameter value, but also set the corrent context's object to the
     ConfigStorage instance.
     """
 

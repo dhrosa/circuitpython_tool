@@ -52,19 +52,6 @@ def versions() -> None:
 
 @uf2.command
 @click.argument("board", type=BoardParam(), required=True)
-@click.option(
-    "--locale",
-    default="en_US",
-    type=LocaleParam(),
-    help="Locale for CircuitPython install.",
-)
-def url(board: Board, locale: str) -> None:
-    """Print download URL for CircuitPython image."""
-    print(board.download_url(board.most_recent_version, locale))
-
-
-@uf2.command
-@click.argument("board", type=BoardParam(), required=True)
 @click.argument(
     "destination", type=click.Path(path_type=Path), required=False, default=Path.cwd()
 )
@@ -74,13 +61,21 @@ def url(board: Board, locale: str) -> None:
     type=LocaleParam(),
     help="Locale for CircuitPython install.",
 )
-def download(board: Board, locale: str, destination: Path) -> Path:
+@click.option(
+    "--offline/--no-offline",
+    default=False,
+    help="If true, just print the download URL without actually downloading.",
+)
+def download(board: Board, locale: str, destination: Path, offline: bool) -> Path:
     """Download CircuitPython image for the requested board.
 
     If DESTINATION is not provided, the file is downloaded to the current directory.
     If DESTINATION is a directory, the filename is automatically generated.
     """
     url = board.download_url(board.most_recent_version, locale)
+    if offline:
+        print(url)
+        exit(0)
     destination = download_path(url, destination)
     if destination.is_dir():
         destination /= url.split("/")[-1]

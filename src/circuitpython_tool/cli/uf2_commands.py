@@ -7,7 +7,6 @@ from logging import getLogger
 from pathlib import Path
 from shutil import rmtree
 from tempfile import mkdtemp
-from typing import cast
 from urllib.request import urlopen
 
 import rich_click as click
@@ -100,42 +99,6 @@ def download(board: Board, locale: str, destination: Path) -> Path:
         while chunk := response.read(4 * 1024):
             output.write(chunk)
     return destination
-
-
-@uf2.command
-@click.pass_context
-@label_or_query_argument("query", required=True)
-@click.argument(
-    "destination", type=click.Path(path_type=Path), required=False, default=Path.cwd()
-)
-@click.option(
-    "--locale",
-    default="en_US",
-    type=LocaleParam(),
-    help="Locale for CircuitPython install.",
-)
-def auto_download(
-    context: click.Context, query: Query, locale: str, destination: Path
-) -> Path:
-    """Download the appropriate CircuitPython image for the selected CircuitPython device.
-
-    Automatically detects the Adafruit board ID of the connected device and
-    downloads the respective CircuitPython distribution.
-
-    If DESTINATION is not provided, the file is downloaded to the current directory.
-    If DESTINATION is a directory, the filename is automatically generated.
-    """
-    device = distinct_device(query)
-    print("Selected CircuitPython device: ", device)
-
-    board_id = device.get_boot_info().board_id
-    print("Device board ID: ", board_id)
-    board = Board.by_id(board_id)
-
-    return cast(
-        Path,
-        context.invoke(download, board=board, locale=locale, destination=destination),
-    )
 
 
 @uf2.command

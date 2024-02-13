@@ -17,7 +17,7 @@ from rich.table import Table
 from ..hw.device import Device
 from ..hw.query import Query
 from ..hw.uf2_device import Uf2Device
-from ..request_cache import request_cache
+from ..request_cache import RequestCache
 from ..uf2 import Board
 from . import distinct_device, distinct_uf2_device, uf2_devices_table
 from .params import BoardParam, LocaleParam, QueryParam, label_or_query_argument
@@ -83,9 +83,10 @@ def download(board: Board, locale: str, destination: Path, offline: bool) -> Pat
     print(f"Source: {url}")
     print(f"Destination: {destination}")
 
-    if url in request_cache:
+    cache = RequestCache()
+    if url in cache:
         logger.info("Serving request from cache.")
-        destination.write_bytes(request_cache[url])
+        destination.write_bytes(cache[url])
         return destination
 
     logger.info("Populating cache from upstream.")
@@ -98,7 +99,7 @@ def download(board: Board, locale: str, destination: Path, offline: bool) -> Pat
     ) as response:
         while chunk := response.read(4 * 1024):
             data += chunk
-    request_cache[url] = data
+    cache[url] = data
     destination.write_bytes(data)
     return destination
 

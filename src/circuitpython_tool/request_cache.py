@@ -42,6 +42,3 @@ class RequestCache:
         This just computes what the path should be; the path might not actually exist.
         """
         return CACHE_DIR / quote(url, safe="")
-
-
-request_cache = RequestCache()

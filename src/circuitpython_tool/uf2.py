@@ -7,7 +7,7 @@ from json import loads
 from urllib.request import urlopen
 
 from .iter import as_list
-from .request_cache import request_cache
+from .request_cache import RequestCache
 
 logger = logging.getLogger(__name__)
 
@@ -20,15 +20,16 @@ def cached_boards_json() -> str:
     The data is fetched from circuitpython.org's github repo and cached to disk.
     """
     url = "https://raw.githubusercontent.com/adafruit/circuitpython-org/main/_data/files.json"
-    if url in request_cache:
+    cache = RequestCache()
+    if url in cache:
         logging.debug("Using cached data for CircuitPython boards JSON.")
-        return str(request_cache[url], encoding="utf-8")
+        return str(cache[url], encoding="utf-8")
     logging.debug(
         f"CircuitPython boards JSON not found in cached; populating from {url}"
     )
     with urlopen(url) as request:
         data = request.read()
-    request_cache[url] = data
+    cache[url] = data
     return str(data, encoding="utf-8")
 
 

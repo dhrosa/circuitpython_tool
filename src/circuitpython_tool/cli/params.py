@@ -157,6 +157,7 @@ class BoardParam(ParamType):
     def shell_complete(
         self, context: Context, param: Parameter, incomplete: str
     ) -> list[CompletionItem]:
+        completion.disable_logging()
         return [
             CompletionItem(b.id) for b in Board.all() if b.id.startswith(incomplete)
         ]

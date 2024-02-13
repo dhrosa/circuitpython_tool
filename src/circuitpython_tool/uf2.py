@@ -6,8 +6,8 @@ from dataclasses import dataclass
 from json import loads
 from urllib.request import urlopen
 
-from .dirs import app_dir
 from .iter import as_list
+from .request_cache import request_cache
 
 logger = logging.getLogger(__name__)
 
@@ -19,17 +19,17 @@ def cached_boards_json() -> str:
 
     The data is fetched from circuitpython.org's github repo and cached to disk.
     """
-    # TODO(dhrosa): Re-download when the file is stale.
-    path = app_dir / "cached_boards.json"
-    if path.exists():
-        return path.read_text()
     url = "https://raw.githubusercontent.com/adafruit/circuitpython-org/main/_data/files.json"
-    logger.info(f"Cached boards path {path} does not exist yet; populating from {url}")
+    if url in request_cache:
+        logging.debug("Using cached data for CircuitPython boards JSON.")
+        return str(request_cache[url], encoding="utf-8")
+    logging.debug(
+        f"CircuitPython boards JSON not found in cached; populating from {url}"
+    )
     with urlopen(url) as request:
-        json = str(request.read(), encoding="utf-8")
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json)
-    return json
+        data = request.read()
+    request_cache[url] = data
+    return str(data, encoding="utf-8")
 
 
 @dataclass

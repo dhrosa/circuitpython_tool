@@ -64,6 +64,7 @@ def exits_with_code(code: int) -> Iterator[None]:
 
 def test_subcommands() -> None:
     assert set(commands.main.commands.keys()) == {
+        "completion",
         "devices",
         "label",
         "upload",

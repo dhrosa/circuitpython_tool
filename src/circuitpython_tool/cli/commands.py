@@ -9,9 +9,9 @@ parts of the code being tied up with console output.
 
 import asyncio
 import logging
-from os import execlp
+from os import environ, execlp
 from pathlib import Path
-from sys import exit
+from sys import exit, stderr, stdout
 
 import rich_click as click
 from rich import get_console, print
@@ -33,6 +33,9 @@ from .params import ConfigStorageParam, FakeDeviceParam, label_or_query_argument
 from .shared_state import SharedState
 
 logger = logging.getLogger(__name__)
+
+COMPLETE_VAR = "_CIRCUITPYTHON_TOOL"
+"""Environment variable for shell completion support."""
 
 
 @click.version_option(VERSION, "--version", "-v")
@@ -82,6 +85,54 @@ def main(log_level: str) -> None:
 
 main.add_command(uf2_commands.uf2)
 main.add_command(label_commands.label)
+
+
+@main.command
+def completion() -> None:
+    """Output shell commands needed for auto-completion.
+
+    Evaluating the output of this command will allow auto-completion of this
+    program's arguments. This can be done as a one-off using:
+
+    eval $(circuitpython-tool completion)
+
+    or by putting the following line in your shell config file (e.g. ~/.bashrc):
+
+    source $(circuitpython-tool completion)
+    """
+
+    # TODO(dhrosa): Document sourcing the pre-generated completion scripts.
+    try:
+        shell_path = Path(environ["SHELL"])
+    except KeyError:
+        print(":thumbs_down: $SHELL environment variable [red]not[/] set.")
+        exit(1)
+
+    tty_warning = """
+    [yellow]WARNING[/]:
+    If you're seeing this message in your terminal,
+    then you probably meant to evaluate the output of this command in your shell.
+    You can do this by as a one-off using:
+
+    eval $(circuitpython-tool completion)
+
+    or by putting the following line in your shell config file:
+
+    source $(circuitpython-tool completion)
+    """
+
+    def maybe_emit_tty_warning() -> None:
+        if stdout.isatty():
+            print(tty_warning, file=stderr)
+
+    environ[COMPLETE_VAR] = f"{shell_path.name}_source"
+    # We print warning message at start and end of output so it's easier to
+    # notice no matter how the output is scrolled.
+    maybe_emit_tty_warning()
+    try:
+        main.main([], complete_var=COMPLETE_VAR)
+    finally:
+        maybe_emit_tty_warning()
 
 
 @main.command()

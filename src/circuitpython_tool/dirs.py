@@ -1,6 +1,6 @@
 """Filesystem paths common to multiple modules."""
-from pathlib import Path
 
-from click import get_app_dir
+import platformdirs
 
-app_dir = Path(get_app_dir("circuitpython-tool"))
+app_dir = platformdirs.user_config_path("circuitpython-tool")
+cache_dir = platformdirs.user_cache_path("circuitpython-tool")

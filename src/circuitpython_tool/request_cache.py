@@ -4,11 +4,11 @@ from logging import getLogger
 from pathlib import Path
 from urllib.parse import quote
 
-from .dirs import app_dir
+from .dirs import cache_dir
 
 logger = getLogger(__name__)
 
-CACHE_DIR = app_dir / "requests_cache"
+CACHE_DIR = cache_dir / "requests"
 
 
 class RequestCache:

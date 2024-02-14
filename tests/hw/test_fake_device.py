@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from circuitpython_tool.hw.fake_device import FakeDevice, to_toml
+from circuitpython_tool.hw import FakeDevice, devices_to_toml
 
 
 def test_empty_str() -> None:
@@ -93,7 +93,7 @@ def test_to_toml() -> None:
         FakeDevice("vb", "mb", "sb", Path("/partition")),
     }
 
-    toml = to_toml(original_devices)
+    toml = devices_to_toml(original_devices)
     devices = FakeDevice.all(toml)
 
     assert devices == original_devices

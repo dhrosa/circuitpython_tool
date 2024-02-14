@@ -2,8 +2,7 @@
 from collections.abc import Callable, Set
 from dataclasses import dataclass
 
-from ..hw.device import Device
-from ..hw.real_device import RealDevice
+from ..hw import Device, RealDevice
 from .config import ConfigStorage
 
 

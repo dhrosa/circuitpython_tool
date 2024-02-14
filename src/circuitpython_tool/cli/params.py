@@ -8,8 +8,7 @@ import click
 from click import Context, Parameter, ParamType
 from click.shell_completion import CompletionItem
 
-from ..hw.fake_device import FakeDevice
-from ..hw.query import Query
+from ..hw import FakeDevice, Query
 from ..uf2 import Board
 from . import completion
 from .config import ConfigStorage

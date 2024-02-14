@@ -6,7 +6,7 @@ import rich_click as click
 from rich import print
 from rich.table import Table
 
-from ..hw.query import Query
+from ..hw import Query
 from . import completion, pass_config_storage, pass_read_only_config
 from .config import Config, ConfigStorage, DeviceLabel
 from .params import label_or_query_argument

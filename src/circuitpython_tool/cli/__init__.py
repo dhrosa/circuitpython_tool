@@ -14,9 +14,7 @@ from rich import print, traceback
 from rich.logging import RichHandler
 from rich.table import Table
 
-from ..hw.device import Device
-from ..hw.query import Query
-from ..hw.uf2_device import Uf2Device
+from ..hw import Device, Query, Uf2Device
 from .config import Config, ConfigStorage
 from .shared_state import SharedState
 

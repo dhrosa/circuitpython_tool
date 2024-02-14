@@ -14,9 +14,7 @@ from humanize import naturaldelta
 from rich import get_console, print, progress
 from rich.table import Table
 
-from ..hw.device import Device
-from ..hw.query import Query
-from ..hw.uf2_device import Uf2Device
+from ..hw import Device, Query, Uf2Device
 from ..request_cache import RequestCache
 from ..uf2 import Board
 from . import distinct_device, distinct_uf2_device, uf2_devices_table

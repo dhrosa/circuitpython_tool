@@ -70,7 +70,7 @@ class FakeDevice(Device):
         return table
 
 
-def to_toml(devices: Iterable[Device]) -> str:
+def devices_to_toml(devices: Iterable[Device]) -> str:
     """Save arbitrary Device objects to a TOML file."""
     doc = tomlkit.document()
     devices_array = tomlkit.aot()

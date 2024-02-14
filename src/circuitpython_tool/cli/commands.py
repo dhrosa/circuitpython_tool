@@ -18,8 +18,7 @@ from rich import get_console, print
 
 from .. import VERSION, fs
 from ..async_iter import time_batched
-from ..hw import fake_device
-from ..hw.query import Query
+from ..hw import Query, devices_to_toml
 from . import (
     devices_table,
     distinct_device,
@@ -160,7 +159,7 @@ def devices(
 
     if fake_device_save_path:
         logging.info(f"Saving device list to {str(fake_device_save_path)}")
-        fake_device_save_path.write_text(fake_device.to_toml(devices))
+        fake_device_save_path.write_text(devices_to_toml(devices))
 
 
 def get_source_dir(source_dir: Path | None) -> Path:

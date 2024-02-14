@@ -12,7 +12,7 @@ import tomlkit
 from tomlkit import TOMLDocument
 
 from ..dirs import app_dir
-from ..hw.query import Query
+from ..hw import Query
 
 logger = logging.getLogger(__name__)
 

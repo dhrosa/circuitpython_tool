@@ -4,7 +4,6 @@ from typing import Any
 
 import pytest
 
-from circuitpython_tool import uf2
 from circuitpython_tool.uf2 import Board, Version
 
 
@@ -47,7 +46,7 @@ class FakeBoardsJson:
 def fake_boards_json(monkeypatch: pytest.MonkeyPatch) -> FakeBoardsJson:
     """Fixture to bypass external HTTP requests and inject arbitrary JSON payloads."""
     fake_boards = FakeBoardsJson()
-    monkeypatch.setattr(uf2, "cached_boards_json", fake_boards.to_json)
+    monkeypatch.setattr(Board, "cached_boards_json", fake_boards.to_json)
     return fake_boards
 
 

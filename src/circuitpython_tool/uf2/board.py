@@ -6,31 +6,12 @@ from dataclasses import dataclass
 from json import loads
 from urllib.request import urlopen
 
-from .iter import as_list
-from .request_cache import RequestCache
+from ..iter import as_list
+from ..request_cache import RequestCache
 
 logger = logging.getLogger(__name__)
 
 BASE_URL = "https://circuitpython.org"
-
-
-def cached_boards_json() -> str:
-    """JSON blob of CircuitPython-supposed boards.
-
-    The data is fetched from circuitpython.org's github repo and cached to disk.
-    """
-    url = "https://raw.githubusercontent.com/adafruit/circuitpython-org/main/_data/files.json"
-    cache = RequestCache()
-    if url in cache:
-        logging.debug("Using cached data for CircuitPython boards JSON.")
-        return str(cache[url], encoding="utf-8")
-    logging.debug(
-        f"CircuitPython boards JSON not found in cached; populating from {url}"
-    )
-    with urlopen(url) as request:
-        data = request.read()
-    cache[url] = data
-    return str(data, encoding="utf-8")
 
 
 @dataclass
@@ -75,7 +56,7 @@ class Board:
     @staticmethod
     def all() -> Iterator["Board"]:
         """All available boards, sorted by decreasing popularity."""
-        for board_json in loads(cached_boards_json()):
+        for board_json in loads(Board.cached_boards_json()):
             board = Board(board_json["id"])
             for version_json in board_json["versions"]:
                 if "uf2" not in version_json["extensions"]:
@@ -117,3 +98,22 @@ class Board:
         dir = f"{self.id}/{locale}"
         file = f"adafruit-circuitpython-{self.id}-{locale}-{version.label}.uf2"
         return f"{prefix}/{dir}/{file}"
+
+    @staticmethod
+    def cached_boards_json() -> str:
+        """JSON blob of CircuitPython-supposed boards.
+
+        The data is fetched from circuitpython.org's github repo and cached to disk.
+        """
+        url = "https://raw.githubusercontent.com/adafruit/circuitpython-org/main/_data/files.json"
+        cache = RequestCache()
+        if url in cache:
+            logging.debug("Using cached data for CircuitPython boards JSON.")
+            return str(cache[url], encoding="utf-8")
+        logging.debug(
+            f"CircuitPython boards JSON not found in cached; populating from {url}"
+        )
+        with urlopen(url) as request:
+            data = request.read()
+        cache[url] = data
+        return str(data, encoding="utf-8")

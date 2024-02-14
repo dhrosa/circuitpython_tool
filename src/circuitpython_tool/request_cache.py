@@ -8,8 +8,6 @@ from .dirs import app_dir
 
 logger = getLogger(__name__)
 
-
-CACHE_PATH = app_dir / "requests.cache"
 CACHE_DIR = app_dir / "requests_cache"
 
 

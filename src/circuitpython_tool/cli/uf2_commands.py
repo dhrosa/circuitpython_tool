@@ -16,7 +16,7 @@ from rich.table import Table
 
 from ..hw import Device, Query, Uf2Device
 from ..request_cache import RequestCache
-from ..uf2 import Board
+from ..uf2 import Block, Board
 from . import distinct_device, distinct_uf2_device, uf2_devices_table
 from .params import BoardParam, LocaleParam, QueryParam, label_or_query_argument
 
@@ -45,7 +45,7 @@ def versions() -> None:
             board.stable_version.label if board.stable_version else "",
             board.unstable_version.label if board.unstable_version else "",
         )
-    with get_console().pager():
+    with get_console().pager(styles=True):
         print(table)
 
 
@@ -264,6 +264,18 @@ def boot_info(query: Query) -> None:
     boot_info = device.get_boot_info()
     print("Version: ", boot_info.version)
     print("Board ID: ", boot_info.board_id)
+
+
+@uf2.command
+@click.argument(
+    "image_path", type=click.Path(path_type=Path, dir_okay=False), required=True
+)
+def analyze(image_path: Path) -> None:
+    """Print details of each block in a UF2 image."""
+    raw = image_path.read_bytes()
+    with get_console().pager(styles=True):
+        for block in Block.from_bytes_multi(raw):
+            print(block)
 
 
 def download_path(url: str, destination: Path) -> Path:

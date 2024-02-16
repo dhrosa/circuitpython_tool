@@ -3,9 +3,15 @@
 Based on specification at https://github.com/microsoft/uf2
 """
 
-from dataclasses import dataclass
+from collections.abc import Iterator
+from dataclasses import dataclass, fields
 from enum import IntFlag
 from struct import Struct
+from typing import Any, TypeAlias
+
+import rich.repr
+
+Buffer: TypeAlias = bytes | bytearray | memoryview
 
 
 @dataclass
@@ -28,8 +34,17 @@ class Block:
     family_id: int
     payload: bytes
 
+    def __rich_repr__(self) -> rich.repr.Result:
+        for field in fields(self):
+            value: Any = getattr(self, field.name)
+            if field.type == int:
+                value = HexInt(value)
+            elif field.type == bytes:
+                value = TruncatedBytes(value)
+            yield field.name, value
+
     @staticmethod
-    def from_bytes(raw: bytes | bytearray | memoryview) -> "Block":
+    def from_bytes(raw: Buffer) -> "Block":
         """Parse 512-byte raw blob into a Block."""
         if (size := len(raw)) != 512:
             raise ValueError(f"Expected UF2 block size of 512, got: {size}")
@@ -64,6 +79,14 @@ class Block:
             payload=payload[:payload_size],
         )
 
+    @staticmethod
+    def from_bytes_multi(raw: Buffer) -> Iterator["Block"]:
+        """Iterate over UF2 blocks in a buffer."""
+        if (size := len(raw)) % 512 != 0:
+            raise ValueError(f"Provided buffer's size is not a multiple of 512: {size}")
+        for offset in range(0, size, 512):
+            yield Block.from_bytes(raw[offset : offset + 512])
+
     def to_bytes(self) -> bytes:
         """Unparse Block into a 512-byte raw blob."""
         return struct.pack(
@@ -78,6 +101,18 @@ class Block:
             self.payload.ljust(475, b"\0"),
             self.MAGIC_END,
         )
+
+
+class HexInt(int):
+    """int subclass with hex output in its __repr__."""
+
+    def __repr__(self) -> str:
+        return f"<0x{self:X} ({self:d})>"
+
+
+class TruncatedBytes(bytes):
+    def __repr__(self) -> str:
+        return f"<{len(self)} bytes>"
 
 
 struct = Struct("< 8I 476s I")

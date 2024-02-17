@@ -40,7 +40,7 @@ class Block:
             if field.type == int:
                 value = HexInt(value)
             elif field.type == bytes:
-                value = TruncatedBytes(value)
+                value = HexBytes(value)
             yield field.name, value
 
     @staticmethod
@@ -98,7 +98,7 @@ class Block:
             self.block_number,
             self.total_block_count,
             self.family_id,
-            self.payload.ljust(475, b"\0"),
+            self.payload,
             self.MAGIC_END,
         )
 
@@ -110,9 +110,11 @@ class HexInt(int):
         return f"<0x{self:X} ({self:d})>"
 
 
-class TruncatedBytes(bytes):
+class HexBytes(bytes):
+    """bytes subclass with alternative __repr__ implementation"""
+
     def __repr__(self) -> str:
-        return f"<{len(self)} bytes>"
+        return f"<{len(self)} bytes: {self.hex(' ', 2)}>"
 
 
 struct = Struct("< 8I 476s I")

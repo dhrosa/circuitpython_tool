@@ -54,8 +54,11 @@ class UsbDevice:
     model: str
     serial: str
 
-    partition_label: str | None
+    partition_label: str | None = None
     """If this is a partition device, the filesystem label."""
+
+    is_tty: bool = False
+    """True if this is a serial terminal."""
 
     @as_list
     @staticmethod
@@ -76,6 +79,7 @@ class UsbDevice:
                 serial=(
                     properties.get("ID_USB_SERIAL_SHORT") or properties["ID_USB_SERIAL"]
                 ),
+                is_tty=properties["SUBSYSTEM"] == "tty",
                 partition_label=properties.get("ID_FS_LABEL"),
             )
 

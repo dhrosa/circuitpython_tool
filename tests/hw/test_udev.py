@@ -30,13 +30,19 @@ def test_empty_db() -> None:
 def test_db_without_usb_entries(fake_udev: list[list[str]]) -> None:
     fake_udev.append(
         [
-            "E: DEVPATH=/devices/no_properties",
+            "E: DEVNAME=/devices/no_bus",
         ]
     )
     fake_udev.append(
         [
-            "E: DEVPATH=/devices/non_usb_bus",
+            "E: DEVNAME=/devices/non_usb_bus",
             "E: ID_BUS=pci",
+        ]
+    )
+    fake_udev.append(
+        [
+            "E: DEVPATH=/devices/no_devname",
+            "E: ID_BUS=usb",
         ]
     )
     assert udev.UsbDevice.all() == []
@@ -45,7 +51,7 @@ def test_db_without_usb_entries(fake_udev: list[list[str]]) -> None:
 def test_db_usb_entries(fake_udev: list[list[str]]) -> None:
     fake_udev.append(
         [
-            "E: DEVPATH=/devices/with_serial",
+            "E: DEVNAME=/devices/with_serial",
             "E: ID_BUS=usb",
             "E: ID_USB_VENDOR=vendor1",
             "E: ID_USB_MODEL=model1",
@@ -55,7 +61,7 @@ def test_db_usb_entries(fake_udev: list[list[str]]) -> None:
 
     fake_udev.append(
         [
-            "E: DEVPATH=/devices/with_short_serial",
+            "E: DEVNAME=/devices/with_short_serial",
             "E: ID_BUS=usb",
             "E: ID_USB_VENDOR=vendor2",
             "E: ID_USB_MODEL=model2",
@@ -65,7 +71,7 @@ def test_db_usb_entries(fake_udev: list[list[str]]) -> None:
 
     fake_udev.append(
         [
-            "E: DEVPATH=/devices/with_fs_label",
+            "E: DEVNAME=/devices/with_fs_label",
             "E: ID_BUS=usb",
             "E: ID_USB_VENDOR=vendor3",
             "E: ID_USB_MODEL=model3",

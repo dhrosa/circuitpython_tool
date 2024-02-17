@@ -66,8 +66,11 @@ class UsbDevice:
             properties = parse_properties(entry)
             if properties.get("ID_BUS") != "usb":
                 continue
+            # DEVPATH names don't work with 'lsblk', so we use DEVNAME
+            if not (devname := properties.get("DEVNAME")):
+                continue
             yield UsbDevice(
-                path=Path(properties["DEVPATH"]),
+                path=Path(devname),
                 vendor=properties["ID_USB_VENDOR"],
                 model=properties["ID_USB_MODEL"],
                 serial=(

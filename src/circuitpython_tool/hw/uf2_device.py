@@ -3,7 +3,7 @@ from datetime import datetime
 from pathlib import Path
 
 from . import partition
-from .udev import usb_device_properties
+from .udev import UsbDevice
 
 
 @dataclass(frozen=True)
@@ -34,20 +34,15 @@ class Uf2Device:
     def all() -> set["Uf2Device"]:
         """Find all devices waiting in UF2 bootloader mode."""
         devices: set[Uf2Device] = set()
-        for path in partition.PARTITION_DIR.iterdir():
-            properties = usb_device_properties(path)
-            if (
-                properties is None
-                or properties["DEVTYPE"] != "partition"
-                or properties["ID_FS_LABEL"] != "RPI-RP2"
-            ):
+        for usb_device in UsbDevice.all():
+            if usb_device.partition_label != "RPI-RP2":
                 continue
             devices.add(
                 Uf2Device(
-                    vendor=properties["ID_USB_VENDOR"],
-                    model=properties["ID_USB_MODEL"],
-                    serial=properties["ID_USB_SERIAL_SHORT"],
-                    partition_path=path.resolve(),
+                    vendor=usb_device.vendor,
+                    model=usb_device.model,
+                    serial=usb_device.serial,
+                    partition_path=usb_device.path.resolve(),
                 )
             )
         return devices

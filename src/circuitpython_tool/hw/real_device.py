@@ -9,13 +9,9 @@ from pathlib import Path
 
 from . import partition
 from .device import BootInfo, Device
-from .partition import PARTITION_DIR
-from .udev import usb_device_properties
+from .udev import UsbDevice
 
 logger = logging.getLogger(__name__)
-
-SERIAL_DIR = Path("/dev/serial/by-id")
-"""Contains all serial devices. Directory might not exist if none are connected."""
 
 
 class RealDevice(Device):
@@ -65,45 +61,27 @@ class RealDevice(Device):
         # Maps (vendor, model, serial) to RealDevice instances.
         devices: dict[tuple[str, str, str], RealDevice] = {}
 
-        def vendor(properties: dict[str, str]) -> str:
-            return properties["ID_USB_VENDOR"]
-
-        def model(properties: dict[str, str]) -> str:
-            return properties["ID_USB_MODEL"]
-
-        def serial(properties: dict[str, str]) -> str:
-            return properties["ID_USB_SERIAL_SHORT"]
+        usb_devices = UsbDevice.all()
 
         # Find CIRCUITPY partition devices.
-        for path in PARTITION_DIR.iterdir():
-            properties = usb_device_properties(path)
-            if (
-                properties is None
-                or properties["DEVTYPE"] != "partition"
-                or properties["ID_FS_LABEL"] != "CIRCUITPY"
-            ):
+        for usb_device in usb_devices:
+            if usb_device.partition_label != "CIRCUITPY":
                 continue
             device = RealDevice(
-                vendor=vendor(properties),
-                model=model(properties),
-                serial=serial(properties),
-                partition_path=path.resolve(),
+                vendor=usb_device.vendor,
+                model=usb_device.model,
+                serial=usb_device.serial,
+                partition_path=usb_device.path,
             )
             devices[device.key] = device
 
         # Find corresponding serial devices.
-
-        # Parent directory might not exist if there are no attached serial devices.
-        if SERIAL_DIR.exists():
-            for path in SERIAL_DIR.iterdir():
-                properties = usb_device_properties(path)
-                if properties is None:
-                    continue
-                key = vendor(properties), model(properties), serial(properties)
-                if key not in devices:
-                    continue
-                devices[key] = replace(devices[key], serial_path=path.resolve())
-        else:
-            logging.info("No serial devices found.")
+        for usb_device in usb_devices:
+            if not usb_device.is_tty:
+                continue
+            key = usb_device.vendor, usb_device.model, usb_device.serial
+            if key not in devices:
+                continue
+            devices[key] = replace(devices[key], serial_path=usb_device.path)
 
         return set(devices.values())

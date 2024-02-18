@@ -2,56 +2,15 @@ from pathlib import Path
 
 from pytest import MonkeyPatch, fixture
 
-from circuitpython_tool.hw import real_device
-from circuitpython_tool.hw import udev as udev_module
 from circuitpython_tool.hw.real_device import RealDevice
-
-
-class FakeUdev:
-    """Fake `udevadm info` implementation."""
-
-    def __init__(self, tmp_path: Path):
-        # udev properties for each device path.
-        self.devices: dict[Path, dict[str, str]] = {}
-
-        # Path containing partition devices.
-        self.partition_dir = tmp_path / "partition"
-        self.partition_dir.mkdir()
-
-        # Path containing serial devices.
-        self.serial_dir = tmp_path / "serial"
-        self.serial_dir.mkdir()
-
-    def add_device(self, path: Path, **properties: str) -> None:
-        """Registers a fake device with the given properties."""
-        path.touch()
-        self.devices[path] = properties
-
-    def add_serial_device(self, name: str, **properties: str) -> None:
-        self.add_device(self.serial_dir / name, **properties)
-
-    def add_partition_device(self, name: str, **properties: str) -> None:
-        self.add_device(self.partition_dir / name, **properties)
-
-    def info_command(self, path: Path) -> str:
-        """Simulates output of `udevadm info` command.
-
-        One line for each property as "KEY=VALUE".
-        """
-        return "\n".join(f"{k}={v}" for k, v in self.devices[path].items())
+from circuitpython_tool.hw.udev import UsbDevice
 
 
 @fixture(autouse=True)
-def udev(tmp_path: Path, monkeypatch: MonkeyPatch) -> FakeUdev:
-    """Sets up udev fixture to intercept `udevadm info` commands and lookups of device paths.
-
-    Fixture is setup as `autouse` so that no tests try to accidentally access real devices.
-    """
-    fake_udev = FakeUdev(tmp_path)
-    monkeypatch.setattr(udev_module, "udevadm_info", fake_udev.info_command)
-    monkeypatch.setattr(real_device, "PARTITION_DIR", fake_udev.partition_dir)
-    monkeypatch.setattr(real_device, "SERIAL_DIR", fake_udev.serial_dir)
-    return fake_udev
+def usb_devices(monkeypatch: MonkeyPatch) -> list[UsbDevice]:
+    devices: list[UsbDevice] = []
+    monkeypatch.setattr(UsbDevice, "all", lambda: devices)
+    return devices
 
 
 def test_no_devices() -> None:
@@ -59,62 +18,36 @@ def test_no_devices() -> None:
     assert RealDevice.all() == set()
 
 
-def test_device_without_serial(udev: FakeUdev) -> None:
+def test_device_without_serial(usb_devices: list[UsbDevice]) -> None:
     """Lookup a valid device with a partition device but no serial device."""
-    udev.add_partition_device(
-        "device",
-        ID_BUS="usb",
-        ID_USB_VENDOR="v",
-        ID_USB_MODEL="m",
-        ID_USB_SERIAL_SHORT="s",
-        DEVTYPE="partition",
-        ID_FS_LABEL="CIRCUITPY",
+    usb_devices.append(
+        UsbDevice(Path("/device"), "v", "m", "s", partition_label="CIRCUITPY")
     )
-
     assert RealDevice.all() == {
-        RealDevice("v", "m", "s", partition_path=udev.partition_dir / "device")
+        RealDevice("v", "m", "s", partition_path=Path("/device"))
     }
 
 
-def test_device_without_partition(udev: FakeUdev) -> None:
+def test_device_without_partition(usb_devices: list[UsbDevice]) -> None:
     """Devices with serial port and no partition should be skipped."""
-    udev.add_serial_device(
-        "device",
-        ID_BUS="usb",
-        ID_USB_VENDOR="v",
-        ID_USB_MODEL="m",
-        ID_USB_SERIAL_SHORT="s",
-    )
+    usb_devices.append(UsbDevice(Path("/device"), "v", "m", "s", is_tty=True))
 
     assert RealDevice.all() == set()
 
 
-def test_device_partition_and_serial(udev: FakeUdev) -> None:
+def test_device_partition_and_serial(usb_devices: list[UsbDevice]) -> None:
     """Lookup a valid device with a partition device and serial device."""
-    udev.add_partition_device(
-        "device",
-        ID_BUS="usb",
-        ID_USB_VENDOR="v",
-        ID_USB_MODEL="m",
-        ID_USB_SERIAL_SHORT="s",
-        DEVTYPE="partition",
-        ID_FS_LABEL="CIRCUITPY",
+    usb_devices.append(
+        UsbDevice(Path("/partition"), "v", "m", "s", partition_label="CIRCUITPY")
     )
 
-    udev.add_serial_device(
-        "device",
-        ID_BUS="usb",
-        ID_USB_VENDOR="v",
-        ID_USB_MODEL="m",
-        ID_USB_SERIAL_SHORT="s",
-    )
-
+    usb_devices.append(UsbDevice(Path("/serial"), "v", "m", "s", is_tty=True))
     assert RealDevice.all() == {
         RealDevice(
             "v",
             "m",
             "s",
-            partition_path=udev.partition_dir / "device",
-            serial_path=udev.serial_dir / "device",
+            partition_path=Path("/partition"),
+            serial_path=Path("/serial"),
         ),
     }

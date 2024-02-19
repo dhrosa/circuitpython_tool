@@ -1,7 +1,9 @@
 """Custom `click` parameters."""
 
+import logging
 import pathlib
-from collections.abc import Callable
+from collections.abc import Callable, Iterator
+from contextlib import contextmanager
 from typing import Any, TypeAlias, cast
 
 import click
@@ -13,6 +15,25 @@ from ..uf2 import Board
 from . import completion
 from .config import ConfigStorage
 from .shared_state import SharedState
+
+
+@contextmanager
+def supressed_logging(context: Context | None = None) -> Iterator[None]:
+    if context and not context.resilient_parsing:
+        # If resilient parsing isn't explicitly set, we assume we're in a
+        # context where logging is okay (e.g. inside one of our click commands).
+        yield
+        return
+    # If there is no context, or resilient parsing is explicitly set, we assume
+    # we're in a context where logging may interfere with the program (e.g.
+    # shell completion).
+    #
+    # TODO(dhrosa): We should be able to redirect to STDERR instead.
+    logging.disable()
+    try:
+        yield
+    finally:
+        logging.disable(logging.NOTSET)
 
 
 class ConfigStorageParam(click.Path):
@@ -148,7 +169,9 @@ class BoardParam(ParamType):
             return None
         if isinstance(value, Board):
             return value
-        for board in Board.all():
+        with supressed_logging(context):
+            boards = Board.all()
+        for board in boards:
             if board.id == value:
                 return board
         self.fail(f"Unknown board_id: {value}")
@@ -156,10 +179,9 @@ class BoardParam(ParamType):
     def shell_complete(
         self, context: Context, param: Parameter, incomplete: str
     ) -> list[CompletionItem]:
-        completion.disable_logging()
-        return [
-            CompletionItem(b.id) for b in Board.all() if b.id.startswith(incomplete)
-        ]
+        with supressed_logging():
+            boards = Board.all()
+        return [CompletionItem(b.id) for b in boards if b.id.startswith(incomplete)]
 
 
 class LocaleParam(ParamType):
@@ -172,7 +194,8 @@ class LocaleParam(ParamType):
     ) -> str | None:
         if value is None:
             return None
-        locales = Board.all_locales()
+        with supressed_logging(context):
+            locales = Board.all_locales()
         if value in locales:
             return value
         self.fail(f"Invalid locale: '{value}'. Valid options: {locales}")
@@ -180,11 +203,9 @@ class LocaleParam(ParamType):
     def shell_complete(
         self, context: Context, param: Parameter, incomplete: str
     ) -> list[CompletionItem]:
-        return [
-            CompletionItem(lang)
-            for lang in Board.all_locales()
-            if lang.startswith(incomplete)
-        ]
+        with supressed_logging(context):
+            locales = Board.all_locales()
+        return [CompletionItem(lang) for lang in locales if lang.startswith(incomplete)]
 
 
 AnyCallable: TypeAlias = Callable[..., Any]

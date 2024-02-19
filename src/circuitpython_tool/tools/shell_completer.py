@@ -1,4 +1,3 @@
-import os
 import shlex
 
 import rich_click as click
@@ -8,29 +7,36 @@ from rich import get_console
 from circuitpython_tool.cli import commands
 
 
-@click.command(
-    context_settings=dict(allow_extra_args=True, ignore_unknown_options=True)
-)
-@click.pass_context
-def main(context: click.Context) -> None:
+@click.command
+@click.argument("arg_str", required=True)
+def main(arg_str: str) -> None:
     """Simulate a shell requesting completion.
 
-    All arguments are forwarded to circuitpython-tool for completion and
-    completions are printed to stdout. The first completion is highlighted as if
-    a user at a shell was selecting it.
+    The arguments is forwarded to circuitpython-tool as an incomplete
+    commandline for completion and completions are printed to stdout. The first
+    completion is highlighted as if a user at a shell was selecting it.
+
+    If ARG_STR ends in a space, the earlier parts of the string are interpreted
+    as complete arguments, and that the user is requesting completion for the
+    first character of the next argument.
+
+    If ARG_STR does not end in a space, then the last argument will be the
+    argument to be completed.
     """
-    os.environ.update(
-        _CIRCUITPYTHON_TOOL_COMPLETE="zsh_complete",
-        COMP_WORDS=shlex.join(context.args),
-        COMP_CWORD=str(len(context.args) - 1),
-    )
     complete = ZshComplete(
         commands.main, {}, "circuitpython-tool", "_CIRCUITPYTHON_TOOL_COMPLETE"
     )
+    args = shlex.split(arg_str)
+    if arg_str.endswith(" "):
+        incomplete = " "
+    else:
+        incomplete = args.pop()
+    print(f"$ circuitpython-tool {arg_str}")
+
     console = get_console()
-    for i, item in enumerate(complete.get_completions(*complete.get_completion_args())):
+    for i, item in enumerate(complete.get_completions(args, incomplete)):
         console.print(
-            f"{item.value} - {item.help}",
+            f"{item.value} | {item.help}",
             markup=False,
             style="reverse" if i == 0 else None,
         )

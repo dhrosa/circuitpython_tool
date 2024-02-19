@@ -168,8 +168,10 @@ class LocaleParam(ParamType):
     name = "locale"
 
     def convert(
-        self, value: str, param: Parameter | None, context: Context | None
-    ) -> str:
+        self, value: str | None, param: Parameter | None, context: Context | None
+    ) -> str | None:
+        if value is None:
+            return None
         locales = Board.all_locales()
         if value in locales:
             return value

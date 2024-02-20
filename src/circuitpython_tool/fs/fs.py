@@ -6,7 +6,7 @@ import shutil
 from collections.abc import AsyncIterator, Iterable, Iterator
 from pathlib import Path
 
-from .inotify import INotify, Mask
+from .inotify import INotify
 
 logger = logging.getLogger(__name__)
 
@@ -66,6 +66,7 @@ def watch_all(roots: Iterable[Path]) -> AsyncIterator[Path]:
     # that happen between the call to this function and iterating over the first
     # element of the coroutine.
     watcher = INotify()
+    Mask = INotify.Mask
     mask = Mask.CREATE | Mask.MODIFY | Mask.ATTRIB | Mask.DELETE | Mask.DELETE_SELF
     for _, path in walk_all(roots):
         if not path.is_dir():

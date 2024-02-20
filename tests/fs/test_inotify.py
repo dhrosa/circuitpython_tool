@@ -1,7 +1,9 @@
 import asyncio
 from pathlib import Path
 
-from circuitpython_tool.fs import INotify, Mask
+from circuitpython_tool.fs import INotify
+
+Mask = INotify.Mask
 
 
 def test_file_changes(tmp_path: Path) -> None:

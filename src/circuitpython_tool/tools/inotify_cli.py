@@ -7,7 +7,7 @@ from typing import cast
 import rich_click as click
 from rich import print
 
-from ..fs.inotify import INotify, Mask
+from ..fs.inotify import INotify
 
 
 @click.command
@@ -18,7 +18,7 @@ from ..fs.inotify import INotify, Mask
 )
 @click.argument(
     "mask_strings",
-    type=click.Choice([cast(str, m.name) for m in Mask], case_sensitive=False),
+    type=click.Choice([cast(str, m.name) for m in INotify.Mask], case_sensitive=False),
     required=True,
     nargs=-1,
 )
@@ -27,7 +27,7 @@ def main(path: Path, mask_strings: list[str]) -> None:
 
     Waits for inotify events and prints them as they arrive.
     """
-    mask = reduce(Mask.__or__, (Mask[s] for s in mask_strings))
+    mask = reduce(INotify.Mask.__or__, (INotify.Mask[s] for s in mask_strings))
     print(f"Selected mask: {mask}")
     watcher = INotify()
     watcher.add_watch(path, mask)

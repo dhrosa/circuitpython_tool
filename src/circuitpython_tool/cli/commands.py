@@ -33,7 +33,7 @@ from .shared_state import SharedState
 
 logger = logging.getLogger(__name__)
 
-COMPLETE_VAR = "_CIRCUITPYTHON_TOOL"
+COMPLETE_VAR = "_CIRCUITPYTHON_TOOL_COMPLETE"
 """Environment variable for shell completion support."""
 
 
@@ -93,11 +93,11 @@ def completion() -> None:
     Evaluating the output of this command will allow auto-completion of this
     program's arguments. This can be done as a one-off using:
 
-    eval $(circuitpython-tool completion)
+    eval "$(circuitpython-tool completion)"
 
     or by putting the following line in your shell config file (e.g. ~/.bashrc):
 
-    source $(circuitpython-tool completion)
+    source "$(circuitpython-tool completion)"
     """
 
     # TODO(dhrosa): Document sourcing the pre-generated completion scripts.
@@ -113,11 +113,11 @@ def completion() -> None:
     then you probably meant to evaluate the output of this command in your shell.
     You can do this by as a one-off using:
 
-    eval $(circuitpython-tool completion)
+    eval "$(circuitpython-tool completion)"
 
     or by putting the following line in your shell config file:
 
-    source $(circuitpython-tool completion)
+    source "$(circuitpython-tool completion)"
     """
 
     def maybe_emit_tty_warning() -> None:

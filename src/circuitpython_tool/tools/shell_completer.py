@@ -2,13 +2,14 @@ import shlex
 
 import rich_click as click
 from click.shell_completion import ZshComplete
-from rich import get_console
+from rich import print
+from rich.text import Text
 
 from circuitpython_tool.cli import commands
 
 
 @click.command
-@click.argument("arg_str", required=True)
+@click.argument("arg_str", default="")
 def main(arg_str: str) -> None:
     """Simulate a shell requesting completion.
 
@@ -24,22 +25,30 @@ def main(arg_str: str) -> None:
     argument to be completed.
     """
     complete = ZshComplete(
-        commands.main, {}, "circuitpython-tool", "_CIRCUITPYTHON_TOOL_COMPLETE"
+        commands.main, {}, "circuitpython-tool", commands.COMPLETE_VAR
     )
+    if not arg_str:
+        arg_str = " "
     args = shlex.split(arg_str)
     if arg_str.endswith(" "):
-        incomplete = " "
+        incomplete = ""
     else:
         incomplete = args.pop()
-    print(f"$ circuitpython-tool {arg_str}")
 
-    console = get_console()
-    for i, item in enumerate(complete.get_completions(args, incomplete)):
-        console.print(
-            f"{item.value} | {item.help}",
-            markup=False,
-            style="reverse" if i == 0 else None,
+    # Emulate a user a terminal
+    print(
+        Text.assemble(
+            ("$", "green bold"),
+            " circuitpython-tool ",
+            arg_str,
+            # Fake cursor at end of input
+            (" ", "reverse"),
         )
+    )
+
+    for i, item in enumerate(complete.get_completions(args, incomplete)):
+        item_str = f"{item.value} | {item.help}" if item.help else item.value
+        print(Text(item_str, style="reverse" if i == 0 else ""))
 
 
 if __name__ == "__main__":

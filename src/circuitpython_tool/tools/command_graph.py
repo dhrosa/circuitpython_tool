@@ -12,7 +12,7 @@ from rich.text import Text
 from rich.theme import Theme
 from rich.tree import Tree
 
-from .cli import commands
+from ..cli import commands
 
 THEME = Theme(
     {

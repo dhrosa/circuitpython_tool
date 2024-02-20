@@ -5,7 +5,7 @@ from click.shell_completion import ZshComplete
 from rich import print
 from rich.text import Text
 
-from circuitpython_tool.cli import commands
+from ..cli import commands
 
 
 @click.command

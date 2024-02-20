@@ -7,7 +7,7 @@ from typing import cast
 import rich_click as click
 from rich import print
 
-from .inotify import INotify, Mask
+from ..fs.inotify import INotify, Mask
 
 
 @click.command

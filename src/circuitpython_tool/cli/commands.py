@@ -9,12 +9,16 @@ parts of the code being tied up with console output.
 
 import asyncio
 import logging
+import subprocess
 from os import environ, execlp
 from pathlib import Path
 from sys import exit, stderr, stdout
+from shutil import which
+import shlex
 
 import rich_click as click
 from rich import get_console, print
+from rich.rule import Rule
 
 from .. import VERSION, fs
 from ..async_iter import time_batched
@@ -186,7 +190,10 @@ def get_source_dir(source_dir: Path | None) -> Path:
     "its descendants for user code (e.g. code.py).",
 )
 @label_or_query_argument("query", required=True)
-def upload(source_dir: Path | None, query: Query) -> None:
+@click.option("--circup/--no-circup", default=False,
+              help="If true, use `circup` to automatically install "
+              "library dependencies on the target device.")
+def upload(source_dir: Path | None, query: Query, circup: bool) -> None:
     """Upload code to device."""
     source_dir = get_source_dir(source_dir)
     print(f"Source directory: {source_dir}")
@@ -195,6 +202,8 @@ def upload(source_dir: Path | None, query: Query) -> None:
     print("Uploading to device: ", device)
     fs.upload([source_dir], mountpoint)
     print(":thumbs_up: Upload [green]succeeded.")
+    if circup:
+        circup_sync(mountpoint)
 
 
 @main.command
@@ -209,7 +218,10 @@ def upload(source_dir: Path | None, query: Query) -> None:
     "its descendants for user code (e.g. code.py).",
 )
 @label_or_query_argument("query", required=True)
-def watch(source_dir: Path | None, query: Query) -> None:
+@click.option("--circup/--no-circup", default=False,
+              help="If true, use `circup` to automatically install "
+              "library dependencies on the target device.")
+def watch(source_dir: Path | None, query: Query, circup: bool) -> None:
     """Continuously upload code to device in response to source file changes.
 
     The contents of the source tree TREE_NAME will be copied onto the device
@@ -229,6 +241,8 @@ def watch(source_dir: Path | None, query: Query) -> None:
     # Always do at least one upload at the start.
     source_dirs = [source_dir]
     fs.upload(source_dirs, device.mount_if_needed())
+    if circup:
+        circup_sync(device.mount_if_needed())
 
     # TODO(dhrosa): Expose delay as a flag.
     events = time_batched(fs.watch_all(source_dirs), delay=lambda: asyncio.sleep(0.5))
@@ -242,6 +256,8 @@ def watch(source_dir: Path | None, query: Query) -> None:
                 logger.info(f"Modified paths: {[str(p) for p in modified_paths]}")
             with get_console().status("Uploading to device."):
                 fs.upload(source_dirs, device.mount_if_needed())
+            if circup:
+                circup_sync(mountpoint)
 
     try:
         asyncio.run(watch_loop())
@@ -287,3 +303,25 @@ def unmount(query: Query) -> None:
     print(f"Device is currently mounted at {mountpoint}")
     device.unmount_if_needed()
     print("Device unmounted.")
+
+
+def circup_sync(mountpoint: Path) -> None:
+    """Use 'circup' to install library dependencies onto device."""
+    if not (circup := which('circup')):
+        print("🤷 [i]circup[/] command [red]not found[/]. "
+              "Install it using e.g.: `pip install circup`")
+        exit(1)
+    args = [
+        circup,
+        "--path",
+        str(mountpoint),
+        "install",
+        "--auto",
+    ]
+    print("Running command: ", shlex.join(args))
+    print(Rule(f"begin circup output"))
+    with subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT) as process:
+        while out := process.stdout.read(1).decode():
+            stdout.write(out)
+    print(Rule("end circup output"))
+    print("👍 Circup sync [green]complete[/].")

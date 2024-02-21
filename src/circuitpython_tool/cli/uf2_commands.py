@@ -12,6 +12,7 @@ from urllib.request import urlopen
 import rich_click as click
 from humanize import naturaldelta
 from rich import get_console, print, progress
+from rich.prompt import Confirm
 from rich.table import Table
 
 from ..hw import Device, Query, Uf2Device
@@ -276,6 +277,26 @@ def analyze(image_path: Path) -> None:
     with get_console().pager(styles=True):
         for block in Block.from_bytes_multi(raw):
             print(block)
+
+
+@uf2.command
+@click.pass_context
+def nuke(context: click.Context) -> None:
+    """Clear out flash memory on UF2 bootloader device."""
+    from importlib import resources
+
+    from .. import static
+
+    if not Confirm.ask(
+        "This UF2 file will reset the flash storage on your device.\n"
+        "This UF2 likely works on most RP2040-based boards.\n"
+        "Do you want to continue?"
+    ):
+        print("[yellow]Cancelling[/]")
+        exit(1)
+
+    with resources.files(static).joinpath("flash_nuke.uf2") as image_path:
+        context.invoke(install, image_path=image_path)
 
 
 def download_path(url: str, destination: Path) -> Path:

@@ -9,12 +9,12 @@ parts of the code being tied up with console output.
 
 import asyncio
 import logging
+import shlex
 import subprocess
 from os import environ, execlp
 from pathlib import Path
-from sys import exit, stderr, stdout
 from shutil import which
-import shlex
+from sys import exit, stderr, stdout
 
 import rich_click as click
 from rich import get_console, print
@@ -190,9 +190,12 @@ def get_source_dir(source_dir: Path | None) -> Path:
     "its descendants for user code (e.g. code.py).",
 )
 @label_or_query_argument("query", required=True)
-@click.option("--circup/--no-circup", default=False,
-              help="If true, use `circup` to automatically install "
-              "library dependencies on the target device.")
+@click.option(
+    "--circup/--no-circup",
+    default=False,
+    help="If true, use `circup` to automatically install "
+    "library dependencies on the target device.",
+)
 def upload(source_dir: Path | None, query: Query, circup: bool) -> None:
     """Upload code to device."""
     source_dir = get_source_dir(source_dir)
@@ -218,9 +221,12 @@ def upload(source_dir: Path | None, query: Query, circup: bool) -> None:
     "its descendants for user code (e.g. code.py).",
 )
 @label_or_query_argument("query", required=True)
-@click.option("--circup/--no-circup", default=False,
-              help="If true, use `circup` to automatically install "
-              "library dependencies on the target device.")
+@click.option(
+    "--circup/--no-circup",
+    default=False,
+    help="If true, use `circup` to automatically install "
+    "library dependencies on the target device.",
+)
 def watch(source_dir: Path | None, query: Query, circup: bool) -> None:
     """Continuously upload code to device in response to source file changes.
 
@@ -234,15 +240,21 @@ def watch(source_dir: Path | None, query: Query, circup: bool) -> None:
     command in order to monitor them.
     """
     source_dir = get_source_dir(source_dir)
+    source_dirs = [source_dir]
     print(f"Source directory: {source_dir}")
     device = distinct_device(query)
     print("Target device: ")
     print(device)
+
+    def sync() -> None:
+        mountpoint = device.mount_if_needed()
+        with get_console().status("Uploading to device."):
+            fs.upload(source_dirs, mountpoint)
+        if circup:
+            circup_sync(mountpoint)
+
     # Always do at least one upload at the start.
-    source_dirs = [source_dir]
-    fs.upload(source_dirs, device.mount_if_needed())
-    if circup:
-        circup_sync(device.mount_if_needed())
+    sync()
 
     # TODO(dhrosa): Expose delay as a flag.
     events = time_batched(fs.watch_all(source_dirs), delay=lambda: asyncio.sleep(0.5))
@@ -254,10 +266,7 @@ def watch(source_dir: Path | None, query: Query, circup: bool) -> None:
             ):
                 modified_paths = await anext(events)
                 logger.info(f"Modified paths: {[str(p) for p in modified_paths]}")
-            with get_console().status("Uploading to device."):
-                fs.upload(source_dirs, device.mount_if_needed())
-            if circup:
-                circup_sync(mountpoint)
+            sync()
 
     try:
         asyncio.run(watch_loop())
@@ -307,9 +316,11 @@ def unmount(query: Query) -> None:
 
 def circup_sync(mountpoint: Path) -> None:
     """Use 'circup' to install library dependencies onto device."""
-    if not (circup := which('circup')):
-        print("🤷 [i]circup[/] command [red]not found[/]. "
-              "Install it using e.g.: `pip install circup`")
+    if not (circup := which("circup")):
+        print(
+            "🤷 [i]circup[/] command [red]not found[/]. "
+            "Install it using e.g.: `pip install circup`"
+        )
         exit(1)
     args = [
         circup,
@@ -319,9 +330,12 @@ def circup_sync(mountpoint: Path) -> None:
         "--auto",
     ]
     print("Running command: ", shlex.join(args))
-    print(Rule(f"begin circup output"))
-    with subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT) as process:
-        while out := process.stdout.read(1).decode():
-            stdout.write(out)
+    print(Rule("begin circup output"))
+    with subprocess.Popen(
+        args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT
+    ) as process:
+        assert process.stdout
+        while out := process.stdout.read(1):
+            stdout.write(out.decode())
     print(Rule("end circup output"))
     print("👍 Circup sync [green]complete[/].")

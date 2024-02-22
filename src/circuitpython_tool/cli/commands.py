@@ -19,6 +19,7 @@ from sys import exit, stderr, stdout
 import rich_click as click
 from rich import get_console, print
 from rich.rule import Rule
+from rich_click import argument, option
 
 from .. import VERSION, fs
 from ..async_iter import time_batched
@@ -40,7 +41,7 @@ COMPLETE_VAR = "_CIRCUITPYTHON_TOOL_COMPLETE"
     ),
     epilog=f"Version: {VERSION}",
 )
-@click.option(
+@option(
     "--log-level",
     "-l",
     type=click.Choice(["DEBUG", "INFO", "WARNING", "ERROR"]),
@@ -48,7 +49,7 @@ COMPLETE_VAR = "_CIRCUITPYTHON_TOOL_COMPLETE"
     show_envvar=True,
     help="Only display logs at or above ths level.",
 )
-@click.option(
+@option(
     "--fake-device-config",
     "-f",
     type=FakeDeviceParam(),
@@ -117,8 +118,8 @@ def completion() -> None:
 
 
 @main.command()
-@click.argument("query", type=QueryParam(), default=Query.any())
-@click.option(
+@argument("query", type=QueryParam(), default=Query.any())
+@option(
     "--save",
     "-s",
     "fake_device_save_path",
@@ -156,8 +157,8 @@ def get_source_dir(source_dir: Path | None) -> Path:
 
 
 @main.command
-@click.argument("device", type=DeviceParam(), required=True)
-@click.option(
+@argument("device", type=DeviceParam(), required=True)
+@option(
     "--dir",
     "-d",
     "source_dir",
@@ -167,7 +168,7 @@ def get_source_dir(source_dir: Path | None) -> Path:
     "If not specified, the source directory is guessed by searching the current directory and "
     "its descendants for user code (e.g. code.py).",
 )
-@click.option(
+@option(
     "--circup/--no-circup",
     default=False,
     help="If true, use `circup` to automatically install "
@@ -186,8 +187,8 @@ def upload(device: Device, source_dir: Path | None, circup: bool) -> None:
 
 
 @main.command
-@click.argument("device", type=DeviceParam(), required=True)
-@click.option(
+@argument("device", type=DeviceParam(), required=True)
+@option(
     "--dir",
     "-d",
     "source_dir",
@@ -197,7 +198,7 @@ def upload(device: Device, source_dir: Path | None, circup: bool) -> None:
     "If not specified, the source directory is guessed by searching the current directory and "
     "its descendants for user code (e.g. code.py).",
 )
-@click.option(
+@option(
     "--circup/--no-circup",
     default=False,
     help="If true, use `circup` to automatically install "
@@ -250,7 +251,7 @@ def watch(device: Device, source_dir: Path | None, circup: bool) -> None:
 
 
 @main.command
-@click.argument("device", type=DeviceParam(), required=True)
+@argument("device", type=DeviceParam(), required=True)
 def connect(device: Device) -> None:
     """Connect to a device's serial terminal."""
     logger.info("Launching minicom for ")
@@ -260,7 +261,7 @@ def connect(device: Device) -> None:
 
 
 @main.command
-@click.argument("device", type=DeviceParam(), required=True)
+@argument("device", type=DeviceParam(), required=True)
 def mount(device: Device) -> None:
     """Mounts the specified device if needed, and prints the mountpoint."""
     print(device)
@@ -273,7 +274,7 @@ def mount(device: Device) -> None:
 
 
 @main.command
-@click.argument("device", type=DeviceParam(), required=True)
+@argument("device", type=DeviceParam(), required=True)
 def unmount(device: Device) -> None:
     """Unmounts the specified device if needed."""
     print(device)

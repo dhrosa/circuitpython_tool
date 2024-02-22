@@ -14,6 +14,7 @@ from humanize import naturaldelta
 from rich import get_console, print, progress
 from rich.prompt import Confirm
 from rich.table import Table
+from rich_click import argument, option
 
 from ..hw import Device, Query, Uf2Device
 from ..request_cache import RequestCache
@@ -51,17 +52,17 @@ def versions() -> None:
 
 
 @uf2.command
-@click.argument("board", type=BoardParam(), required=True)
-@click.argument(
+@argument("board", type=BoardParam(), required=True)
+@argument(
     "destination", type=click.Path(path_type=Path), required=False, default=Path.cwd()
 )
-@click.option(
+@option(
     "--locale",
     default="en_US",
     type=LocaleParam(),
     help="Locale for CircuitPython install.",
 )
-@click.option(
+@option(
     "--offline/--no-offline",
     default=False,
     help="If true, just print the download URL without actually downloading.",
@@ -105,20 +106,20 @@ def download(board: Board, locale: str, destination: Path, offline: bool) -> Pat
 
 @uf2.command
 @click.pass_context
-@click.option(
+@option(
     "--image_path",
     "-i",
     type=click.Path(path_type=Path, dir_okay=False, exists=True),
     help="If specified, install this already-existing UF2 image.",
 )
-@click.option(
+@option(
     "--board",
     "-b",
     type=BoardParam(),
     help="If specified, automatically download and install appropriate CircuitPython UF2 image "
     "for this board ID.",
 )
-@click.option(
+@option(
     "--device",
     "-d",
     "query",
@@ -126,14 +127,14 @@ def download(board: Board, locale: str, destination: Path, offline: bool) -> Pat
     help="If specified, this device will be restarted into its UF2 bootloader and "
     "be used as the target device for installing the image.",
 )
-@click.option(
+@option(
     "--locale",
     default="en_US",
     type=LocaleParam(),
     help="Locale for CircuitPython install. Not used if an explicit image is given "
     "using --image_path.",
 )
-@click.option(
+@option(
     "--delete-download/--no-delete-download",
     default=True,
     help="Delete any downloaded UF2 images on exit.",
@@ -206,7 +207,7 @@ def install(
 
 
 @uf2.command
-@click.argument("device", type=DeviceParam(), required=True)
+@argument("device", type=DeviceParam(), required=True)
 def restart(device: Device) -> None:
     """Restart selected device into UF2 bootloader."""
     print("Selected CircuitPython device: ", device)
@@ -256,7 +257,7 @@ def uf2_unmount() -> None:
 
 
 @uf2.command
-@click.argument("device", type=DeviceParam(), required=True)
+@argument("device", type=DeviceParam(), required=True)
 def boot_info(device: Device) -> None:
     """Lookup UF2 bootloader info of the specified CircuitPython device."""
     print("Selected CircuitPython device: ", device)
@@ -266,9 +267,7 @@ def boot_info(device: Device) -> None:
 
 
 @uf2.command
-@click.argument(
-    "image_path", type=click.Path(path_type=Path, dir_okay=False), required=True
-)
+@argument("image_path", type=click.Path(path_type=Path, dir_okay=False), required=True)
 def analyze(image_path: Path) -> None:
     """Print details of each block in a UF2 image."""
     raw = image_path.read_bytes()

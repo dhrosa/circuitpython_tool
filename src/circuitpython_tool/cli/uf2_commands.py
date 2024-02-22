@@ -295,7 +295,9 @@ def nuke(context: click.Context) -> None:
         print("[yellow]Cancelling[/]")
         exit(1)
 
-    with resources.files(static).joinpath("flash_nuke.uf2") as image_path:
+    with resources.as_file(
+        resources.files(static).joinpath("flash_nuke.uf2")
+    ) as image_path:
         context.invoke(install, image_path=image_path)
 
 

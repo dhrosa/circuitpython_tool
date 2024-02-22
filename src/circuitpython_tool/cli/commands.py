@@ -30,14 +30,18 @@ from .shared_state import SharedState
 
 logger = logging.getLogger(__name__)
 
+PROGRAM_NAME = "circuitpython-tool"
+"""Program name in help messages."""
+
 COMPLETE_VAR = "_CIRCUITPYTHON_TOOL_COMPLETE"
 """Environment variable for shell completion support."""
 
 
-@click.version_option(VERSION, "--version", "-v")
+@click.version_option(VERSION, "--version", "-v", prog_name=PROGRAM_NAME)
 @click.group(
     context_settings=dict(
-        help_option_names=["-h", "--help"], auto_envvar_prefix="CIRCUITPYTHON_TOOL"
+        help_option_names=["-h", "--help"],
+        auto_envvar_prefix="CIRCUITPYTHON_TOOL",
     ),
     epilog=f"Version: {VERSION}",
 )

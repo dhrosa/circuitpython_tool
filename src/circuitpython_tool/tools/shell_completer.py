@@ -25,7 +25,10 @@ def main(arg_str: str) -> None:
     argument to be completed.
     """
     complete = ZshComplete(
-        commands.main, {}, "circuitpython-tool", commands.COMPLETE_VAR
+        commands.main,
+        commands.main.context_settings,
+        commands.PROGRAM_NAME,
+        commands.COMPLETE_VAR,
     )
     if not arg_str:
         arg_str = " "

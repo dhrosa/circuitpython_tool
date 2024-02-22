@@ -66,7 +66,6 @@ def test_subcommands() -> None:
     assert set(commands.main.commands.keys()) == {
         "completion",
         "devices",
-        "label",
         "upload",
         "watch",
         "connect",
@@ -123,18 +122,6 @@ def test_device_list_query(capsys: CaptureFixture, cli: CliRunner) -> None:
     assert "sb" not in out
 
 
-def test_label_add(capsys: CaptureFixture, cli: CliRunner) -> None:
-    # Add label_a
-    with exits_with_code(0):
-        cli.run("label add label_a va:ma:sa")
-    assert "Label label_a added" in capsys.readouterr().out
-
-    # Should be in list output
-    with exits_with_code(0):
-        cli.run("label list")
-    assert contains_ordered_substrings(capsys.readouterr().out, ["label_a", "va:ma:sa"])
-
-
 def test_connect(
     capsys: CaptureFixture,
     monkeypatch: MonkeyPatch,
@@ -151,13 +138,7 @@ def test_connect(
 
     cli.add_device("vv", "mm", "ss", "/partition", serial_path="/serial_path")
     with exits_with_code(0):
-        cli.run("label add label_a vv:mm:ss")
-
-    with exits_with_code(0):
-        cli.run("devices")
-
-    with exits_with_code(0):
-        cli.run("connect label_a")
+        cli.run("connect vv:mm:ss")
 
     assert exec_args == ["minicom", "minicom", "-D", "/serial_path"]
 

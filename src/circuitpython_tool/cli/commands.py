@@ -22,17 +22,10 @@ from rich.rule import Rule
 
 from .. import VERSION, fs
 from ..async_iter import time_batched
-from ..hw import Query, devices_to_toml
-from . import (
-    devices_table,
-    distinct_device,
-    label_commands,
-    pass_read_only_config,
-    pass_shared_state,
-    uf2_commands,
-)
+from ..hw import Device, Query, devices_to_toml
+from . import devices_table, pass_read_only_config, pass_shared_state, uf2_commands
 from .config import Config, ConfigStorage
-from .params import ConfigStorageParam, FakeDeviceParam, label_or_query_argument
+from .params import ConfigStorageParam, DeviceParam, FakeDeviceParam, QueryParam
 from .shared_state import SharedState
 
 logger = logging.getLogger(__name__)
@@ -87,7 +80,6 @@ def main(log_level: str) -> None:
 
 
 main.add_command(uf2_commands.uf2)
-main.add_command(label_commands.label)
 
 
 @main.command
@@ -139,7 +131,7 @@ def completion() -> None:
 
 
 @main.command()
-@label_or_query_argument("query", default=Query.any())
+@click.argument("query", type=QueryParam(), default=Query.any())
 @click.option(
     "--save",
     "-s",
@@ -179,6 +171,7 @@ def get_source_dir(source_dir: Path | None) -> Path:
 
 
 @main.command
+@click.argument("device", type=DeviceParam(), required=True)
 @click.option(
     "--dir",
     "-d",
@@ -189,18 +182,16 @@ def get_source_dir(source_dir: Path | None) -> Path:
     "If not specified, the source directory is guessed by searching the current directory and "
     "its descendants for user code (e.g. code.py).",
 )
-@label_or_query_argument("query", required=True)
 @click.option(
     "--circup/--no-circup",
     default=False,
     help="If true, use `circup` to automatically install "
     "library dependencies on the target device.",
 )
-def upload(source_dir: Path | None, query: Query, circup: bool) -> None:
+def upload(device: Device, source_dir: Path | None, circup: bool) -> None:
     """Upload code to device."""
     source_dir = get_source_dir(source_dir)
     print(f"Source directory: {source_dir}")
-    device = distinct_device(query)
     mountpoint = device.mount_if_needed()
     print("Uploading to device: ", device)
     fs.upload([source_dir], mountpoint)
@@ -210,6 +201,7 @@ def upload(source_dir: Path | None, query: Query, circup: bool) -> None:
 
 
 @main.command
+@click.argument("device", type=DeviceParam(), required=True)
 @click.option(
     "--dir",
     "-d",
@@ -220,14 +212,13 @@ def upload(source_dir: Path | None, query: Query, circup: bool) -> None:
     "If not specified, the source directory is guessed by searching the current directory and "
     "its descendants for user code (e.g. code.py).",
 )
-@label_or_query_argument("query", required=True)
 @click.option(
     "--circup/--no-circup",
     default=False,
     help="If true, use `circup` to automatically install "
     "library dependencies on the target device.",
 )
-def watch(source_dir: Path | None, query: Query, circup: bool) -> None:
+def watch(device: Device, source_dir: Path | None, circup: bool) -> None:
     """Continuously upload code to device in response to source file changes.
 
     The contents of the source tree TREE_NAME will be copied onto the device
@@ -242,7 +233,6 @@ def watch(source_dir: Path | None, query: Query, circup: bool) -> None:
     source_dir = get_source_dir(source_dir)
     source_dirs = [source_dir]
     print(f"Source directory: {source_dir}")
-    device = distinct_device(query)
     print("Target device: ")
     print(device)
 
@@ -275,10 +265,9 @@ def watch(source_dir: Path | None, query: Query, circup: bool) -> None:
 
 
 @main.command
-@label_or_query_argument("query", required=True)
-def connect(query: Query) -> None:
+@click.argument("device", type=DeviceParam(), required=True)
+def connect(device: Device) -> None:
     """Connect to a device's serial terminal."""
-    device = distinct_device(query)
     logger.info("Launching minicom for ")
     logger.info(device)
     assert device.serial_path is not None
@@ -286,10 +275,9 @@ def connect(query: Query) -> None:
 
 
 @main.command
-@label_or_query_argument("query", required=True)
-def mount(query: Query) -> None:
+@click.argument("device", type=DeviceParam(), required=True)
+def mount(device: Device) -> None:
     """Mounts the specified device if needed, and prints the mountpoint."""
-    device = distinct_device(query)
     print(device)
     mountpoint = device.get_mountpoint()
     if mountpoint:
@@ -300,10 +288,9 @@ def mount(query: Query) -> None:
 
 
 @main.command
-@label_or_query_argument("query", required=True)
-def unmount(query: Query) -> None:
+@click.argument("device", type=DeviceParam(), required=True)
+def unmount(device: Device) -> None:
     """Unmounts the specified device if needed."""
-    device = distinct_device(query)
     print(device)
     mountpoint = device.get_mountpoint()
     if not mountpoint:

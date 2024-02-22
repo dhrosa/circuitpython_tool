@@ -10,9 +10,9 @@ import click
 from click import Context, Parameter, ParamType
 from click.shell_completion import CompletionItem
 
-from ..hw import FakeDevice, Query
+from ..hw import Device, FakeDevice, Query
 from ..uf2 import Board
-from . import completion
+from . import completion, distinct_device
 from .config import ConfigStorage
 from .shared_state import SharedState
 
@@ -109,8 +109,15 @@ class QueryParam(ParamType):
     name = "query"
 
     def convert(
-        self, value: str, param: Parameter | None, context: Context | None
-    ) -> Query:
+        self,
+        value: str | Query | None,
+        param: Parameter | None,
+        context: Context | None,
+    ) -> Query | None:
+        if value is None:
+            return None
+        if isinstance(value, Query):
+            return value
         try:
             return Query.parse(value)
         except Query.ParseError as error:
@@ -152,6 +159,22 @@ class QueryOrLabelParam(ParamType):
         return completion.device_label(context, param, incomplete) + completion.query(
             context, param, incomplete
         )
+
+
+class DeviceParam(ParamType):
+    def convert(
+        self, value: str | Device, param: Parameter | None, context: Context | None
+    ) -> Device | None:
+        if value is None:
+            return None
+        if isinstance(value, Device):
+            return value
+        return distinct_device(Query.parse(value))
+
+    def shell_complete(
+        self, context: Context, param: Parameter, incomplete: str
+    ) -> list[CompletionItem]:
+        return completion.query(context, param, incomplete)
 
 
 class BoardParam(ParamType):

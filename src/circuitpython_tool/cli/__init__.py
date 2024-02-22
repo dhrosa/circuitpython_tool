@@ -3,10 +3,8 @@
 # TODO(dhrosa): This file feels like a 'utils' library; figure out a better way to organize this.
 
 import logging
-from collections.abc import Callable, Iterable
+from collections.abc import Iterable
 from datetime import datetime
-from functools import wraps
-from typing import Concatenate, ParamSpec, TypeVar
 
 import rich_click as click
 from humanize import naturaltime
@@ -15,7 +13,6 @@ from rich.logging import RichHandler
 from rich.table import Table
 
 from ..hw import Device, Query, Uf2Device
-from .config import Config, ConfigStorage
 from .shared_state import SharedState
 
 # Use `rich` for tracebacks and logging.
@@ -165,34 +162,3 @@ def distinct_uf2_device() -> Uf2Device:
 
 pass_shared_state = click.make_pass_decorator(SharedState, ensure=True)
 """Decorator for passing SharedState to a function."""
-
-# These can be removed in python 3.12
-#
-# Type variables for return value and function parameters.
-R = TypeVar("R")
-P = ParamSpec("P")
-
-
-def pass_config_storage(
-    f: Callable[Concatenate[ConfigStorage, P], R]
-) -> Callable[P, R]:
-    """Decorator for passing ConfigStorage to a function."""
-
-    @pass_shared_state
-    @wraps(f)
-    def inner(state: SharedState, /, *args: P.args, **kwargs: P.kwargs) -> R:
-        return f(state.config_storage, *args, **kwargs)
-
-    return inner
-
-
-def pass_read_only_config(f: Callable[Concatenate[Config, P], R]) -> Callable[P, R]:
-    """Decorator for supplying a function with a read-only snapshot of our current Config."""
-
-    @pass_config_storage
-    @wraps(f)
-    def inner(config_storage: ConfigStorage, /, *args: P.args, **kwargs: P.kwargs) -> R:
-        with config_storage.open() as config:
-            return f(config, *args, **kwargs)
-
-    return inner

@@ -23,9 +23,8 @@ from rich.rule import Rule
 from .. import VERSION, fs
 from ..async_iter import time_batched
 from ..hw import Device, Query, devices_to_toml
-from . import devices_table, pass_read_only_config, pass_shared_state, uf2_commands
-from .config import Config, ConfigStorage
-from .params import ConfigStorageParam, DeviceParam, FakeDeviceParam, QueryParam
+from . import devices_table, pass_shared_state, uf2_commands
+from .params import DeviceParam, FakeDeviceParam, QueryParam
 from .shared_state import SharedState
 
 logger = logging.getLogger(__name__)
@@ -40,19 +39,6 @@ COMPLETE_VAR = "_CIRCUITPYTHON_TOOL_COMPLETE"
         help_option_names=["-h", "--help"], auto_envvar_prefix="CIRCUITPYTHON_TOOL"
     ),
     epilog=f"Version: {VERSION}",
-)
-@click.option(
-    "--config",
-    "-c",
-    "config_path",
-    type=ConfigStorageParam(),
-    default=ConfigStorage(),
-    expose_value=False,
-    show_envvar=True,
-    # Force evaluation of this paramter early so that later parameters can
-    # assume the config has already been found.
-    is_eager=True,
-    help="Path to configuration TOML file for device labels and source trees.",
 )
 @click.option(
     "--log-level",
@@ -139,10 +125,9 @@ def completion() -> None:
     type=click.Path(dir_okay=False, path_type=Path),
     help="If set, save devices to a TOML file for later recall using the --fake-devices flag.",
 )
-@pass_read_only_config
 @pass_shared_state
 def devices(
-    state: SharedState, config: Config, query: Query, fake_device_save_path: Path | None
+    state: SharedState, query: Query, fake_device_save_path: Path | None
 ) -> None:
     """List all connected CircuitPython devices.
 

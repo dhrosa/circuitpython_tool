@@ -19,7 +19,7 @@ from ..hw import Device, Query, Uf2Device
 from ..request_cache import RequestCache
 from ..uf2 import Block, Board
 from . import distinct_device, distinct_uf2_device, uf2_devices_table
-from .params import BoardParam, LocaleParam, QueryParam, label_or_query_argument
+from .params import BoardParam, DeviceParam, LocaleParam, QueryParam
 
 logger = getLogger(__name__)
 
@@ -206,10 +206,9 @@ def install(
 
 
 @uf2.command
-@label_or_query_argument("query", required=True)
-def restart(query: Query) -> None:
+@click.argument("device", type=DeviceParam(), required=True)
+def restart(device: Device) -> None:
     """Restart selected device into UF2 bootloader."""
-    device = distinct_device(query)
     print("Selected CircuitPython device: ", device)
     try:
         uf2_device = enter_uf2_bootloader(device)
@@ -257,10 +256,9 @@ def uf2_unmount() -> None:
 
 
 @uf2.command
-@label_or_query_argument("query", required=True)
-def boot_info(query: Query) -> None:
+@click.argument("device", type=DeviceParam(), required=True)
+def boot_info(device: Device) -> None:
     """Lookup UF2 bootloader info of the specified CircuitPython device."""
-    device = distinct_device(query)
     print("Selected CircuitPython device: ", device)
     boot_info = device.get_boot_info()
     print("Version: ", boot_info.version)

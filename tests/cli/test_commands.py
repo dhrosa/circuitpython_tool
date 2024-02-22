@@ -34,8 +34,6 @@ class CliRunner:
         args = [
             "--fake-device-config",
             fake_config_path,
-            "--config",
-            self.base_path / "config.toml",
             *args_str.split(),
         ]
         commands.main(args)

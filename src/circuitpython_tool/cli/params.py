@@ -2,9 +2,9 @@
 
 import logging
 import pathlib
-from collections.abc import Callable, Iterator
+from collections.abc import Iterator
 from contextlib import contextmanager
-from typing import Any, TypeAlias, cast
+from typing import Any
 
 import click
 from click import Context, Parameter, ParamType
@@ -13,7 +13,6 @@ from click.shell_completion import CompletionItem
 from ..hw import Device, FakeDevice, Query
 from ..uf2 import Board
 from . import completion, distinct_device
-from .config import ConfigStorage
 from .shared_state import SharedState
 
 
@@ -34,42 +33,6 @@ def supressed_logging(context: Context | None = None) -> Iterator[None]:
         yield
     finally:
         logging.disable(logging.NOTSET)
-
-
-class ConfigStorageParam(click.Path):
-    """Click paramter for parsing paths to ConfigStorage.
-
-    We return a parameter value, but also set the corrent context's object to the
-    ConfigStorage instance.
-    """
-
-    name = "config_file"
-
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
-        kwargs["dir_okay"] = False
-        kwargs["path_type"] = pathlib.Path
-        super().__init__(*args, **kwargs)
-
-    def convert(  # type: ignore[override]
-        self,
-        value: str | pathlib.Path | ConfigStorage,
-        param: Parameter | None,
-        context: Context | None,
-    ) -> ConfigStorage:
-        match value:
-            case ConfigStorage():
-                storage = value
-            case pathlib.Path():
-                storage = ConfigStorage(value)
-            case _:
-                assert param is not None
-                assert context is not None
-                path = cast(pathlib.Path, super().convert(value, param, context))
-                storage = ConfigStorage(path)
-        assert context
-        state = context.ensure_object(SharedState)
-        state.config_storage = storage
-        return storage
 
 
 class FakeDeviceParam(click.Path):
@@ -127,38 +90,6 @@ class QueryParam(ParamType):
         self, context: Context, param: Parameter, incomplete: str
     ) -> list[CompletionItem]:
         return completion.query(context, param, incomplete)
-
-
-class QueryOrLabelParam(ParamType):
-    """Click parameter type for Query arguments, represented by either Query
-    syntax or the name of an existing device label."""
-
-    name = "label_or_query"
-
-    def convert(
-        self,
-        value: str | Query | None,
-        param: Parameter | None,
-        context: Context | None,
-    ) -> Query | None:
-        if value is None:
-            return None
-        if isinstance(value, Query):
-            return value
-        try:
-            if ":" in value:
-                return Query.parse(value)
-        except Query.ParseError as error:
-            self.fail(str(error))
-        # TODO(dhrosa): Actually implement device label lookup
-        return Query("", "", "")
-
-    def shell_complete(
-        self, context: Context, param: Parameter, incomplete: str
-    ) -> list[CompletionItem]:
-        return completion.device_label(context, param, incomplete) + completion.query(
-            context, param, incomplete
-        )
 
 
 class DeviceParam(ParamType):
@@ -229,25 +160,3 @@ class LocaleParam(ParamType):
         with supressed_logging(context):
             locales = Board.all_locales()
         return [CompletionItem(lang) for lang in locales if lang.startswith(incomplete)]
-
-
-AnyCallable: TypeAlias = Callable[..., Any]
-
-
-def label_or_query_argument(
-    name: str,
-    *args: Any,
-    **kwargs: Any,
-) -> Callable[[AnyCallable], AnyCallable]:
-    """Decorator that accepts a device label or a raw query string, and passes
-    an argument of type Query to the command."""
-
-    kwargs.setdefault("required", False)
-    # The return value will be a Query, likely with the name 'query', but we
-    # want to communicate to the user that either a device label or query string
-    # works.
-    metavar = "LABEL_OR_QUERY"
-    if not kwargs.get("required"):
-        metavar = f"[{metavar}]"
-    kwargs.setdefault("metavar", metavar)
-    return click.argument(name, *args, type=QueryOrLabelParam(), **kwargs)

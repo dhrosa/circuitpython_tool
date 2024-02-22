@@ -10,9 +10,9 @@ import click
 from click import Context, Parameter, ParamType
 from click.shell_completion import CompletionItem
 
-from ..hw import Device, FakeDevice, Query
+from ..hw import Device, FakeDevice, Query, RealDevice
 from ..uf2 import Board
-from . import completion, distinct_device
+from . import distinct_device
 from .shared_state import SharedState
 
 
@@ -66,6 +66,13 @@ class FakeDeviceParam(click.Path):
         context.ensure_object(SharedState).all_devices = lambda: devices
 
 
+def query_completion(incomplete: str) -> list[CompletionItem]:
+    return [
+        CompletionItem(":".join((d.vendor, d.model, d.serial)))
+        for d in RealDevice.all()
+    ]
+
+
 class QueryParam(ParamType):
     """Click parameter type for parsing Query arguments."""
 
@@ -89,7 +96,7 @@ class QueryParam(ParamType):
     def shell_complete(
         self, context: Context, param: Parameter, incomplete: str
     ) -> list[CompletionItem]:
-        return completion.query(context, param, incomplete)
+        return query_completion(incomplete)
 
 
 class DeviceParam(ParamType):
@@ -105,7 +112,7 @@ class DeviceParam(ParamType):
     def shell_complete(
         self, context: Context, param: Parameter, incomplete: str
     ) -> list[CompletionItem]:
-        return completion.query(context, param, incomplete)
+        return query_completion(incomplete)
 
 
 class BoardParam(ParamType):

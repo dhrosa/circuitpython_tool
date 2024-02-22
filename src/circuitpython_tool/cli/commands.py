@@ -105,6 +105,9 @@ def completion() -> None:
     or by putting the following line in your shell config file:
 
     source "$(circuitpython-tool completion)"
+
+    or to avoid execution time of Python code, you can redirect the output of
+    this command to a file and `source` that file in your shell config file.
     """
 
     def maybe_emit_tty_warning() -> None:

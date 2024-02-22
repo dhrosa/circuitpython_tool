@@ -3,6 +3,7 @@
 import time
 from collections.abc import Iterator
 from contextlib import contextmanager
+from importlib import resources
 from logging import getLogger
 from pathlib import Path
 from shutil import rmtree
@@ -16,6 +17,7 @@ from rich.prompt import Confirm
 from rich.table import Table
 from rich_click import argument, option
 
+from .. import static
 from ..hw import Device, Query, Uf2Device
 from ..request_cache import RequestCache
 from ..uf2 import Block, Board
@@ -280,10 +282,6 @@ def analyze(image_path: Path) -> None:
 @click.pass_context
 def nuke(context: click.Context) -> None:
     """Clear out flash memory on UF2 bootloader device."""
-    from importlib import resources
-
-    from .. import static
-
     if not Confirm.ask(
         "This UF2 file will reset the flash storage on your device.\n"
         "This UF2 likely works on most RP2040-based boards.\n"

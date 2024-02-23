@@ -88,3 +88,68 @@ def test_device_partition_and_serial(usb_devices: list[UsbDevice]) -> None:
             serial_path=Path("/serial"),
         ),
     }
+
+
+def test_match_by_id(usb_devices: list[UsbDevice]) -> None:
+    usb_devices.append(
+        UsbDevice(
+            Path("/partition"),
+            vendor_id="0000",
+            vendor="vendor",
+            model_id="0000",
+            model="model",
+            serial="serial",
+            partition_label="CIRCUITPY",
+        )
+    )
+
+    # Non-matching model ID
+    usb_devices.append(
+        UsbDevice(
+            Path("/serial1"),
+            vendor_id="0000",
+            vendor="vendor",
+            model_id="0001",
+            model="model",
+            serial="serial",
+            is_tty=True,
+        )
+    )
+
+    # Non-matching vendor ID
+    usb_devices.append(
+        UsbDevice(
+            Path("/serial2"),
+            vendor_id="0002",
+            vendor="vendor",
+            model_id="0000",
+            model="model",
+            serial="serial",
+            is_tty=True,
+        )
+    )
+
+    # Non-matching descriptor strings, but matching IDs
+    usb_devices.append(
+        UsbDevice(
+            Path("/serial3"),
+            vendor_id="0000",
+            vendor="other_vendor",
+            model_id="0000",
+            model="other_model",
+            serial="serial",
+            is_tty=True,
+        )
+    )
+
+    # Only /serial3 should match, as its IDs match. Vendor and model strings
+    # should be taken from the serial device.
+    assert RealDevice.all() == {
+        RealDevice(
+            "other_vendor",
+            "other_model",
+            "serial",
+            partition_path=Path("/partition"),
+            serial_path=Path("/serial3"),
+        )
+    }

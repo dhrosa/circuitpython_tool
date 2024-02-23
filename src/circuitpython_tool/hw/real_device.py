@@ -4,7 +4,7 @@ import logging
 import os
 import re
 import termios
-from dataclasses import replace
+from dataclasses import dataclass, replace
 from pathlib import Path
 
 from . import partition
@@ -58,9 +58,17 @@ class RealDevice(Device):
     def all() -> set["RealDevice"]:
         """Finds all USB CircuitPython devices."""
 
-        # Maps (vendor, model, serial) to RealDevice instances.
-        devices: dict[tuple[str, str, str], RealDevice] = {}
+        @dataclass(frozen=True)
+        class Key:
+            vendor_id: str
+            model_id: str
+            serial: str
 
+            @staticmethod
+            def from_usb_device(usb_device: UsbDevice) -> "Key":
+                return Key(usb_device.vendor_id, usb_device.model_id, usb_device.serial)
+
+        devices: dict[Key, RealDevice] = {}
         usb_devices = UsbDevice.all()
 
         # Find CIRCUITPY partition devices.
@@ -73,15 +81,24 @@ class RealDevice(Device):
                 serial=usb_device.serial,
                 partition_path=usb_device.path,
             )
-            devices[device.key] = device
+            devices[Key.from_usb_device(usb_device)] = device
 
         # Find corresponding serial devices.
         for usb_device in usb_devices:
             if not usb_device.is_tty:
                 continue
-            key = usb_device.vendor, usb_device.model, usb_device.serial
+            key = Key.from_usb_device(usb_device)
             if key not in devices:
                 continue
-            devices[key] = replace(devices[key], serial_path=usb_device.path)
+            # Take the descriptor strings from the serial device preferentially.
+            # In my experience with the Raspberry Pi Pico, these strings are
+            # more descriptive too.
+            devices[key] = replace(
+                devices[key],
+                vendor=usb_device.vendor,
+                model=usb_device.model,
+                serial=usb_device.serial,
+                serial_path=usb_device.path,
+            )
 
         return set(devices.values())

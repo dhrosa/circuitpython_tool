@@ -19,29 +19,29 @@
         font-weight: 700;
     }
 
-    .terminal-4116075915-matrix {
+    .terminal-1693341468-matrix {
         font-family: Fira Code, monospace;
         font-size: 20px;
         line-height: 24.4px;
         font-variant-east-asian: full-width;
     }
 
-    .terminal-4116075915-title {
+    .terminal-1693341468-title {
         font-size: 18px;
         font-weight: bold;
         font-family: arial;
     }
 
-    .terminal-4116075915-r1 { fill: #98a84b;font-weight: bold }
-.terminal-4116075915-r2 { fill: #c5c8c6 }
-.terminal-4116075915-r3 { fill: #292929 }
+    .terminal-1693341468-r1 { fill: #98a84b;font-weight: bold }
+.terminal-1693341468-r2 { fill: #c5c8c6 }
+.terminal-1693341468-r3 { fill: #292929 }
     </style>
 
     <defs>
-    <clipPath id="terminal-4116075915-clip-terminal">
+    <clipPath id="terminal-1693341468-clip-terminal">
       <rect x="0" y="0" width="975.0" height="47.8" />
     </clipPath>
-    <clipPath id="terminal-4116075915-line-0">
+    <clipPath id="terminal-1693341468-line-0">
     <rect x="0" y="1.5" width="976" height="24.65"/>
             </clipPath>
     </defs>
@@ -53,11 +53,11 @@
             <circle cx="44" cy="0" r="7" fill="#28c840"/>
             </g>
         
-    <g transform="translate(9, 41)" clip-path="url(#terminal-4116075915-clip-terminal)">
-    <rect fill="#c5c8c6" x="402.6" y="1.5" width="12.2" height="24.65" shape-rendering="crispEdges"/><rect fill="#c5c8c6" x="0" y="25.9" width="390.4" height="24.65" shape-rendering="crispEdges"/>
-    <g class="terminal-4116075915-matrix">
-    <text class="terminal-4116075915-r1" x="0" y="20" textLength="12.2" clip-path="url(#terminal-4116075915-line-0)">$</text><text class="terminal-4116075915-r2" x="12.2" y="20" textLength="390.4" clip-path="url(#terminal-4116075915-line-0)">&#160;circuitpython-tool&#160;upload&#160;:Pico</text><text class="terminal-4116075915-r2" x="976" y="20" textLength="12.2" clip-path="url(#terminal-4116075915-line-0)">
-</text><text class="terminal-4116075915-r3" x="0" y="44.4" textLength="390.4" clip-path="url(#terminal-4116075915-line-1)">Raspberr:Pico_W:E661801017488C39</text><text class="terminal-4116075915-r2" x="976" y="44.4" textLength="12.2" clip-path="url(#terminal-4116075915-line-1)">
+    <g transform="translate(9, 41)" clip-path="url(#terminal-1693341468-clip-terminal)">
+    <rect fill="#c5c8c6" x="402.6" y="1.5" width="12.2" height="24.65" shape-rendering="crispEdges"/><rect fill="#c5c8c6" x="0" y="25.9" width="439.2" height="24.65" shape-rendering="crispEdges"/>
+    <g class="terminal-1693341468-matrix">
+    <text class="terminal-1693341468-r1" x="0" y="20" textLength="12.2" clip-path="url(#terminal-1693341468-line-0)">$</text><text class="terminal-1693341468-r2" x="12.2" y="20" textLength="390.4" clip-path="url(#terminal-1693341468-line-0)">&#160;circuitpython-tool&#160;upload&#160;:Pico</text><text class="terminal-1693341468-r2" x="976" y="20" textLength="12.2" clip-path="url(#terminal-1693341468-line-0)">
+</text><text class="terminal-1693341468-r3" x="0" y="44.4" textLength="439.2" clip-path="url(#terminal-1693341468-line-1)">Raspberry_Pi:Pico_W:E661801017488C39</text><text class="terminal-1693341468-r2" x="976" y="44.4" textLength="12.2" clip-path="url(#terminal-1693341468-line-1)">
 </text>
     </g>
     </g>

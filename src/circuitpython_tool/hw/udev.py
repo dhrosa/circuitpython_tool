@@ -22,8 +22,17 @@ class UsbDevice:
     """USB device properties from udev."""
 
     path: Path
+
+    vendor_id: str
+    """Vendor identifier BCD string."""
     vendor: str
+    """Vendor name from string descriptor."""
+
+    model_id: str
+    """Model identifier BCD string."""
     model: str
+    """Model name from string descriptor."""
+
     serial: str
 
     partition_label: str | None = None
@@ -46,7 +55,9 @@ class UsbDevice:
                 continue
             yield UsbDevice(
                 path=Path(devname),
+                vendor_id=properties["ID_USB_VENDOR_ID"],
                 vendor=properties["ID_USB_VENDOR"],
+                model_id=properties["ID_USB_MODEL_ID"],
                 model=properties["ID_USB_MODEL"],
                 serial=(
                     properties.get("ID_USB_SERIAL_SHORT") or properties["ID_USB_SERIAL"]

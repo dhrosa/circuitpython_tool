@@ -21,7 +21,15 @@ def test_no_devices() -> None:
 def test_device_without_serial(usb_devices: list[UsbDevice]) -> None:
     """Lookup a valid device with a partition device but no serial device."""
     usb_devices.append(
-        UsbDevice(Path("/device"), "v", "m", "s", partition_label="CIRCUITPY")
+        UsbDevice(
+            Path("/device"),
+            vendor_id="0001",
+            vendor="v",
+            model_id="0002",
+            model="m",
+            serial="s",
+            partition_label="CIRCUITPY",
+        )
     )
     assert RealDevice.all() == {
         RealDevice("v", "m", "s", partition_path=Path("/device"))
@@ -30,7 +38,17 @@ def test_device_without_serial(usb_devices: list[UsbDevice]) -> None:
 
 def test_device_without_partition(usb_devices: list[UsbDevice]) -> None:
     """Devices with serial port and no partition should be skipped."""
-    usb_devices.append(UsbDevice(Path("/device"), "v", "m", "s", is_tty=True))
+    usb_devices.append(
+        UsbDevice(
+            Path("/device"),
+            vendor_id="0001",
+            vendor="v",
+            model_id="0002",
+            model="m",
+            serial="s",
+            is_tty=True,
+        )
+    )
 
     assert RealDevice.all() == set()
 
@@ -38,10 +56,29 @@ def test_device_without_partition(usb_devices: list[UsbDevice]) -> None:
 def test_device_partition_and_serial(usb_devices: list[UsbDevice]) -> None:
     """Lookup a valid device with a partition device and serial device."""
     usb_devices.append(
-        UsbDevice(Path("/partition"), "v", "m", "s", partition_label="CIRCUITPY")
+        UsbDevice(
+            Path("/partition"),
+            vendor_id="0001",
+            vendor="v",
+            model_id="0002",
+            model="m",
+            serial="s",
+            partition_label="CIRCUITPY",
+        )
     )
 
-    usb_devices.append(UsbDevice(Path("/serial"), "v", "m", "s", is_tty=True))
+    usb_devices.append(
+        UsbDevice(
+            Path("/serial"),
+            vendor_id="0001",
+            vendor="v",
+            model_id="0002",
+            model="m",
+            serial="s",
+            is_tty=True,
+        )
+    )
+
     assert RealDevice.all() == {
         RealDevice(
             "v",

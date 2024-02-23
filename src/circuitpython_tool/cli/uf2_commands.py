@@ -206,6 +206,7 @@ def install(
         ):
             output_file.close()
     print("Install complete.")
+    # TODO(dhrosa): Show user status of newly setup device
 
 
 @uf2.command

@@ -181,47 +181,24 @@ def get_source_dir(source_dir: Path | None) -> Path:
     help="If true, use `circup` to automatically install "
     "library dependencies on the target device.",
 )
-def upload(device: Device, source_dir: Path | None, circup: bool) -> None:
-    """Upload code to device."""
-    source_dir = get_source_dir(source_dir)
-    print(f"Source directory: {source_dir}")
-    mountpoint = device.mount_if_needed()
-    print("Uploading to device: ", device)
-    fs.upload([source_dir], mountpoint)
-    print(":thumbs_up: Upload [green]succeeded.")
-    if circup:
-        circup_sync(mountpoint)
-
-
-@main.command
-@argument("device", type=DeviceParam(), required=True)
 @option(
-    "--dir",
-    "-d",
-    "source_dir",
-    type=click.Path(exists=True, file_okay=False, path_type=Path),
-    required=False,
-    help="Path containing source code to upload. "
-    "If not specified, the source directory is guessed by searching the current directory and "
-    "its descendants for user code (e.g. code.py).",
+    "--mode",
+    default="watch",
+    type=click.Choice(choices=["single-shot", "watch"]),
+    help="Whether to upload code once, or continuously.",
 )
-@option(
-    "--circup/--no-circup",
-    default=False,
-    help="If true, use `circup` to automatically install "
-    "library dependencies on the target device.",
-)
-def watch(device: Device, source_dir: Path | None, circup: bool) -> None:
+def upload(device: Device, source_dir: Path | None, circup: bool, mode: str) -> None:
     """Continuously upload code to device in response to source file changes.
 
-    The contents of the source tree TREE_NAME will be copied onto the device
-    with the label LABEL_NAME.
+    The contents of the specified source directory will be copied onto the given
+    CircuitPython device.
 
-    This command will always perform at least one upload. Then this command
-    waits for filesystem events from all paths and descendant paths of the
-    source tree. Currently this command will only properly track file
-    modifications. Creation of new files and folders requires you to rerun this
-    command in order to monitor them.
+    If `--mode` is "single-shot", then the code is uploaded and then the command exits.
+
+    If `--mode` is "watch", then this commnd will perform one upload, and then
+    will continue running. The command will wait for filesystem events from all
+    paths and descendant paths of the source tree, and will re-upload code to
+    the device on each event.
     """
     source_dir = get_source_dir(source_dir)
     source_dirs = [source_dir]
@@ -238,6 +215,10 @@ def watch(device: Device, source_dir: Path | None, circup: bool) -> None:
 
     # Always do at least one upload at the start.
     sync()
+
+    if mode == "single-shot":
+        print("👍 Upload [green]complete[/].")
+        exit()
 
     # TODO(dhrosa): Expose delay as a flag.
     events = time_batched(fs.watch_all(source_dirs), delay=lambda: asyncio.sleep(0.5))

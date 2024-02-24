@@ -69,16 +69,16 @@ circuitpython-tool connect :Pico:
 
 ### Upload code
 
-Upload code to connected Raspberry Pi Pico (without needing to manually mount the device!):
+Upload code to connected Raspberry Pi Pico everytime the contents of `~/mycode` changes (without needing to manually mount the device!):
 
 ```sh
 circuitpython-tool upload --dir ~/mycode :Pico:
 ```
 
-or automatically upload code everytime a source file changes:
+Or to only upload code once and exit:
 
 ```sh
-circuitpython-tool watch --dir ~/mycode :Pico:
+circuitpython-tool watch --dir ~/mycode :Pico: --mode=single-shot
 ```
 
 ### Mount device

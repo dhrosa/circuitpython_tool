@@ -62,15 +62,14 @@ def exits_with_code(code: int) -> Iterator[None]:
 
 def test_subcommands() -> None:
     assert set(commands.main.commands.keys()) == {
-        "completion",
         "clean",
-        "devices",
-        "upload",
-        "watch",
+        "completion",
         "connect",
+        "devices",
         "mount",
-        "unmount",
         "uf2",
+        "unmount",
+        "upload",
     }
 
 

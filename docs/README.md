@@ -1,5 +1,19 @@
 # circuitpython-tool
 
+[![PyPI version](https://badge.fury.io/py/circuitpython-tool.svg)](https://badge.fury.io/py/circuitpython-tool)
+
+Links:
+- Github: https://github.com/dhrosa/circuitpython-tool
+- PyPI: https://pypi.org/project/circuitpython-tool
+
+Installation:
+
+```sh
+pip install circuitpython-tool
+```
+
+## Overview
+
 `circuitpython-tool` is a command-line utility for conveniently using
 CircuitPython devices from the terminal. Especially useful
 when multiple devices are connected to the same computer.
@@ -58,13 +72,13 @@ circuitpython-tool connect :Pico:
 Upload code to connected Raspberry Pi Pico (without needing to manually mount the device!):
 
 ```sh
-circuitpython-tool upload --dir ~/mycode :Pico:`
+circuitpython-tool upload --dir ~/mycode :Pico:
 ```
 
 or automatically upload code everytime a source file changes:
 
 ```sh
-circuitpython-tool watch --dir ~/mycode :Pico:`
+circuitpython-tool watch --dir ~/mycode :Pico:
 ```
 
 ### Mount device
@@ -85,7 +99,7 @@ circuitpython-tool uf2 restart :Pico:
 
 Then download and install CircuitPython:
 ```sh
-circuitpython-tool install --board raspberry_pi_pico`
+circuitpython-tool install --board raspberry_pi_pico
 ```
 
 ### Wipe out flash memory

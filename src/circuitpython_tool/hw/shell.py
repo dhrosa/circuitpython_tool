@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 
 def run(command: str) -> str:
     """Execute command and return its stdout output."""
-    # TODO(dhrosa): Debug logs of command executions.
+    logging.debug(f"Executing command: {command}")
     process = subprocess.run(shlex.split(command), capture_output=True, text=True)
     try:
         process.check_returncode()
@@ -19,4 +19,6 @@ def run(command: str) -> str:
         if process.stderr:
             logger.error(f"stderr:\n{process.stderr}")
         raise
+    logging.debug("stdout: ", process.stdout)
+    logging.debug("stderr: ", process.stderr)
     return process.stdout

@@ -6,18 +6,18 @@ Any code directly interfacing with `rich` is housed here to avoid standalone
 parts of the code being tied up with console output.
 
 """
-
 import asyncio
 import logging
 import shlex
 import subprocess
 from os import environ, execlp
 from pathlib import Path
-from shutil import which
+from shutil import rmtree, which
 from sys import exit, stderr, stdout
 
 import rich_click as click
 from rich import get_console, print
+from rich.prompt import Confirm
 from rich.rule import Rule
 from rich_click import argument, option
 
@@ -255,6 +255,33 @@ def watch(device: Device, source_dir: Path | None, circup: bool) -> None:
         asyncio.run(watch_loop())
     except KeyboardInterrupt:
         print("Watch [magenta]cancelled[/magenta] by keyboard interrupt.")
+
+
+@main.command
+@argument("device", type=DeviceParam(), required=True)
+def clean(device: Device) -> None:
+    """Deletes all files on the target device, and creates an empty boot.py and code.py on it."""
+    print(device)
+    if not Confirm.ask(
+        "This will delete all files on your device.\nDo you want to continue?"
+    ):
+        print("[yellow]Cancelling[/]")
+        exit(1)
+    mountpoint = device.mount_if_needed()
+    with get_console().status("Deleting files."):
+        for path in mountpoint.iterdir():
+            if path.is_dir():
+                logging.info(f"Deleting directory {path}")
+                rmtree(path)
+            else:
+                logging.info(f"Deleting file {path}")
+                path.unlink()
+    print(f"All files in {mountpoint} deleted.")
+    for name in ("boot.py", "code.py"):
+        path = mountpoint / name
+        logging.info(f"Creating {path}")
+        path.touch()
+    print("👍 Cleanup [green]complete[/].")
 
 
 @main.command

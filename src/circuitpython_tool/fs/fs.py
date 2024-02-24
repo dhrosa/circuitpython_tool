@@ -103,21 +103,39 @@ def watch_all(roots: Iterable[Path]) -> AsyncIterator[Path]:
 
 def upload(source_dirs: Iterable[Path], mountpoint: Path) -> None:
     """Copy all source files onto the device."""
-    # TODO(dhrosa): shutil.copytree() with a custom `copy_function` or `ignore`
-    # argument would probably be simpler.
-    for source_dir, source in walk_all(source_dirs):
+
+    def copy_file(source: Path | str, dest: Path | str) -> None:
+        """Copy file `source` to `dest`.
+
+        Skips hidden files and files with same timestamps under FAT timestamp rounding.
+        """
+        if isinstance(source, str):
+            source = Path(source)
+        if isinstance(dest, str):
+            dest = Path(dest)
         if source.name[0] == "." or source.is_dir():
-            continue
-        rel_path = source.relative_to(source_dir)
-        dest = mountpoint / rel_path
-        dest.parent.mkdir(parents=True, exist_ok=True)
+            logger.debug(f"Skipping {source}")
+            return
         if dest.exists():
             # Round source timestamp to 2s resolution to match FAT drive.
             # This prevents spurious timestamp mismatches.
             source_mtime = (source.stat().st_mtime // 2) * 2
             dest_mtime = dest.stat().st_mtime
             if source_mtime == dest_mtime:
-                continue
-        logger.info(f"Copying {source_dir / rel_path}")
+                logger.debug(
+                    f"Skipping {source} because destination file has same modification time."
+                )
+                return
+        logger.info(f"Copying {source}")
         shutil.copy2(source, dest)
+
+    for source_dir in source_dirs:
+        for source in source_dir.iterdir():
+            rel_path = source.relative_to(source_dir)
+            dest = mountpoint / rel_path
+            if source.is_dir():
+                shutil.copytree(source, dest, copy_function=copy_file)
+                continue
+            copy_file(source, dest)
+
     logger.info("Upload complete")

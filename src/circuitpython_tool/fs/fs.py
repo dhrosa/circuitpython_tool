@@ -35,6 +35,20 @@ def walk_all(roots: Iterable[Path]) -> Iterator[tuple[Path, Path]]:
             yield root, path
 
 
+def is_main_code_file(path: Path) -> bool:
+    """Returns True if the given path is a CircuitPython main source file."""
+    if not path.is_file():
+        return False
+    return bool(re.fullmatch(r"(code|main)\.(py|txt)", path.name))
+
+
+def contains_main_code_file(path: Path) -> bool:
+    """Returns True if the given path is a directory containing a CircuitPython main source file."""
+    if not path.is_dir():
+        return False
+    return any(is_main_code_file(p) for p in path.iterdir())
+
+
 def guess_source_dir(start_dir: Path) -> Path | None:
     """Finds the directory containing the user's CircuitPython code, starting from `start_dir`.
 
@@ -43,10 +57,8 @@ def guess_source_dir(start_dir: Path) -> Path | None:
     If no such file was found, None is returned.
     """
     for path in walk(start_dir):
-        if not path.is_file():
-            continue
-        if re.fullmatch(r"(code|main)\.(py|txt)", path.name):
-            return path.parent
+        if contains_main_code_file(path):
+            return path
     return None
 
 

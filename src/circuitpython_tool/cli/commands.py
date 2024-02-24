@@ -201,6 +201,11 @@ def upload(device: Device, source_dir: Path | None, circup: bool, mode: str) -> 
     the device on each event.
     """
     source_dir = get_source_dir(source_dir)
+    if not fs.contains_main_code_file(source_dir) and not Confirm.ask(
+        f"{source_dir} does not appear to contain any CircuitPython code."
+        "Do you want to continue?"
+    ):
+        exit(1)
     source_dirs = [source_dir]
     print(f"Source directory: {source_dir}")
     print("Target device: ")

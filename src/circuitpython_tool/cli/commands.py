@@ -86,8 +86,6 @@ def completion() -> None:
 
     source "$(circuitpython-tool completion)"
     """
-
-    # TODO(dhrosa): Document sourcing the pre-generated completion scripts.
     try:
         shell_path = Path(environ["SHELL"])
     except KeyError:

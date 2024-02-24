@@ -251,6 +251,9 @@ def clean(device: Device) -> None:
     mountpoint = device.mount_if_needed()
     with get_console().status("Deleting files."):
         for path in mountpoint.iterdir():
+            if path == mountpoint / "boot_out.txt":
+                logging.info(f"Skipping deletion of {path}")
+                continue
             if path.is_dir():
                 logging.info(f"Deleting directory {path}")
                 rmtree(path)

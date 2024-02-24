@@ -13,7 +13,7 @@ import os
 import struct
 from asyncio import Queue
 from collections.abc import AsyncIterator, Callable, Iterator
-from contextlib import contextmanager
+from contextlib import asynccontextmanager
 from ctypes import CDLL, get_errno
 from ctypes.util import find_library
 from dataclasses import dataclass
@@ -56,21 +56,23 @@ class Event:
     """Path the event relates to (e.g. the file name of a newly created file)."""
 
 
-@contextmanager
-def async_read_fd(fd: int, read_callback: Callable[[], None]) -> Iterator[None]:
-    """Context manager for monitoring a file descriptor for read events with asyncio.
+@asynccontextmanager
+async def async_fd_reader(fd: int) -> AsyncIterator[AsyncIterator[bytes]]:
+    """Context manager for monitoring a file descriptor for read events with asyncio."""
+    queue = Queue[bytes]()
 
-    Must be called within an async context. Unregisters the file descriptor when
-    the context manager exits.
-    """
+    async def gen() -> AsyncIterator[bytes]:
+        """Stream data from queue."""
+        while True:
+            yield await queue.get()
 
-    # TODO(dhrosa): Get rid of callback and return an AsyncIterator
     loop = asyncio.get_running_loop()
-    loop.add_reader(fd, read_callback)
-    try:
-        yield
-    finally:
-        loop.remove_reader(fd)
+    with os.fdopen(fd, "rb") as f:
+        loop.add_reader(fd, lambda: queue.put_nowait(f.read()))
+        try:
+            yield gen()
+        finally:
+            loop.remove_reader(fd)
 
 
 class INotify:
@@ -117,12 +119,9 @@ class INotify:
 
     async def events(self) -> AsyncIterator[Event]:
         """Asynchronous generator for inotify events."""
-        queue: Queue[bytes] = Queue()
-        with os.fdopen(self.fd, "rb") as f, async_read_fd(
-            self.fd, lambda: queue.put_nowait(f.read())
-        ):
-            while True:
-                for event in self.parse_events(await queue.get()):
+        async with async_fd_reader(self.fd) as reader:
+            async for data in reader:
+                for event in self.parse_events(data):
                     yield event
 
     def parse_events(self, data: bytes) -> Iterator[Event]:

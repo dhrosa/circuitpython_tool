@@ -187,7 +187,21 @@ def get_source_dir(source_dir: Path | None) -> Path:
     type=click.Choice(choices=["single-shot", "watch"]),
     help="Whether to upload code once, or continuously.",
 )
-def upload(device: Device, source_dir: Path | None, circup: bool, mode: str) -> None:
+@option(
+    "--batch-period",
+    type=float,
+    default=0.25,
+    help="Batch filesystem events that happen within this period. "
+    "This reduces spurious uploads when files update in quick succession. "
+    "Unit: seconds",
+)
+def upload(
+    device: Device,
+    source_dir: Path | None,
+    circup: bool,
+    mode: str,
+    batch_period: float,
+) -> None:
     """Continuously upload code to device in response to source file changes.
 
     The contents of the specified source directory will be copied onto the given
@@ -225,8 +239,9 @@ def upload(device: Device, source_dir: Path | None, circup: bool, mode: str) -> 
         print("👍 Upload [green]complete[/].")
         exit()
 
-    # TODO(dhrosa): Expose delay as a flag.
-    events = time_batched(fs.watch_all(source_dirs), delay=lambda: asyncio.sleep(0.5))
+    events = time_batched(
+        fs.watch_all(source_dirs), delay=lambda: asyncio.sleep(batch_period)
+    )
 
     async def watch_loop() -> None:
         while True:

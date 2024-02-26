@@ -15,10 +15,8 @@ class Number:
 
     @classmethod
     def __table_fields__(cls) -> Iterator[TableField]:
-        yield "value"
-        yield "Labelled Value", "value"
-        yield "square"
-        yield "Labelled Square", "square"
+        yield "value", lambda x: x.value
+        yield "square", Number.square
 
 
 def get_cells(table: Table) -> dict[str, list[str]]:
@@ -33,7 +31,5 @@ def test_to_table() -> None:
     table = to_table(Number, [Number(1), Number(2)])
     assert get_cells(table) == {
         "value": ["1", "2"],
-        "Labelled Value": ["1", "2"],
         "square": ["1", "4"],
-        "Labelled Square": ["1", "4"],
     }

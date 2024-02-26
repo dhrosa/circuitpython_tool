@@ -1,13 +1,14 @@
 """Library for rendering objects with Rich."""
 
-from collections.abc import Iterable, Iterator
+from collections.abc import Callable, Iterable, Iterator
 from typing import Any, Protocol, TypeAlias, TypeVar, cast
 
 from rich.console import RenderableType
 from rich.protocol import is_renderable
 from rich.table import Table
 
-TableField: TypeAlias = tuple[str, str] | str
+TableFieldGetter: TypeAlias = Callable[[Any], Any]
+TableField: TypeAlias = tuple[str, TableFieldGetter]
 
 
 class TableRenderable(Protocol):
@@ -15,18 +16,10 @@ class TableRenderable(Protocol):
 
     @classmethod
     def __table_fields__(cls) -> Iterator[TableField]:
-        """Each property to be identified by its attribute name.
+        """Specifies fields to render in table output for each instance.
 
-        The value to render in the table is lookuped up from each item instance
-        by the attribute name. If the attribute name specifies a method, the
-        method is automatically called to fetch the value to render.
-
-        If a field is just a single string, then the column name is the same as
-        the attribute name.
-
-        If a field is a pair of strings, the first element of the pair is used
-        as the column name, and the second element is the attribute name.
-
+        Each field is specified as a tuple of (field label, getter). `getter` is
+        a callable that takes an item instance and returns the value to render.
         """
         ...
 
@@ -40,31 +33,19 @@ def to_table(element_type: type[TableRenderable], items: Iterable[T]) -> Table:
     Each item must be of type `element_type`.
     """
 
-    # Mapping of labels to attribute names.
-    fields = dict[str, str]()
-    for f in element_type.__table_fields__():
-        if isinstance(f, str):
-            f = (f, f)
-        fields[f[0]] = f[1]
+    labels, getters = zip(*element_type.__table_fields__())
 
     table = Table()
-    for key in fields.keys():
-        table.add_column(key)
+    for label in labels:
+        table.add_column(label)
 
     for item in items:
-        row = list[Any]()
-        # Map attribute names to values
-        for attribute_name in fields.values():
-            row.append(get_field_value(item, attribute_name))
+        row = list[RenderableType]()
+        for getter in getters:
+            value = getter(item)
+            row.append(
+                cast(RenderableType, value) if is_renderable(value) else str(value)
+            )
         table.add_row(*row)
 
     return table
-
-
-def get_field_value(item: Any, attribute_name: str) -> RenderableType:
-    value: Any = getattr(item, attribute_name)
-    if callable(value):
-        value = value()
-    if is_renderable(value):
-        return cast(RenderableType, value)
-    return str(value)

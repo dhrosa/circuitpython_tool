@@ -1,3 +1,4 @@
 dist/
+cpp/build/
 *undo-tree*
 *__pycache__*

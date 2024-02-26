@@ -2,10 +2,12 @@ from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 
+from ..render import TableFields, pretty_datetime, rich_renderable_as_table
 from . import partition
 from .udev import UsbDevice
 
 
+@rich_renderable_as_table
 @dataclass(frozen=True)
 class Uf2Device:
     """A device in UF2 bootloader mode."""
@@ -46,3 +48,12 @@ class Uf2Device:
                 )
             )
         return devices
+
+    @classmethod
+    def __table_fields__(cls) -> TableFields:
+        yield "Vendor", lambda d: d.vendor
+        yield "Model", lambda d: d.model
+        yield "Serial", lambda d: d.serial
+        yield "Partition Path", lambda d: d.partition_path
+        yield "Mountpoint", lambda d: d.get_mountpoint()
+        yield "Connection Time", lambda d: pretty_datetime(d.connection_time)

@@ -4,15 +4,14 @@
 
 import logging
 from collections.abc import Iterable
-from datetime import datetime
 
 import rich_click as click
-from humanize import naturaltime
 from rich import print, traceback
 from rich.logging import RichHandler
 from rich.table import Table
 
 from ..hw import Device, Query, Uf2Device
+from ..render import to_table
 from .shared_state import SharedState
 
 # Use `rich` for tracebacks and logging.
@@ -27,88 +26,16 @@ logging.basicConfig(
 )
 
 
-def render_device(self: Device) -> Table:
-    table = Table("Property", "Value")
-    table.add_row("Vendor", self.vendor)
-    table.add_row("Model", self.model)
-    table.add_row("Serial", self.serial)
-    table.add_row("Partition Path", str(self.partition_path))
-    table.add_row("Serial Path", str(self.serial_path))
-    table.add_row("Mountpoint", str(self.get_mountpoint()))
-    table.add_row("Connection Time", pretty_datetime(self.connection_time))
-    return table
-
-
-# TODO(dhrosa): There has got to be a better way to automatically pretty-print
-# without leaking Rich details into other modules.
-setattr(Device, "__rich__", render_device)
-
-
-def render_uf2_device(self: Uf2Device) -> Table:
-    table = Table("Property", "Value")
-    table.add_row("Vendor", self.vendor)
-    table.add_row("Model", self.model)
-    table.add_row("Serial", self.serial)
-    table.add_row("Partition Path", str(self.partition_path))
-    table.add_row("Mountpoint", str(self.get_mountpoint()))
-    table.add_row("Connection Time", pretty_datetime(self.connection_time))
-    return table
-
-
-setattr(Uf2Device, "__rich__", render_uf2_device)
-
-
-def pretty_datetime(timestamp: datetime) -> str:
-    """Human-readable rendering of a timestamp and its delta from now."""
-    delta = naturaltime(datetime.now() - timestamp)
-    return f"{timestamp:%x %X} ({delta})"
-
-
 def devices_table(devices: Iterable[Device]) -> Table:
     """Render devices into a table."""
-    table = Table(
-        "Vendor",
-        "Model",
-        "Serial",
-        "Partition Path",
-        "Serial Path",
-        "Mountpoint",
-        "Connection Time",
-    )
-
-    for column in table.columns:
-        column.overflow = "fold"
-
-    for device in sorted(devices, key=lambda d: d.key):
-        table.add_row(
-            device.vendor,
-            device.model,
-            device.serial,
-            str(device.partition_path),
-            str(device.serial_path),
-            str(device.get_mountpoint()),
-            pretty_datetime(device.connection_time),
-        )
-    return table
+    # Mypy incorrectly infers the type when this is inlined.
+    sorted_devices = sorted(devices, key=lambda d: d.key)
+    return to_table(Device, sorted_devices)
 
 
 def uf2_devices_table(devices: Iterable[Uf2Device]) -> Table:
     """Render UF2 bootloader devices into a table."""
-    table = Table(
-        "Vendor", "Model", "Serial", "Partition Path", "Mountpoint", "Connection Time"
-    )
-    for column in table.columns:
-        column.overflow = "fold"
-    for device in devices:
-        table.add_row(
-            device.vendor,
-            device.model,
-            device.serial,
-            str(device.partition_path),
-            str(device.get_mountpoint()),
-            pretty_datetime(device.connection_time),
-        )
-    return table
+    return to_table(Uf2Device, devices)
 
 
 def distinct_device(query: Query) -> Device:

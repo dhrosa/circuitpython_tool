@@ -1,11 +1,10 @@
 """CircuitPython devices abstrations."""
 
-import logging
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 
-logger = logging.getLogger(__name__)
+from ..render import TableFields, pretty_datetime, rich_renderable_as_table
 
 
 @dataclass(frozen=True)
@@ -17,6 +16,7 @@ class BootInfo:
     """CircuitPython board identifier."""
 
 
+@rich_renderable_as_table
 @dataclass(frozen=True)
 class Device:
     """A CircuitPython composite USB device."""
@@ -62,3 +62,13 @@ class Device:
     def get_boot_info(self) -> BootInfo:
         """Lookup the adafruit board ID."""
         raise NotImplementedError()
+
+    @classmethod
+    def __table_fields__(cls) -> TableFields:
+        yield "Vendor", lambda d: d.vendor
+        yield "Model", lambda d: d.model
+        yield "Serial", lambda d: d.serial
+        yield "Partition Path", lambda d: d.partition_path
+        yield "Serial Path", lambda d: d.serial_path
+        yield "Mountpoint", lambda d: d.get_mountpoint()
+        yield "Connection Time", lambda d: pretty_datetime(d.connection_time)

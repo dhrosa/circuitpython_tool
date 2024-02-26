@@ -1,9 +1,8 @@
-from collections.abc import Iterator
 from dataclasses import dataclass
 
 from rich.table import Table
 
-from circuitpython_tool.render import TableField, to_table, to_table_single
+from circuitpython_tool.render import TableFields, to_table, to_table_single
 
 
 @dataclass
@@ -14,7 +13,7 @@ class Number:
         return self.value**2
 
     @classmethod
-    def __table_fields__(cls) -> Iterator[TableField]:
+    def __table_fields__(cls) -> TableFields:
         yield "value", lambda x: x.value
         yield "square", Number.square
 

@@ -3,7 +3,7 @@ from dataclasses import dataclass
 
 from rich.table import Table
 
-from circuitpython_tool.render import TableField, to_table
+from circuitpython_tool.render import TableField, to_table, to_table_single
 
 
 @dataclass
@@ -28,8 +28,14 @@ def get_cells(table: Table) -> dict[str, list[str]]:
 
 
 def test_to_table() -> None:
-    table = to_table(Number, [Number(1), Number(2)])
-    assert get_cells(table) == {
+    assert get_cells(to_table(Number, [Number(1), Number(2)])) == {
         "value": ["1", "2"],
         "square": ["1", "4"],
+    }
+
+
+def test_to_table_single() -> None:
+    assert get_cells(to_table_single(Number(2))) == {
+        "Property": ["value", "square"],
+        "Value": ["2", "4"],
     }

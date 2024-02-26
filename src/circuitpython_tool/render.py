@@ -1,7 +1,7 @@
 """Library for rendering objects with Rich."""
 
 from collections.abc import Callable, Iterable, Iterator
-from typing import Any, Protocol, TypeAlias, TypeVar, cast
+from typing import Any, Protocol, TypeAlias, cast
 
 from rich.console import RenderableType
 from rich.protocol import is_renderable
@@ -24,10 +24,9 @@ class TableRenderable(Protocol):
         ...
 
 
-T = TypeVar("T", bound=TableRenderable)
-
-
-def to_table(element_type: type[TableRenderable], items: Iterable[T]) -> Table:
+def to_table(
+    element_type: type[TableRenderable], items: Iterable[TableRenderable]
+) -> Table:
     """Render `items` into a table, with each row corresponding to one item.
 
     Each item must be of type `element_type`.
@@ -40,12 +39,21 @@ def to_table(element_type: type[TableRenderable], items: Iterable[T]) -> Table:
         table.add_column(label)
 
     for item in items:
-        row = list[RenderableType]()
-        for getter in getters:
-            value = getter(item)
-            row.append(
-                cast(RenderableType, value) if is_renderable(value) else str(value)
-            )
+        row = [to_renderable(getter(item)) for getter in getters]
         table.add_row(*row)
 
     return table
+
+
+def to_table_single(item: TableRenderable) -> Table:
+    """Render a single object as a table of key-value pairs."""
+    table = Table("Property", "Value")
+    for label, getter in item.__table_fields__():
+        table.add_row(label, to_renderable(getter(item)))
+    return table
+
+
+def to_renderable(value: Any) -> RenderableType:
+    if is_renderable(value):
+        return cast(RenderableType, value)
+    return str(value)

@@ -222,6 +222,14 @@ def restart(device: Device) -> None:
     print("UF2 bootloader device: ", uf2_device)
 
 
+@uf2.command("exit")
+@click.pass_context
+def uf2_exit(context: click.Context) -> None:
+    """Restart given UF2 bootloader device into normal application code."""
+    with static_uf2_image_path("uf2_exit.uf2") as image_path:
+        context.invoke(install, image_path=image_path)
+
+
 @uf2.command("devices")
 def uf2_devices() -> None:
     """List connected devices that are in UF2 bootloader mode."""
@@ -291,9 +299,7 @@ def nuke(context: click.Context) -> None:
         print("[yellow]Cancelling[/]")
         exit(1)
 
-    with resources.as_file(
-        resources.files(static).joinpath("flash_nuke.uf2")
-    ) as image_path:
+    with static_uf2_image_path("flash_nuke.uf2") as image_path:
         context.invoke(install, image_path=image_path)
 
 
@@ -356,3 +362,10 @@ def temporary_directory(delete: bool) -> Iterator[Path]:
         if delete:
             logger.debug(f"Deleting temporary directory: {path}")
             rmtree(path)
+
+
+@contextmanager
+def static_uf2_image_path(file_name: str) -> Iterator[Path]:
+    """Context manager yielding a (possibly temporary) path to a bundled UF2 image."""
+    with resources.as_file(resources.files(static).joinpath(file_name)) as image_path:
+        yield image_path

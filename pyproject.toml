@@ -44,12 +44,12 @@ dependencies = ["setuptools", "isort", "black", "pylama", "mypy", "pytest"]
 
 [tool.hatch.envs.style.scripts]
 format = [
-       "isort --color .",
-       "black .",
+       "isort --color src tests",
+       "black src tests",
 ]
 check = [
-      "pylama --ignore E203 .", # E203 is not pep8-compliant, and black breaks it
-      "mypy --strict --pretty .",
+      "pylama --ignore E203 src tests", # E203 is not pep8-compliant, and black breaks it
+      "mypy --strict --pretty src tests",
 ] 
 all = [
     "hatch run style:format",

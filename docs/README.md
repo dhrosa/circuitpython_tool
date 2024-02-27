@@ -49,7 +49,7 @@ to the device.
   RP2040-based devices, the device shows up as a removable drive labeled
   `RPI-RP2`. This is the default state for brand-new RP2040 devices. This is
   also the state entered when a device is reset with the BOOTSEL butten held
-  down. This state can also be entered via the `uf2 restart` command.
+  down. This state can also be entered via the `uf2 enter` command.
 
 ## Example Commands
 
@@ -94,7 +94,7 @@ Automatically download and install the correct version of CircuitPython onto a c
 If the device isn't already in the UF2 bootloader:
 
 ```sh
-circuitpython-tool uf2 restart :Pico:
+circuitpython-tool uf2 enter :Pico:
 ```
 
 Then download and install CircuitPython:

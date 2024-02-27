@@ -209,9 +209,9 @@ def install(
     # TODO(dhrosa): Show user status of newly setup device
 
 
-@uf2.command
+@uf2.command("enter")
 @argument("device", type=DeviceParam(), required=True)
-def restart(device: Device) -> None:
+def uf2_enter(device: Device) -> None:
     """Restart selected device into UF2 bootloader."""
     print("Selected CircuitPython device: ", device)
     try:

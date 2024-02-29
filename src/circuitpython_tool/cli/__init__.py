@@ -2,38 +2,15 @@
 
 # TODO(dhrosa): This file feels like a 'utils' library; figure out a better way to organize this.
 
-import logging
 from collections.abc import Iterable
 
 import rich_click as click
-from rich import print, traceback
-from rich.console import Console
-from rich.logging import RichHandler
+from rich import print
 from rich.table import Table
 
 from ..hw import Device, Query, Uf2Device
 from ..render import to_table
 from .shared_state import SharedState
-
-# Use `rich` for tracebacks and logging.
-traceback.install(show_locals=True)
-
-stderr_console = Console(stderr=True)
-
-logging.basicConfig(
-    # Default to WARNING for code that runs before main(). This level is overriden in main().
-    level="WARNING",
-    format="%(message)s",
-    datefmt="[%X]",
-    handlers=[
-        RichHandler(
-            console=stderr_console,
-            rich_tracebacks=True,
-            markup=True,
-            omit_repeated_times=False,
-        )
-    ],
-)
 
 
 def devices_table(devices: Iterable[Device]) -> Table:

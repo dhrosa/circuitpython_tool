@@ -16,7 +16,9 @@ from shutil import rmtree, which
 from sys import exit, stderr, stdout
 
 import rich_click as click
-from rich import get_console, print
+from rich import get_console, print, traceback
+from rich.console import Console
+from rich.logging import RichHandler
 from rich.prompt import Confirm
 from rich.rule import Rule
 from rich_click import argument, option
@@ -39,8 +41,26 @@ COMPLETE_VAR = "_CIRCUITPYTHON_TOOL_COMPLETE"
 
 def set_log_level(context: click.Context, param: click.Parameter, level: str) -> None:
     """Eager callback for --log-level flag."""
-    root_logger = logging.getLogger()
-    root_logger.setLevel(level)
+    logging.basicConfig(
+        level=level,
+        format="%(message)s",
+        datefmt="[%X]",
+        handlers=[
+            RichHandler(
+                console=Console(stderr=True),
+                markup=True,
+                omit_repeated_times=False,
+            ),
+        ],
+    )
+
+
+def set_verbose_tracebacks(
+    context: click.Context, params: click.Parameter, verbose: bool
+) -> None:
+    """Eager callback for --traceback" flag."""
+    if verbose:
+        traceback.install(show_locals=True)
 
 
 @click.version_option(VERSION, "--version", "-v", prog_name=PROGRAM_NAME)
@@ -61,6 +81,15 @@ def set_log_level(context: click.Context, param: click.Parameter, level: str) ->
     expose_value=False,
     show_envvar=True,
     help="Only display logs at or above ths level.",
+)
+@option(
+    "--traceback",
+    is_flag=True,
+    default=False,
+    callback=set_verbose_tracebacks,
+    expose_value=False,
+    show_envvar=True,
+    help="If true, render verbose tracebacks for exception handling.",
 )
 @option(
     "--fake-device-config",

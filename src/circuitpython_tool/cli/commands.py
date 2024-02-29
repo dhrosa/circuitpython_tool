@@ -37,6 +37,12 @@ COMPLETE_VAR = "_CIRCUITPYTHON_TOOL_COMPLETE"
 """Environment variable for shell completion support."""
 
 
+def set_log_level(context: click.Context, param: click.Parameter, level: str) -> None:
+    """Eager callback for --log-level flag."""
+    root_logger = logging.getLogger()
+    root_logger.setLevel(level)
+
+
 @click.version_option(VERSION, "--version", "-v", prog_name=PROGRAM_NAME)
 @click.group(
     context_settings=dict(
@@ -50,6 +56,9 @@ COMPLETE_VAR = "_CIRCUITPYTHON_TOOL_COMPLETE"
     "-l",
     type=click.Choice(["DEBUG", "INFO", "WARNING", "ERROR"], case_sensitive=False),
     default="INFO",
+    callback=set_log_level,
+    is_eager=True,
+    expose_value=False,
     show_envvar=True,
     help="Only display logs at or above ths level.",
 )
@@ -64,10 +73,8 @@ COMPLETE_VAR = "_CIRCUITPYTHON_TOOL_COMPLETE"
     is_eager=True,
     help="Path to TOML configuration file for fake devices. For use in tests and demos.",
 )
-def main(log_level: str) -> None:
+def main() -> None:
     """Tool for interfacing with CircuitPython devices."""
-    root_logger = logging.getLogger()
-    root_logger.setLevel(log_level)
 
 
 main.add_command(uf2_commands.uf2)

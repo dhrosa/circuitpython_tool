@@ -195,16 +195,12 @@ def install(
     print("Source: ", image_path)
     print("Destination: ", destination)
 
-    try:
-        output_file = destination.open("wb")
-        with progress.open(str(image_path), "rb", description="Flashing") as input_file:
-            while chunk := input_file.read(1024):
-                output_file.write(chunk)
-    finally:
-        with get_console().status(
-            "Closed destination file. Waiting for copy to complete."
-        ):
-            output_file.close()
+    output_file = destination.open("wb")
+    with progress.open(str(image_path), "rb", description="Flashing") as input_file:
+        while chunk := input_file.read(1024):
+            output_file.write(chunk)
+    with get_console().status("Closed destination file. Waiting for copy to complete."):
+        output_file.close()
     print("Install complete.")
     # TODO(dhrosa): Show user status of newly setup device
 

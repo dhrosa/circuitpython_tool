@@ -48,7 +48,7 @@ COMPLETE_VAR = "_CIRCUITPYTHON_TOOL_COMPLETE"
 @option(
     "--log-level",
     "-l",
-    type=click.Choice(["DEBUG", "INFO", "WARNING", "ERROR"]),
+    type=click.Choice(["DEBUG", "INFO", "WARNING", "ERROR"], case_sensitive=False),
     default="INFO",
     show_envvar=True,
     help="Only display logs at or above ths level.",

@@ -7,6 +7,7 @@ from importlib import resources
 from logging import getLogger
 from pathlib import Path
 from shutil import rmtree
+from sys import stdout
 from tempfile import mkdtemp
 from urllib.request import urlopen
 
@@ -280,7 +281,23 @@ def boot_info(device: Device) -> None:
 @uf2.command
 @argument("image_path", type=click.Path(path_type=Path, dir_okay=False), required=True)
 def analyze(image_path: Path) -> None:
-    """Print details of each block in a UF2 image."""
+    """Print details of each block in a UF2 image.
+
+    If run in an interactive terminal, you can use arrow keys to browse blocks.
+    If not run in an interactive context, the information about every block is
+    printed.
+    """
+
+    raw = image_path.read_bytes()
+    blocks = list(Block.from_bytes_multi(raw))
+    index = 0
+
+    # Non-interactive; print all the blocks.
+    if not stdout.isatty():
+        for block in blocks:
+            print(block)
+        exit()
+
     bindings = {
         "q": "quit",
         "left/up": "previous block",
@@ -293,10 +310,6 @@ def analyze(image_path: Path) -> None:
     help_text = " | ".join(
         f"[blue]{key}[/]: {label}" for key, label in bindings.items()
     )
-
-    raw = image_path.read_bytes()
-    blocks = list(Block.from_bytes_multi(raw))
-    index = 0
 
     def renderable() -> Group:
         return Group(

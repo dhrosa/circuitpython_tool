@@ -12,7 +12,11 @@ from urllib.request import urlopen
 
 import rich_click as click
 from humanize import naturaldelta
+from readchar import key, readkey
 from rich import get_console, print, progress
+from rich.console import Group
+from rich.live import Live
+from rich.pretty import Pretty
 from rich.prompt import Confirm
 from rich.table import Table
 from rich_click import argument, option
@@ -277,10 +281,50 @@ def boot_info(device: Device) -> None:
 @argument("image_path", type=click.Path(path_type=Path, dir_okay=False), required=True)
 def analyze(image_path: Path) -> None:
     """Print details of each block in a UF2 image."""
+    bindings = {
+        "q": "quit",
+        "left/up": "previous block",
+        "right/down": "next block",
+        "page_up": "back 16 blocks",
+        "page_down": "forward 16 blocks",
+        "home": "first block",
+        "end": "final block",
+    }
+    help_text = " | ".join(
+        f"[blue]{key}[/]: {label}" for key, label in bindings.items()
+    )
+
     raw = image_path.read_bytes()
-    with get_console().pager(styles=True):
-        for block in Block.from_bytes_multi(raw):
-            print(block)
+    blocks = list(Block.from_bytes_multi(raw))
+    index = 0
+
+    def renderable() -> Group:
+        return Group(
+            Pretty(blocks[index]),
+            help_text,
+        )
+
+    with Live(renderable(), auto_refresh=False) as live:
+        while True:
+            match readkey():
+                case key.UP | key.LEFT:
+                    index -= 1
+                case key.DOWN | key.RIGHT:
+                    index += 1
+                case key.PAGE_UP:
+                    index -= 16
+                case key.PAGE_DOWN:
+                    index += 16
+                case key.HOME:
+                    index = 0
+                case key.END:
+                    index = -1
+                case "q" | key.ESC:
+                    break
+                case x:
+                    print(x)
+            index %= len(blocks)
+            live.update(renderable(), refresh=True)
 
 
 @uf2.command

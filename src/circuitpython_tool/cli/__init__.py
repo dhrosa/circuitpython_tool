@@ -7,6 +7,7 @@ from collections.abc import Iterable
 
 import rich_click as click
 from rich import print, traceback
+from rich.console import Console
 from rich.logging import RichHandler
 from rich.table import Table
 
@@ -16,12 +17,21 @@ from .shared_state import SharedState
 
 # Use `rich` for tracebacks and logging.
 traceback.install(show_locals=True)
+
+stderr_console = Console(stderr=True)
+
 logging.basicConfig(
-    level="NOTSET",
+    # Default to WARNING for code that runs before main(). This level is overriden in main().
+    level="WARNING",
     format="%(message)s",
     datefmt="[%X]",
     handlers=[
-        RichHandler(rich_tracebacks=True, markup=True, omit_repeated_times=False)
+        RichHandler(
+            console=stderr_console,
+            rich_tracebacks=True,
+            markup=True,
+            omit_repeated_times=False,
+        )
     ],
 )
 

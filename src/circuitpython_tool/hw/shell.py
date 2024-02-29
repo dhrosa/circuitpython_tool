@@ -19,6 +19,4 @@ def run(command: str) -> str:
         if process.stderr:
             logger.error(f"stderr:\n{process.stderr}")
         raise
-    logging.debug("stdout: ", process.stdout)
-    logging.debug("stderr: ", process.stderr)
     return process.stdout

@@ -13,7 +13,7 @@ import subprocess
 from os import environ, execlp
 from pathlib import Path
 from shutil import rmtree, which
-from sys import exit, stderr, stdout
+from sys import argv, exit, stderr, stdout
 
 import rich_click as click
 from rich import get_console, print, traceback
@@ -55,14 +55,6 @@ def set_log_level(context: click.Context, param: click.Parameter, level: str) ->
     )
 
 
-def set_verbose_tracebacks(
-    context: click.Context, params: click.Parameter, verbose: bool
-) -> None:
-    """Eager callback for --traceback" flag."""
-    if verbose:
-        traceback.install(show_locals=True)
-
-
 @click.version_option(VERSION, "--version", "-v", prog_name=PROGRAM_NAME)
 @click.group(
     context_settings=dict(
@@ -83,15 +75,6 @@ def set_verbose_tracebacks(
     help="Only display logs at or above ths level.",
 )
 @option(
-    "--traceback",
-    is_flag=True,
-    default=False,
-    callback=set_verbose_tracebacks,
-    expose_value=False,
-    show_envvar=True,
-    help="If true, render verbose tracebacks for exception handling.",
-)
-@option(
     "--fake-device-config",
     "-f",
     type=FakeDeviceParam(),
@@ -104,6 +87,22 @@ def set_verbose_tracebacks(
 )
 def main() -> None:
     """Tool for interfacing with CircuitPython devices."""
+
+    # Setup pretty traceback handler in a way that's relatively compact and
+    # quiet, so that exceptions generally fit within a fraction of the terminal
+    # window.
+
+    # Import modules without aliased names.
+    import click
+    import rich_click
+
+    traceback.install(
+        show_locals=True,
+        # Suppress frames from uninteresting wrapper functions, and the top-level wrapper script.
+        suppress=[click, rich_click, argv[0]],
+        max_frames=3,
+        extra_lines=1,
+    )
 
 
 main.add_command(uf2_commands.uf2)

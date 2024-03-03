@@ -13,7 +13,7 @@ author = 'Diony Rosa'
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
-extensions = ['sphinx_click']
+extensions = []
 
 templates_path = ['_templates']
 exclude_patterns = []

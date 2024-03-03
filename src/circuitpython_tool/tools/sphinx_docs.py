@@ -13,6 +13,9 @@ def indent(s: str) -> str:
     return textwrap.indent(s, " " * 3)
 
 
+dedent = textwrap.dedent
+
+
 @dataclass
 class Parameter:
     name: str
@@ -53,7 +56,7 @@ class Option(Parameter):
     def from_dict(p: dict[str, Any]) -> "Option":
         return Option(
             name=p["name"],
-            help=p["help"],
+            help=dedent(p["help"]),
             required=p["required"],
             opts=p["opts"],
             is_flag=p["is_flag"],
@@ -111,7 +114,7 @@ class Command:
 
         return Command(
             name=name,
-            help=command["help"],
+            help=dedent(command["help"]),
             options=options,
             arguments=arguments,
             children=children,
@@ -130,15 +133,20 @@ class Command:
         yield ".. parsed-literal::"
         yield ""
         yield indent(" ".join(parts()))
+
+    def help_lines(self) -> Iterator[str]:
+        yield ".. rubric:: Description"
+        yield ""
+        yield self.help
         yield ""
 
     def to_rst_lines(self) -> Iterator[str]:
         yield f"``{self.name}``"
         yield "=" * 40
         yield ""
-        yield self.help
-        yield ""
         yield from self.syntax()
+        yield ""
+        yield from self.help_lines()
         yield ""
         if self.options:
             yield ".. rubric:: Options"
@@ -146,6 +154,7 @@ class Command:
                 yield from option.to_rst_lines()
                 yield ""
             yield ""
+        yield ""
 
 
 def main() -> None:

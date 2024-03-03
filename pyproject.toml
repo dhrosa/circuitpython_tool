@@ -67,7 +67,11 @@ addopts = "--no-header -W error --showlocals -vv"
 log_level = "DEBUG"
 
 [tool.hatch.envs.docs]
-dependencies = ["rich-codex"]
+dependencies = ["rich-codex", "sphinx", "sphinx-rtd-theme"]
 
 [tool.hatch.envs.docs.scripts]
-generate = ["rich-codex --use-pty --skip-git-checks --no-confirm --terminal-width 100"]
+images = ["rich-codex --use-pty --skip-git-checks --no-confirm --terminal-width 100"]
+sphinx = [
+       "python3 -m circuitpython_tool.tools.sphinx_docs",
+       "make -C docs html"
+]

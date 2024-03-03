@@ -75,10 +75,12 @@ def versions() -> None:
     help="If true, just print the download URL without actually downloading.",
 )
 def download(board: Board, locale: str, destination: Path, offline: bool) -> Path:
-    """Download CircuitPython image for the requested board.
+    """
+    Download CircuitPython image for the requested board.
 
-    If DESTINATION is not provided, the file is downloaded to the current directory.
-    If DESTINATION is a directory, the filename is automatically generated.
+    If ``DESTINATION`` is not provided, the file is downloaded to the current directory.
+
+    If ``DESTINATION`` is a directory, the filename is automatically generated.
     """
     url = board.download_url(board.most_recent_version, locale)
     if offline:
@@ -139,7 +141,7 @@ def download(board: Board, locale: str, destination: Path, offline: bool) -> Pat
     default="en_US",
     type=LocaleParam(),
     help="Locale for CircuitPython install. Not used if an explicit image is given "
-    "using --image_path.",
+    "using ``--image_path``.",
 )
 @option(
     "--delete-download/--no-delete-download",
@@ -154,10 +156,11 @@ def install(
     locale: str,
     delete_download: bool,
 ) -> None:
-    """Install a UF2 image onto a connected UF2 bootloader device.
+    """
+    Install a UF2 image onto a connected UF2 bootloader device.
 
-    If a CircuitPython device is specified with `--device`, then we restart that
-    device into its UF2 bootloader and install the image onto it. If `--device`
+    If a CircuitPython device is specified with ``--device``, then we restart that
+    device into its UF2 bootloader and install the image onto it. If ``--device``
     is not specified, we assume there is already a connected UF2 bootloader device.
     """
     if not image_path and not board:
@@ -281,7 +284,8 @@ def boot_info(device: Device) -> None:
 @uf2.command
 @argument("image_path", type=click.Path(path_type=Path, dir_okay=False), required=True)
 def analyze(image_path: Path) -> None:
-    """Print details of each block in a UF2 image.
+    """
+    Print details of each block in a UF2 image.
 
     If run in an interactive terminal, you can use arrow keys to browse blocks.
     If not run in an interactive context, the information about every block is
@@ -357,7 +361,8 @@ def nuke(context: click.Context) -> None:
 
 
 def download_path(url: str, destination: Path) -> Path:
-    """Determine the destination file path for the download.
+    """
+    Determine the destination file path for the download.
 
     If `destination` is already a file path, it is returned unchanged. If
       `destination` is a directory, the file name is derived from the URL.

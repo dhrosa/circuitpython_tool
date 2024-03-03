@@ -110,16 +110,17 @@ main.add_command(uf2_commands.uf2)
 
 @main.command
 def completion() -> None:
-    """Output shell commands needed for auto-completion.
+    """
+    Output shell commands needed for auto-completion.
 
     Evaluating the output of this command will allow auto-completion of this
-    program's arguments. This can be done as a one-off using:
+    program\'s arguments. This can be done as a one-off using::
 
-    eval "$(circuitpython-tool completion)"
+      eval "$(circuitpython-tool completion)"
 
-    or by putting the following line in your shell config file (e.g. ~/.bashrc):
+    or by putting the following line in your shell config file (e.g. ``~/.bashrc``)::
 
-    source "$(circuitpython-tool completion)"
+      source "$(circuitpython-tool completion)"
     """
     try:
         shell_path = Path(environ["SHELL"])
@@ -164,15 +165,16 @@ def completion() -> None:
     "-s",
     "fake_device_save_path",
     type=click.Path(dir_okay=False, path_type=Path),
-    help="If set, save devices to a TOML file for later recall using the --fake-devices flag.",
+    help="If set, save devices to a TOML file for later recall using the ``--fake-devices`` flag.",
 )
 @pass_shared_state
 def devices(
     state: SharedState, query: Query, fake_device_save_path: Path | None
 ) -> None:
-    """List all connected CircuitPython devices.
+    """
+    List all connected CircuitPython devices.
 
-    If QUERY is specified, only devices matching that query are listed."""
+    If ``QUERY`` is specified, only devices matching that query are listed."""
     devices = query.matching_devices(state.all_devices())
     if devices:
         print("Connected CircuitPython devices:", devices_table(devices))
@@ -206,7 +208,7 @@ def get_source_dir(source_dir: Path | None) -> Path:
     required=False,
     help="Path containing source code to upload. "
     "If not specified, the source directory is guessed by searching the current directory and "
-    "its descendants for user code (e.g. code.py).",
+    "its descendants for user code (e.g. ``code.py``).",
 )
 @option(
     "--circup/--no-circup",
@@ -235,14 +237,15 @@ def upload(
     mode: str,
     batch_period: float,
 ) -> None:
-    """Continuously upload code to device in response to source file changes.
+    """
+    Continuously upload code to device in response to source file changes.
 
     The contents of the specified source directory will be copied onto the given
     CircuitPython device.
 
-    If `--mode` is "single-shot", then the code is uploaded and then the command exits.
+    If ``--mode`` is ``single-shot``, then the code is uploaded and then the command exits.
 
-    If `--mode` is "watch", then this commnd will perform one upload, and then
+    If ``--mode`` is ``watch``, then this commnd will perform one upload, and then
     will continue running. The command will wait for filesystem events from all
     paths and descendant paths of the source tree, and will re-upload code to
     the device on each event.

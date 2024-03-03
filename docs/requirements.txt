@@ -1,3 +1,2 @@
-circuitpython-tool
 sphinx
 sphinx-rtd-theme

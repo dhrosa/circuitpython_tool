@@ -84,9 +84,12 @@ class Argument(Parameter):
 class Option(Parameter):
     opts: list[str]
     is_flag: bool
+    negation: str | None
+    default: Any
 
     @staticmethod
     def from_dict(p: dict[str, Any]) -> "Option":
+        negations = p["secondary_opts"]
         return Option(
             name=p["name"],
             help=dedent(p["help"]).strip(),
@@ -94,6 +97,8 @@ class Option(Parameter):
             type=Type.from_dict(p["type"]),
             opts=p["opts"],
             is_flag=p["is_flag"],
+            negation=negations[0] if negations else None,
+            default=p["default"],
         )
 
     def forms(self) -> Iterator[str]:
@@ -107,10 +112,15 @@ class Option(Parameter):
         return next(self.forms())
 
     def to_rst_lines(self) -> Lines:
-        yield self.canonical_form()
+        title_forms = [self.canonical_form()]
+        if self.negation:
+            title_forms.append(self.negation)
+        yield ", ".join(title_forms)
         yield ""
+
         with indented():
-            yield self.help
+            help_prefix = "Required" if self.required else "Optional"
+            yield f"*{help_prefix}*. {self.help}"
             yield ""
             if aliases := [f"``{o}``" for o in self.opts[1:]]:
                 yield f":Aliases: {', '.join(aliases)}"
@@ -118,6 +128,8 @@ class Option(Parameter):
                 yield f":Choices: {', '.join(choices)}"
             elif not self.is_flag:
                 yield f":Type: {self.type.name}"
+            if self.default is not None:
+                yield f":Default: ``{self.default}``"
         yield ""
 
 

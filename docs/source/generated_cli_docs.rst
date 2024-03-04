@@ -39,15 +39,16 @@ Tool for interfacing with CircuitPython devices.
 
 --log-level log_level
 
-   Only display logs at or above ths level.
+   *Optional*. Only display logs at or above ths level.
 
    :Aliases: ``-l``
    :Choices: ``DEBUG``, ``INFO``, ``WARNING``, ``ERROR``
+   :Default: ``INFO``
 
 
 --fake-device-config fake_device_config
 
-   Path to TOML configuration file for fake devices. For use in tests and demos.
+   *Optional*. Path to TOML configuration file for fake devices. For use in tests and demos.
 
    :Aliases: ``-f``
    :Type: file
@@ -55,9 +56,10 @@ Tool for interfacing with CircuitPython devices.
 
 --version
 
-   Show the version and exit.
+   *Optional*. Show the version and exit.
 
    :Aliases: ``-v``
+   :Default: ``False``
 
 
 
@@ -156,7 +158,7 @@ If ``QUERY`` is specified, only devices matching that query are listed.
 
 --save fake_device_save_path
 
-   If set, save devices to a TOML file for later recall using the ``--fake-devices`` flag.
+   *Optional*. If set, save devices to a TOML file for later recall using the ``--fake-devices`` flag.
 
    :Aliases: ``-s``
    :Type: file
@@ -307,15 +309,17 @@ If ``DESTINATION`` is a directory, the filename is automatically generated.
 
 --locale locale
 
-   Locale for CircuitPython install.
+   *Optional*. Locale for CircuitPython install.
 
    :Type: locale
+   :Default: ``en_US``
 
 
---offline
+--offline, --no-offline
 
-   If true, just print the download URL without actually downloading.
+   *Optional*. If true, just print the download URL without actually downloading.
 
+   :Default: ``False``
 
 
 
@@ -384,7 +388,7 @@ is not specified, we assume there is already a connected UF2 bootloader device.
 
 --image_path image_path
 
-   If specified, install this already-existing UF2 image.
+   *Optional*. If specified, install this already-existing UF2 image.
 
    :Aliases: ``-i``
    :Type: file
@@ -392,7 +396,7 @@ is not specified, we assume there is already a connected UF2 bootloader device.
 
 --board board
 
-   If specified, automatically download and install appropriate CircuitPython UF2 image for this board ID.
+   *Optional*. If specified, automatically download and install appropriate CircuitPython UF2 image for this board ID.
 
    :Aliases: ``-b``
    :Type: board_id
@@ -400,7 +404,7 @@ is not specified, we assume there is already a connected UF2 bootloader device.
 
 --device query
 
-   If specified, this device will be restarted into its UF2 bootloader and be used as the target device for installing the image.
+   *Optional*. If specified, this device will be restarted into its UF2 bootloader and be used as the target device for installing the image.
 
    :Aliases: ``-d``
    :Type: query
@@ -408,15 +412,17 @@ is not specified, we assume there is already a connected UF2 bootloader device.
 
 --locale locale
 
-   Locale for CircuitPython install. Not used if an explicit image is given using ``--image_path``.
+   *Optional*. Locale for CircuitPython install. Not used if an explicit image is given using ``--image_path``.
 
    :Type: locale
+   :Default: ``en_US``
 
 
---delete-download
+--delete-download, --no-delete-download
 
-   Delete any downloaded UF2 images on exit.
+   *Optional*. Delete any downloaded UF2 images on exit.
 
+   :Default: ``True``
 
 
 
@@ -550,30 +556,33 @@ the device on each event.
 
 --dir source_dir
 
-   Path containing source code to upload. If not specified, the source directory is guessed by searching the current directory and its descendants for user code (e.g. ``code.py``).
+   *Optional*. Path containing source code to upload. If not specified, the source directory is guessed by searching the current directory and its descendants for user code (e.g. ``code.py``).
 
    :Aliases: ``-d``
    :Type: directory
 
 
---circup
+--circup, --no-circup
 
-   If true, use `circup` to automatically install library dependencies on the target device.
+   *Optional*. If true, use `circup` to automatically install library dependencies on the target device.
 
+   :Default: ``False``
 
 
 --mode mode
 
-   Whether to upload code once, or continuously.
+   *Optional*. Whether to upload code once, or continuously.
 
    :Choices: ``single-shot``, ``watch``
+   :Default: ``watch``
 
 
 --batch-period batch_period
 
-   Batch filesystem events that happen within this period. This reduces spurious uploads when files update in quick succession. Unit: seconds
+   *Optional*. Batch filesystem events that happen within this period. This reduces spurious uploads when files update in quick succession. Unit: seconds
 
    :Type: float
+   :Default: ``0.25``
 
 
 

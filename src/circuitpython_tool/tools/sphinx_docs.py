@@ -183,7 +183,7 @@ class Command:
         # Draw overline on levels 0 and 1
         if depth < 2:
             yield line
-        yield self.name or "Command Reference"
+        yield self.name or "Commands"
         yield line
 
     def syntax(self) -> Lines:
@@ -238,11 +238,21 @@ class Command:
         yield ""
 
 
-def all_lines(command: Command) -> Lines:
-    yield from command.to_rst_lines()
-    for child in command.children:
+def all_lines(root: Command) -> Lines:
+    yield "#" * 40
+    yield "Overview"
+    yield "#" * 40
+    yield "TODO"
+    yield ""
+
+    def flattened(command: Command) -> Iterator[Command]:
+        yield command
+        for child in command.children:
+            yield from flattened(child)
+
+    for command in flattened(root):
         yield "\n----\n"
-        yield from all_lines(child)
+        yield from command.to_rst_lines()
 
 
 def main() -> None:

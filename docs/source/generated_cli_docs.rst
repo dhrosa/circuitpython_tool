@@ -1,3 +1,5 @@
+.. _command-:
+
 ########################################
 Command Reference
 ########################################
@@ -11,31 +13,53 @@ Command Reference
 
 Tool for interfacing with CircuitPython devices.
 
+``COMMAND`` choices:
+
+   .. hlist::
+
+      * :ref:`clean<command-clean>`
+      * :ref:`completion<command-completion>`
+      * :ref:`connect<command-connect>`
+      * :ref:`devices<command-devices>`
+      * :ref:`mount<command-mount>`
+      * :ref:`uf2<command-uf2>`
+      * :ref:`unmount<command-unmount>`
+      * :ref:`upload<command-upload>`
+
 
 .. rubric:: Options
 
 --log-level log_level
+
    Only display logs at or above ths level.
 
-   Aliases: ``-l``
+   :Aliases: ``-l``
+
+   :Choices: ``DEBUG``, ``INFO``, ``WARNING``, ``ERROR``
 
 
 --fake-device-config fake_device_config
+
    Path to TOML configuration file for fake devices. For use in tests and demos.
 
-   Aliases: ``-f``
+   :Aliases: ``-f``
+
+   :Type: file
 
 
 --version
+
    Show the version and exit.
 
-   Aliases: ``-v``
+   :Aliases: ``-v``
 
 
 
 
 
 ----
+
+.. _command-clean:
 
 ****************************************
 clean
@@ -53,7 +77,10 @@ Deletes all files on the target device, and creates an empty boot.py and code.py
 
 
 
+
 ----
+
+.. _command-completion:
 
 ****************************************
 completion
@@ -80,7 +107,10 @@ or by putting the following line in your shell config file (e.g. ``~/.bashrc``):
 
 
 
+
 ----
+
+.. _command-connect:
 
 ****************************************
 connect
@@ -98,7 +128,10 @@ Connect to a device's serial terminal.
 
 
 
+
 ----
+
+.. _command-devices:
 
 ****************************************
 devices
@@ -116,18 +149,24 @@ List all connected CircuitPython devices.
 If ``QUERY`` is specified, only devices matching that query are listed.
 
 
+
 .. rubric:: Options
 
 --save fake_device_save_path
+
    If set, save devices to a TOML file for later recall using the ``--fake-devices`` flag.
 
-   Aliases: ``-s``
+   :Aliases: ``-s``
+
+   :Type: file
 
 
 
 
 
 ----
+
+.. _command-mount:
 
 ****************************************
 mount
@@ -145,7 +184,10 @@ Mounts the specified device if needed, and prints the mountpoint.
 
 
 
+
 ----
+
+.. _command-uf2:
 
 ****************************************
 uf2
@@ -160,10 +202,28 @@ uf2
 
 Search and download CircuitPython UF2 binaries.
 
+``COMMAND`` choices:
+
+   .. hlist::
+
+      * :ref:`analyze<command-uf2-analyze>`
+      * :ref:`boot-info<command-uf2-boot-info>`
+      * :ref:`devices<command-uf2-devices>`
+      * :ref:`download<command-uf2-download>`
+      * :ref:`enter<command-uf2-enter>`
+      * :ref:`exit<command-uf2-exit>`
+      * :ref:`install<command-uf2-install>`
+      * :ref:`mount<command-uf2-mount>`
+      * :ref:`nuke<command-uf2-nuke>`
+      * :ref:`unmount<command-uf2-unmount>`
+      * :ref:`versions<command-uf2-versions>`
+
 
 
 
 ----
+
+.. _command-uf2-analyze:
 
 uf2 analyze
 ========================================
@@ -184,7 +244,10 @@ printed.
 
 
 
+
 ----
+
+.. _command-uf2-boot-info:
 
 uf2 boot-info
 ========================================
@@ -201,7 +264,10 @@ Lookup UF2 bootloader info of the specified CircuitPython device.
 
 
 
+
 ----
+
+.. _command-uf2-devices:
 
 uf2 devices
 ========================================
@@ -218,7 +284,10 @@ List connected devices that are in UF2 bootloader mode.
 
 
 
+
 ----
+
+.. _command-uf2-download:
 
 uf2 download
 ========================================
@@ -237,13 +306,18 @@ If ``DESTINATION`` is not provided, the file is downloaded to the current direct
 If ``DESTINATION`` is a directory, the filename is automatically generated.
 
 
+
 .. rubric:: Options
 
 --locale locale
+
    Locale for CircuitPython install.
+
+   :Type: locale
 
 
 --offline
+
    If true, just print the download URL without actually downloading.
 
 
@@ -251,6 +325,8 @@ If ``DESTINATION`` is a directory, the filename is automatically generated.
 
 
 ----
+
+.. _command-uf2-enter:
 
 uf2 enter
 ========================================
@@ -267,7 +343,10 @@ Restart selected device into UF2 bootloader.
 
 
 
+
 ----
+
+.. _command-uf2-exit:
 
 uf2 exit
 ========================================
@@ -284,7 +363,10 @@ Restart given UF2 bootloader device into normal application code.
 
 
 
+
 ----
+
+.. _command-uf2-install:
 
 uf2 install
 ========================================
@@ -303,31 +385,45 @@ device into its UF2 bootloader and install the image onto it. If ``--device``
 is not specified, we assume there is already a connected UF2 bootloader device.
 
 
+
 .. rubric:: Options
 
 --image_path image_path
+
    If specified, install this already-existing UF2 image.
 
-   Aliases: ``-i``
+   :Aliases: ``-i``
+
+   :Type: file
 
 
 --board board
+
    If specified, automatically download and install appropriate CircuitPython UF2 image for this board ID.
 
-   Aliases: ``-b``
+   :Aliases: ``-b``
+
+   :Type: board_id
 
 
 --device query
+
    If specified, this device will be restarted into its UF2 bootloader and be used as the target device for installing the image.
 
-   Aliases: ``-d``
+   :Aliases: ``-d``
+
+   :Type: query
 
 
 --locale locale
+
    Locale for CircuitPython install. Not used if an explicit image is given using ``--image_path``.
+
+   :Type: locale
 
 
 --delete-download
+
    Delete any downloaded UF2 images on exit.
 
 
@@ -335,6 +431,8 @@ is not specified, we assume there is already a connected UF2 bootloader device.
 
 
 ----
+
+.. _command-uf2-mount:
 
 uf2 mount
 ========================================
@@ -351,7 +449,10 @@ Mount connected UF2 bootloader device if needed and print the mountpoint.
 
 
 
+
 ----
+
+.. _command-uf2-nuke:
 
 uf2 nuke
 ========================================
@@ -368,7 +469,10 @@ Clear out flash memory on UF2 bootloader device.
 
 
 
+
 ----
+
+.. _command-uf2-unmount:
 
 uf2 unmount
 ========================================
@@ -385,7 +489,10 @@ Unmount connected UF2 bootloader device if needed.
 
 
 
+
 ----
+
+.. _command-uf2-versions:
 
 uf2 versions
 ========================================
@@ -402,7 +509,10 @@ List available CircuitPython boards.
 
 
 
+
 ----
+
+.. _command-unmount:
 
 ****************************************
 unmount
@@ -420,7 +530,10 @@ Unmounts the specified device if needed.
 
 
 
+
 ----
+
+.. _command-upload:
 
 ****************************************
 upload
@@ -446,24 +559,35 @@ paths and descendant paths of the source tree, and will re-upload code to
 the device on each event.
 
 
+
 .. rubric:: Options
 
 --dir source_dir
+
    Path containing source code to upload. If not specified, the source directory is guessed by searching the current directory and its descendants for user code (e.g. ``code.py``).
 
-   Aliases: ``-d``
+   :Aliases: ``-d``
+
+   :Type: directory
 
 
 --circup
+
    If true, use `circup` to automatically install library dependencies on the target device.
 
 
 --mode mode
+
    Whether to upload code once, or continuously.
+
+   :Choices: ``single-shot``, ``watch``
 
 
 --batch-period batch_period
+
    Batch filesystem events that happen within this period. This reduces spurious uploads when files update in quick succession. Unit: seconds
+
+   :Type: float
 
 
 

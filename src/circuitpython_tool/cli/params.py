@@ -78,6 +78,10 @@ class QueryParam(ParamType):
 
 
 class DeviceParam(ParamType):
+    """Click parameter for CircuitPython devices."""
+
+    name = "device"
+
     def convert(
         self, value: str | Device, param: Parameter | None, context: Context | None
     ) -> Device | None:

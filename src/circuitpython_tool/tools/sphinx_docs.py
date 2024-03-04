@@ -1,7 +1,8 @@
-import textwrap
 from collections.abc import Iterable, Iterator
+from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
+from textwrap import dedent, indent
 from typing import Any, TypeAlias
 
 import rich_click as click
@@ -9,18 +10,31 @@ from rich import print
 
 from ..cli import commands
 
-dedent = textwrap.dedent
-
 Lines: TypeAlias = Iterable[str]
 
-
-def indent(s: str) -> str:
-    return textwrap.indent(s, " " * 3)
+indent_level: int = 0
 
 
-def indent_lines(lines: Lines) -> Lines:
-    for line in lines:
-        yield indent(line)
+@contextmanager
+def indented() -> Iterator[None]:
+    """Lines yielded within this have their indentation increased by one additional level."""
+    global indent_level
+    indent_level += 1
+    try:
+        yield
+    finally:
+        indent_level -= 1
+
+
+def render_lines(lines: Lines) -> str:
+    """Combine lines of text together respecting indentation level."""
+
+    def indented_lines() -> Iterable[str]:
+        prefix = " " * 3
+        for line in lines:
+            yield indent(line, prefix * indent_level)
+
+    return "\n".join(indented_lines())
 
 
 @dataclass
@@ -95,17 +109,16 @@ class Option(Parameter):
     def to_rst_lines(self) -> Lines:
         yield self.canonical_form()
         yield ""
-        yield indent(self.help)
+        with indented():
+            yield self.help
+            yield ""
+            if aliases := [f"``{o}``" for o in self.opts[1:]]:
+                yield f":Aliases: {', '.join(aliases)}"
+            if choices := [f"``{c}``" for c in self.type.choices]:
+                yield f":Choices: {', '.join(choices)}"
+            elif not self.is_flag:
+                yield f":Type: {self.type.name}"
         yield ""
-        if aliases := [f"``{o}``" for o in self.opts[1:]]:
-            yield indent(f":Aliases: {', '.join(aliases)}")
-            yield ""
-        if choices := [f"``{c}``" for c in self.type.choices]:
-            yield indent(f":Choices: {', '.join(choices)}")
-            yield ""
-        elif not self.is_flag:
-            yield indent(f":Type: {self.type.name}")
-            yield ""
 
 
 @dataclass
@@ -119,11 +132,6 @@ class Command:
     @property
     def name(self) -> str:
         return " ".join(self.command_path)
-
-    def flattened(self) -> Iterator["Command"]:
-        yield self
-        for child in self.children:
-            yield from child.flattened()
 
     @staticmethod
     def from_dict(command: dict[str, Any], parent_path: list[str]) -> "Command":
@@ -191,23 +199,25 @@ class Command:
         yield ".. rubric:: Syntax"
         yield ".. parsed-literal::"
         yield ""
-        yield indent(" ".join(parts()))
+        with indented():
+            yield " ".join(parts())
 
     def description(self) -> Lines:
         yield ".. rubric:: Description"
         yield ""
         yield self.help
         yield ""
-        if self.children:
-            yield "``COMMAND`` choices:"
-            yield ""
-            yield indent(".. hlist::")
+        if not self.children:
+            return
+        yield "``COMMAND`` choices:"
+        yield ""
+        with indented():
+            yield ".. hlist::"
             yield ""
             for child in self.children:
-                yield indent(
-                    indent(f"* :ref:`{child.command_path[-1]}<{child.label}>`")
-                )
-        yield ""
+                with indented():
+                    yield f"* :ref:`{child.command_path[-1]}<{child.label}>`"
+            yield ""
 
     def to_rst_lines(self) -> Lines:
         yield f".. _{self.label}:"
@@ -228,9 +238,11 @@ class Command:
         yield ""
 
 
-def merge_lines(line_lists: Iterable[Iterable[str]]) -> str:
-    blocks = ("\n".join(line_list) for line_list in line_lists)
-    return "\n\n----\n\n".join(blocks)
+def all_lines(command: Command) -> Lines:
+    yield from command.to_rst_lines()
+    for child in command.children:
+        yield "\n----\n"
+        yield from all_lines(child)
 
 
 def main() -> None:
@@ -241,7 +253,7 @@ def main() -> None:
     # TODO(dhrosa): There should be a better way to refer to the docs directory.
     docs_dir = Path(__file__).parent.parent.parent.parent / "docs"
     out_path = docs_dir / "source" / "generated_cli_docs.rst"
-    out_path.write_text(merge_lines(c.to_rst_lines() for c in root.flattened()))
+    out_path.write_text(render_lines(all_lines(root)))
 
 
 if __name__ == "__main__":

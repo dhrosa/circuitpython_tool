@@ -34,7 +34,6 @@ Tool for interfacing with CircuitPython devices.
    Only display logs at or above ths level.
 
    :Aliases: ``-l``
-
    :Choices: ``DEBUG``, ``INFO``, ``WARNING``, ``ERROR``
 
 
@@ -43,7 +42,6 @@ Tool for interfacing with CircuitPython devices.
    Path to TOML configuration file for fake devices. For use in tests and demos.
 
    :Aliases: ``-f``
-
    :Type: file
 
 
@@ -77,7 +75,6 @@ Deletes all files on the target device, and creates an empty boot.py and code.py
 
 
 
-
 ----
 
 .. _command-completion:
@@ -107,7 +104,6 @@ or by putting the following line in your shell config file (e.g. ``~/.bashrc``):
 
 
 
-
 ----
 
 .. _command-connect:
@@ -124,7 +120,6 @@ connect
 .. rubric:: Description
 
 Connect to a device's serial terminal.
-
 
 
 
@@ -149,7 +144,6 @@ List all connected CircuitPython devices.
 If ``QUERY`` is specified, only devices matching that query are listed.
 
 
-
 .. rubric:: Options
 
 --save fake_device_save_path
@@ -157,7 +151,6 @@ If ``QUERY`` is specified, only devices matching that query are listed.
    If set, save devices to a TOML file for later recall using the ``--fake-devices`` flag.
 
    :Aliases: ``-s``
-
    :Type: file
 
 
@@ -180,7 +173,6 @@ mount
 .. rubric:: Description
 
 Mounts the specified device if needed, and prints the mountpoint.
-
 
 
 
@@ -244,7 +236,6 @@ printed.
 
 
 
-
 ----
 
 .. _command-uf2-boot-info:
@@ -264,7 +255,6 @@ Lookup UF2 bootloader info of the specified CircuitPython device.
 
 
 
-
 ----
 
 .. _command-uf2-devices:
@@ -280,7 +270,6 @@ uf2 devices
 .. rubric:: Description
 
 List connected devices that are in UF2 bootloader mode.
-
 
 
 
@@ -306,7 +295,6 @@ If ``DESTINATION`` is not provided, the file is downloaded to the current direct
 If ``DESTINATION`` is a directory, the filename is automatically generated.
 
 
-
 .. rubric:: Options
 
 --locale locale
@@ -319,6 +307,7 @@ If ``DESTINATION`` is a directory, the filename is automatically generated.
 --offline
 
    If true, just print the download URL without actually downloading.
+
 
 
 
@@ -343,7 +332,6 @@ Restart selected device into UF2 bootloader.
 
 
 
-
 ----
 
 .. _command-uf2-exit:
@@ -359,7 +347,6 @@ uf2 exit
 .. rubric:: Description
 
 Restart given UF2 bootloader device into normal application code.
-
 
 
 
@@ -385,7 +372,6 @@ device into its UF2 bootloader and install the image onto it. If ``--device``
 is not specified, we assume there is already a connected UF2 bootloader device.
 
 
-
 .. rubric:: Options
 
 --image_path image_path
@@ -393,7 +379,6 @@ is not specified, we assume there is already a connected UF2 bootloader device.
    If specified, install this already-existing UF2 image.
 
    :Aliases: ``-i``
-
    :Type: file
 
 
@@ -402,7 +387,6 @@ is not specified, we assume there is already a connected UF2 bootloader device.
    If specified, automatically download and install appropriate CircuitPython UF2 image for this board ID.
 
    :Aliases: ``-b``
-
    :Type: board_id
 
 
@@ -411,7 +395,6 @@ is not specified, we assume there is already a connected UF2 bootloader device.
    If specified, this device will be restarted into its UF2 bootloader and be used as the target device for installing the image.
 
    :Aliases: ``-d``
-
    :Type: query
 
 
@@ -425,6 +408,7 @@ is not specified, we assume there is already a connected UF2 bootloader device.
 --delete-download
 
    Delete any downloaded UF2 images on exit.
+
 
 
 
@@ -449,7 +433,6 @@ Mount connected UF2 bootloader device if needed and print the mountpoint.
 
 
 
-
 ----
 
 .. _command-uf2-nuke:
@@ -465,7 +448,6 @@ uf2 nuke
 .. rubric:: Description
 
 Clear out flash memory on UF2 bootloader device.
-
 
 
 
@@ -489,7 +471,6 @@ Unmount connected UF2 bootloader device if needed.
 
 
 
-
 ----
 
 .. _command-uf2-versions:
@@ -505,7 +486,6 @@ uf2 versions
 .. rubric:: Description
 
 List available CircuitPython boards.
-
 
 
 
@@ -526,7 +506,6 @@ unmount
 .. rubric:: Description
 
 Unmounts the specified device if needed.
-
 
 
 
@@ -559,7 +538,6 @@ paths and descendant paths of the source tree, and will re-upload code to
 the device on each event.
 
 
-
 .. rubric:: Options
 
 --dir source_dir
@@ -567,13 +545,13 @@ the device on each event.
    Path containing source code to upload. If not specified, the source directory is guessed by searching the current directory and its descendants for user code (e.g. ``code.py``).
 
    :Aliases: ``-d``
-
    :Type: directory
 
 
 --circup
 
    If true, use `circup` to automatically install library dependencies on the target device.
+
 
 
 --mode mode

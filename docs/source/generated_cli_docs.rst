@@ -10,18 +10,18 @@ Description
    Tool for interfacing with CircuitPython devices.
 
 
-.. rubric:: Options
-.. option:: --log-level log_level, -l log_level
+Options
+   .. option:: --log-level log_level, -l log_level
 
-   Only display logs at or above ths level.
+      Only display logs at or above ths level.
 
-.. option:: --fake-device-config fake_device_config, -f fake_device_config
+   .. option:: --fake-device-config fake_device_config, -f fake_device_config
 
-   Path to TOML configuration file for fake devices. For use in tests and demos.
+      Path to TOML configuration file for fake devices. For use in tests and demos.
 
-.. option:: --version version, -v version
+   .. option:: --version version, -v version
 
-   Show the version and exit.
+      Show the version and exit.
 
 
 
@@ -53,7 +53,6 @@ Syntax
       circuitpython-tool completion
 
 Description
-
    Output shell commands needed for auto-completion.
 
    Evaluating the output of this command will allow auto-completion of this
@@ -64,7 +63,6 @@ Description
    or by putting the following line in your shell config file (e.g. ``~/.bashrc``)::
 
      source "$(circuitpython-tool completion)"
-
 
 
 
@@ -96,16 +94,15 @@ Syntax
       circuitpython-tool devices [OPTIONS] [QUERY]
 
 Description
-
    List all connected CircuitPython devices.
 
    If ``QUERY`` is specified, only devices matching that query are listed.
 
 
-.. rubric:: Options
-.. option:: --save fake_device_save_path, -s fake_device_save_path
+Options
+   .. option:: --save fake_device_save_path, -s fake_device_save_path
 
-   If set, save devices to a TOML file for later recall using the ``--fake-devices`` flag.
+      If set, save devices to a TOML file for later recall using the ``--fake-devices`` flag.
 
 
 
@@ -153,13 +150,11 @@ Syntax
       circuitpython-tool uf2 analyze IMAGE_PATH
 
 Description
-
    Print details of each block in a UF2 image.
 
    If run in an interactive terminal, you can use arrow keys to browse blocks.
    If not run in an interactive context, the information about every block is
    printed.
-
 
 
 
@@ -207,7 +202,6 @@ Syntax
       circuitpython-tool uf2 download [OPTIONS] BOARD [DESTINATION]
 
 Description
-
    Download CircuitPython image for the requested board.
 
    If ``DESTINATION`` is not provided, the file is downloaded to the current directory.
@@ -215,15 +209,14 @@ Description
    If ``DESTINATION`` is a directory, the filename is automatically generated.
 
 
+Options
+   .. option:: --locale locale
 
-.. rubric:: Options
-.. option:: --locale locale
+      Locale for CircuitPython install.
 
-   Locale for CircuitPython install.
+   .. option:: --offline offline
 
-.. option:: --offline offline
-
-   If true, just print the download URL without actually downloading.
+      If true, just print the download URL without actually downloading.
 
 
 
@@ -271,7 +264,6 @@ Syntax
       circuitpython-tool uf2 install [OPTIONS]
 
 Description
-
    Install a UF2 image onto a connected UF2 bootloader device.
 
    If a CircuitPython device is specified with ``--device``, then we restart that
@@ -279,27 +271,26 @@ Description
    is not specified, we assume there is already a connected UF2 bootloader device.
 
 
+Options
+   .. option:: --image_path image_path, -i image_path
 
-.. rubric:: Options
-.. option:: --image_path image_path, -i image_path
+      If specified, install this already-existing UF2 image.
 
-   If specified, install this already-existing UF2 image.
+   .. option:: --board board, -b board
 
-.. option:: --board board, -b board
+      If specified, automatically download and install appropriate CircuitPython UF2 image for this board ID.
 
-   If specified, automatically download and install appropriate CircuitPython UF2 image for this board ID.
+   .. option:: --device query, -d query
 
-.. option:: --device query, -d query
+      If specified, this device will be restarted into its UF2 bootloader and be used as the target device for installing the image.
 
-   If specified, this device will be restarted into its UF2 bootloader and be used as the target device for installing the image.
+   .. option:: --locale locale
 
-.. option:: --locale locale
+      Locale for CircuitPython install. Not used if an explicit image is given using ``--image_path``.
 
-   Locale for CircuitPython install. Not used if an explicit image is given using ``--image_path``.
+   .. option:: --delete-download delete_download
 
-.. option:: --delete-download delete_download
-
-   Delete any downloaded UF2 images on exit.
+      Delete any downloaded UF2 images on exit.
 
 
 
@@ -395,7 +386,6 @@ Syntax
       circuitpython-tool upload [OPTIONS] DEVICE
 
 Description
-
    Continuously upload code to device in response to source file changes.
 
    The contents of the specified source directory will be copied onto the given
@@ -409,22 +399,21 @@ Description
    the device on each event.
 
 
+Options
+   .. option:: --dir source_dir, -d source_dir
 
-.. rubric:: Options
-.. option:: --dir source_dir, -d source_dir
+      Path containing source code to upload. If not specified, the source directory is guessed by searching the current directory and its descendants for user code (e.g. ``code.py``).
 
-   Path containing source code to upload. If not specified, the source directory is guessed by searching the current directory and its descendants for user code (e.g. ``code.py``).
+   .. option:: --circup circup
 
-.. option:: --circup circup
+      If true, use `circup` to automatically install library dependencies on the target device.
 
-   If true, use `circup` to automatically install library dependencies on the target device.
+   .. option:: --mode mode
 
-.. option:: --mode mode
+      Whether to upload code once, or continuously.
 
-   Whether to upload code once, or continuously.
+   .. option:: --batch-period batch_period
 
-.. option:: --batch-period batch_period
-
-   Batch filesystem events that happen within this period. This reduces spurious uploads when files update in quick succession. Unit: seconds
+      Batch filesystem events that happen within this period. This reduces spurious uploads when files update in quick succession. Unit: seconds
 
 

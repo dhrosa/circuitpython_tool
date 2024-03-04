@@ -8,14 +8,18 @@ import rich_click as click
 
 from ..cli import commands
 
+dedent = textwrap.dedent
+
+Lines: TypeAlias = Iterable[str]
+
 
 def indent(s: str) -> str:
     return textwrap.indent(s, " " * 3)
 
 
-dedent = textwrap.dedent
-
-Lines: TypeAlias = Iterable[str]
+def indent_lines(lines: Lines) -> Lines:
+    for line in lines:
+        yield indent(line)
 
 
 @dataclass
@@ -58,7 +62,7 @@ class Option(Parameter):
     def from_dict(p: dict[str, Any]) -> "Option":
         return Option(
             name=p["name"],
-            help=dedent(p["help"]),
+            help=dedent(p["help"]).strip(),
             required=p["required"],
             opts=p["opts"],
             is_flag=p["is_flag"],
@@ -116,7 +120,7 @@ class Command:
 
         return Command(
             name=name,
-            help=dedent(command["help"]),
+            help=dedent(command["help"]).strip(),
             options=options,
             arguments=arguments,
             children=children,
@@ -149,9 +153,9 @@ class Command:
         yield from self.help_lines()
         yield ""
         if self.options:
-            yield ".. rubric:: Options"
+            yield "Options"
             for option in self.options:
-                yield from option.to_rst_lines()
+                yield from indent_lines(option.to_rst_lines())
                 yield ""
             yield ""
         yield ""

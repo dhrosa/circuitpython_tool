@@ -70,15 +70,21 @@ class Option(Parameter):
 
     def forms(self) -> Iterator[str]:
         for o in self.opts:
-            yield f"{o} {self.name}"
+            form = o
+            if not self.is_flag:
+                form = f"{o} {self.name}"
+            yield form
 
     def canonical_form(self) -> str:
         return next(self.forms())
 
     def to_rst_lines(self) -> Lines:
-        yield f".. option:: {', '.join(self.forms())}"
-        yield ""
+        yield self.canonical_form()
         yield indent(self.help)
+        yield ""
+        if aliases := [f"``{o}``" for o in self.opts[1:]]:
+            yield indent(f"Aliases: {', '.join(aliases)}")
+            yield ""
 
 
 @dataclass
@@ -102,7 +108,7 @@ class Command:
             name = f"{parent} {name}"
         if name == "main":
             parent = ""
-            name = "<root>"
+            name = ""
         else:
             parent = name
 
@@ -128,24 +134,30 @@ class Command:
 
     def syntax(self) -> Lines:
         def parts() -> Iterator[str]:
-            yield f"circuitpython-tool {self.name}"
+            yield "circuitpython-tool"
+            if self.name:
+                yield self.name
             if self.options:
                 yield "[OPTIONS]"
             for argument in self.arguments:
                 yield argument.inline_form
 
-        yield "Syntax"
-        yield indent(".. parsed-literal::")
+        yield ".. rubric:: Syntax"
+        yield ".. parsed-literal::"
         yield ""
-        yield indent(indent(" ".join(parts())))
+        yield indent(" ".join(parts()))
 
     def help_lines(self) -> Lines:
-        yield "Description"
-        yield indent(self.help)
+        yield ".. rubric:: Description"
+        yield ""
+        yield self.help
         yield ""
 
     def to_rst_lines(self) -> Lines:
-        yield f"``{self.name}``"
+        if self.name:
+            yield f"{self.name}"
+        else:
+            yield "Command Reference"
         yield "=" * 40
         yield ""
         yield from self.syntax()
@@ -153,9 +165,10 @@ class Command:
         yield from self.help_lines()
         yield ""
         if self.options:
-            yield "Options"
+            yield ".. rubric:: Options"
+            yield ""
             for option in self.options:
-                yield from indent_lines(option.to_rst_lines())
+                yield from option.to_rst_lines()
                 yield ""
             yield ""
         yield ""

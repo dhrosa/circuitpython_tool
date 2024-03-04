@@ -1,5 +1,6 @@
+########################################
 Command Reference
-========================================
+########################################
 
 .. rubric:: Syntax
 .. parsed-literal::
@@ -36,8 +37,9 @@ Tool for interfacing with CircuitPython devices.
 
 ----
 
+****************************************
 clean
-========================================
+****************************************
 
 .. rubric:: Syntax
 .. parsed-literal::
@@ -53,8 +55,9 @@ Deletes all files on the target device, and creates an empty boot.py and code.py
 
 ----
 
+****************************************
 completion
-========================================
+****************************************
 
 .. rubric:: Syntax
 .. parsed-literal::
@@ -79,8 +82,9 @@ or by putting the following line in your shell config file (e.g. ``~/.bashrc``):
 
 ----
 
+****************************************
 connect
-========================================
+****************************************
 
 .. rubric:: Syntax
 .. parsed-literal::
@@ -96,8 +100,9 @@ Connect to a device's serial terminal.
 
 ----
 
+****************************************
 devices
-========================================
+****************************************
 
 .. rubric:: Syntax
 .. parsed-literal::
@@ -124,8 +129,9 @@ If ``QUERY`` is specified, only devices matching that query are listed.
 
 ----
 
+****************************************
 mount
-========================================
+****************************************
 
 .. rubric:: Syntax
 .. parsed-literal::
@@ -141,8 +147,9 @@ Mounts the specified device if needed, and prints the mountpoint.
 
 ----
 
+****************************************
 uf2
-========================================
+****************************************
 
 .. rubric:: Syntax
 .. parsed-literal::
@@ -397,8 +404,9 @@ List available CircuitPython boards.
 
 ----
 
+****************************************
 unmount
-========================================
+****************************************
 
 .. rubric:: Syntax
 .. parsed-literal::
@@ -414,8 +422,9 @@ Unmounts the specified device if needed.
 
 ----
 
+****************************************
 upload
-========================================
+****************************************
 
 .. rubric:: Syntax
 .. parsed-literal::

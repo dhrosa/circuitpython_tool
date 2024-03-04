@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Any, TypeAlias
 
 import rich_click as click
+from rich import print
 
 from ..cli import commands
 
@@ -89,11 +90,15 @@ class Option(Parameter):
 
 @dataclass
 class Command:
-    name: str
+    command_path: list[str]
     help: str
     arguments: list[Argument]
     options: list[Option]
     children: list["Command"]
+
+    @property
+    def name(self) -> str:
+        return " ".join(self.command_path)
 
     def flattened(self) -> Iterator["Command"]:
         yield self
@@ -101,17 +106,11 @@ class Command:
             yield from child.flattened()
 
     @staticmethod
-    def from_dict(command: dict[str, Any], parent: str = "") -> "Command":
+    def from_dict(command: dict[str, Any], parent_path: list[str]) -> "Command":
+        command_path = list[str]()
+        if (name := command["name"]) != "main":
+            command_path = parent_path + [name]
         params = [p for p in command["params"] if p["name"] != "help"]
-        name = command["name"]
-        if parent:
-            name = f"{parent} {name}"
-        if name == "main":
-            parent = ""
-            name = ""
-        else:
-            parent = name
-
         options = [
             Option.from_dict(p) for p in params if p["param_type_name"] == "option"
         ]
@@ -119,18 +118,30 @@ class Command:
             Argument.from_dict(p) for p in params if p["param_type_name"] == "argument"
         ]
         children = [
-            Command.from_dict(i, parent) for i in command.get("commands", {}).values()
+            Command.from_dict(i, command_path)
+            for i in command.get("commands", {}).values()
         ]
         if children:
             arguments.append(Argument(name="command", help="", required=True))
 
         return Command(
-            name=name,
+            command_path=command_path,
             help=dedent(command["help"]).strip(),
             options=options,
             arguments=arguments,
             children=children,
         )
+
+    def section(self) -> Lines:
+        section_chars = '#*=-^"'
+        depth = len(self.command_path)
+        line = section_chars[depth] * 40
+
+        # Draw overline on levels 0 and 1
+        if depth < 2:
+            yield line
+        yield self.name or "Command Reference"
+        yield line
 
     def syntax(self) -> Lines:
         def parts() -> Iterator[str]:
@@ -154,11 +165,7 @@ class Command:
         yield ""
 
     def to_rst_lines(self) -> Lines:
-        if self.name:
-            yield f"{self.name}"
-        else:
-            yield "Command Reference"
-        yield "=" * 40
+        yield from self.section()
         yield ""
         yield from self.syntax()
         yield ""
@@ -182,12 +189,12 @@ def merge_lines(line_lists: Iterable[Iterable[str]]) -> str:
 def main() -> None:
     with click.Context(commands.main) as context:
         info = context.to_info_dict()["command"]
-        # TODO(dhrosa): There should be a better way to refer to the docs directory.
-        docs_dir = Path(__file__).parent.parent.parent.parent / "docs"
-        out_path = docs_dir / "source" / "generated_cli_docs.rst"
-        out_path.write_text(
-            merge_lines(c.to_rst_lines() for c in Command.from_dict(info).flattened())
-        )
+    root = Command.from_dict(info, [])
+    print(root)
+    # TODO(dhrosa): There should be a better way to refer to the docs directory.
+    docs_dir = Path(__file__).parent.parent.parent.parent / "docs"
+    out_path = docs_dir / "source" / "generated_cli_docs.rst"
+    out_path.write_text(merge_lines(c.to_rst_lines() for c in root.flattened()))
 
 
 if __name__ == "__main__":

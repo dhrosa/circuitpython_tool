@@ -1,8 +1,8 @@
 import textwrap
-from collections.abc import Iterator
+from collections.abc import Iterable, Iterator
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, TypeAlias
 
 import rich_click as click
 
@@ -14,6 +14,8 @@ def indent(s: str) -> str:
 
 
 dedent = textwrap.dedent
+
+Lines: TypeAlias = Iterable[str]
 
 
 @dataclass
@@ -69,7 +71,7 @@ class Option(Parameter):
     def canonical_form(self) -> str:
         return next(self.forms())
 
-    def to_rst_lines(self) -> Iterator[str]:
+    def to_rst_lines(self) -> Lines:
         yield f".. option:: {', '.join(self.forms())}"
         yield ""
         yield indent(self.help)
@@ -120,7 +122,7 @@ class Command:
             children=children,
         )
 
-    def syntax(self) -> Iterator[str]:
+    def syntax(self) -> Lines:
         def parts() -> Iterator[str]:
             yield f"circuitpython-tool {self.name}"
             if self.options:
@@ -128,19 +130,17 @@ class Command:
             for argument in self.arguments:
                 yield argument.inline_form
 
-        yield ".. rubric:: Syntax"
+        yield "Syntax"
+        yield indent(".. parsed-literal::")
         yield ""
-        yield ".. parsed-literal::"
-        yield ""
-        yield indent(" ".join(parts()))
+        yield indent(indent(" ".join(parts())))
 
-    def help_lines(self) -> Iterator[str]:
-        yield ".. rubric:: Description"
-        yield ""
-        yield self.help
+    def help_lines(self) -> Lines:
+        yield "Description"
+        yield indent(self.help)
         yield ""
 
-    def to_rst_lines(self) -> Iterator[str]:
+    def to_rst_lines(self) -> Lines:
         yield f"``{self.name}``"
         yield "=" * 40
         yield ""
@@ -157,15 +157,20 @@ class Command:
         yield ""
 
 
+def merge_lines(line_lists: Iterable[Iterable[str]]) -> str:
+    blocks = ("\n".join(line_list) for line_list in line_lists)
+    return "\n\n----\n\n".join(blocks)
+
+
 def main() -> None:
     with click.Context(commands.main) as context:
         info = context.to_info_dict()["command"]
         # TODO(dhrosa): There should be a better way to refer to the docs directory.
         docs_dir = Path(__file__).parent.parent.parent.parent / "docs"
         out_path = docs_dir / "source" / "generated_cli_docs.rst"
-        with out_path.open("w") as f:
-            for command in Command.from_dict(info).flattened():
-                f.write("\n".join(command.to_rst_lines()))
+        out_path.write_text(
+            merge_lines(c.to_rst_lines() for c in Command.from_dict(info).flattened())
+        )
 
 
 if __name__ == "__main__":

@@ -1,15 +1,13 @@
 ``<root>``
 ========================================
 
-.. rubric:: Syntax
+Syntax
+   .. parsed-literal::
 
-.. parsed-literal::
+      circuitpython-tool <root> [OPTIONS] COMMAND
 
-   circuitpython-tool <root> [OPTIONS] COMMAND
-
-.. rubric:: Description
-
-Tool for interfacing with CircuitPython devices.
+Description
+   Tool for interfacing with CircuitPython devices.
 
 
 .. rubric:: Options
@@ -26,74 +24,82 @@ Tool for interfacing with CircuitPython devices.
    Show the version and exit.
 
 
+
+
+----
+
 ``clean``
 ========================================
 
-.. rubric:: Syntax
+Syntax
+   .. parsed-literal::
 
-.. parsed-literal::
+      circuitpython-tool clean DEVICE
 
-   circuitpython-tool clean DEVICE
+Description
+   Deletes all files on the target device, and creates an empty boot.py and code.py on it.
 
-.. rubric:: Description
 
-Deletes all files on the target device, and creates an empty boot.py and code.py on it.
 
+
+----
 
 ``completion``
 ========================================
 
-.. rubric:: Syntax
+Syntax
+   .. parsed-literal::
 
-.. parsed-literal::
+      circuitpython-tool completion
 
-   circuitpython-tool completion
+Description
 
-.. rubric:: Description
+   Output shell commands needed for auto-completion.
 
+   Evaluating the output of this command will allow auto-completion of this
+   program's arguments. This can be done as a one-off using::
 
-Output shell commands needed for auto-completion.
+     eval "$(circuitpython-tool completion)"
 
-Evaluating the output of this command will allow auto-completion of this
-program's arguments. This can be done as a one-off using::
+   or by putting the following line in your shell config file (e.g. ``~/.bashrc``)::
 
-  eval "$(circuitpython-tool completion)"
-
-or by putting the following line in your shell config file (e.g. ``~/.bashrc``)::
-
-  source "$(circuitpython-tool completion)"
+     source "$(circuitpython-tool completion)"
 
 
+
+
+
+----
 
 ``connect``
 ========================================
 
-.. rubric:: Syntax
+Syntax
+   .. parsed-literal::
 
-.. parsed-literal::
+      circuitpython-tool connect DEVICE
 
-   circuitpython-tool connect DEVICE
+Description
+   Connect to a device's serial terminal.
 
-.. rubric:: Description
 
-Connect to a device's serial terminal.
 
+
+----
 
 ``devices``
 ========================================
 
-.. rubric:: Syntax
+Syntax
+   .. parsed-literal::
 
-.. parsed-literal::
+      circuitpython-tool devices [OPTIONS] [QUERY]
 
-   circuitpython-tool devices [OPTIONS] [QUERY]
+Description
 
-.. rubric:: Description
+   List all connected CircuitPython devices.
 
-
-List all connected CircuitPython devices.
-
-If ``QUERY`` is specified, only devices matching that query are listed.
+   If ``QUERY`` is specified, only devices matching that query are listed.
 
 
 .. rubric:: Options
@@ -102,99 +108,111 @@ If ``QUERY`` is specified, only devices matching that query are listed.
    If set, save devices to a TOML file for later recall using the ``--fake-devices`` flag.
 
 
+
+
+----
+
 ``mount``
 ========================================
 
-.. rubric:: Syntax
+Syntax
+   .. parsed-literal::
 
-.. parsed-literal::
+      circuitpython-tool mount DEVICE
 
-   circuitpython-tool mount DEVICE
+Description
+   Mounts the specified device if needed, and prints the mountpoint.
 
-.. rubric:: Description
 
-Mounts the specified device if needed, and prints the mountpoint.
 
+
+----
 
 ``uf2``
 ========================================
 
-.. rubric:: Syntax
+Syntax
+   .. parsed-literal::
 
-.. parsed-literal::
+      circuitpython-tool uf2 COMMAND
 
-   circuitpython-tool uf2 COMMAND
+Description
+   Search and download CircuitPython UF2 binaries.
 
-.. rubric:: Description
 
-Search and download CircuitPython UF2 binaries.
 
+
+----
 
 ``uf2 analyze``
 ========================================
 
-.. rubric:: Syntax
+Syntax
+   .. parsed-literal::
 
-.. parsed-literal::
+      circuitpython-tool uf2 analyze IMAGE_PATH
 
-   circuitpython-tool uf2 analyze IMAGE_PATH
+Description
 
-.. rubric:: Description
+   Print details of each block in a UF2 image.
 
-
-Print details of each block in a UF2 image.
-
-If run in an interactive terminal, you can use arrow keys to browse blocks.
-If not run in an interactive context, the information about every block is
-printed.
+   If run in an interactive terminal, you can use arrow keys to browse blocks.
+   If not run in an interactive context, the information about every block is
+   printed.
 
 
+
+
+
+----
 
 ``uf2 boot-info``
 ========================================
 
-.. rubric:: Syntax
+Syntax
+   .. parsed-literal::
 
-.. parsed-literal::
+      circuitpython-tool uf2 boot-info DEVICE
 
-   circuitpython-tool uf2 boot-info DEVICE
+Description
+   Lookup UF2 bootloader info of the specified CircuitPython device.
 
-.. rubric:: Description
 
-Lookup UF2 bootloader info of the specified CircuitPython device.
 
+
+----
 
 ``uf2 devices``
 ========================================
 
-.. rubric:: Syntax
+Syntax
+   .. parsed-literal::
 
-.. parsed-literal::
+      circuitpython-tool uf2 devices
 
-   circuitpython-tool uf2 devices
+Description
+   List connected devices that are in UF2 bootloader mode.
 
-.. rubric:: Description
 
-List connected devices that are in UF2 bootloader mode.
 
+
+----
 
 ``uf2 download``
 ========================================
 
-.. rubric:: Syntax
+Syntax
+   .. parsed-literal::
 
-.. parsed-literal::
+      circuitpython-tool uf2 download [OPTIONS] BOARD [DESTINATION]
 
-   circuitpython-tool uf2 download [OPTIONS] BOARD [DESTINATION]
+Description
 
-.. rubric:: Description
+   Download CircuitPython image for the requested board.
 
+   If ``DESTINATION`` is not provided, the file is downloaded to the current directory.
 
-Download CircuitPython image for the requested board.
-
-If ``DESTINATION`` is not provided, the file is downloaded to the current directory.
-
-If ``DESTINATION`` is a directory, the filename is automatically generated.
+   If ``DESTINATION`` is a directory, the filename is automatically generated.
 
 
 
@@ -208,51 +226,57 @@ If ``DESTINATION`` is a directory, the filename is automatically generated.
    If true, just print the download URL without actually downloading.
 
 
+
+
+----
+
 ``uf2 enter``
 ========================================
 
-.. rubric:: Syntax
+Syntax
+   .. parsed-literal::
 
-.. parsed-literal::
+      circuitpython-tool uf2 enter DEVICE
 
-   circuitpython-tool uf2 enter DEVICE
+Description
+   Restart selected device into UF2 bootloader.
 
-.. rubric:: Description
 
-Restart selected device into UF2 bootloader.
 
+
+----
 
 ``uf2 exit``
 ========================================
 
-.. rubric:: Syntax
+Syntax
+   .. parsed-literal::
 
-.. parsed-literal::
+      circuitpython-tool uf2 exit
 
-   circuitpython-tool uf2 exit
+Description
+   Restart given UF2 bootloader device into normal application code.
 
-.. rubric:: Description
 
-Restart given UF2 bootloader device into normal application code.
 
+
+----
 
 ``uf2 install``
 ========================================
 
-.. rubric:: Syntax
+Syntax
+   .. parsed-literal::
 
-.. parsed-literal::
+      circuitpython-tool uf2 install [OPTIONS]
 
-   circuitpython-tool uf2 install [OPTIONS]
+Description
 
-.. rubric:: Description
+   Install a UF2 image onto a connected UF2 bootloader device.
 
-
-Install a UF2 image onto a connected UF2 bootloader device.
-
-If a CircuitPython device is specified with ``--device``, then we restart that
-device into its UF2 bootloader and install the image onto it. If ``--device``
-is not specified, we assume there is already a connected UF2 bootloader device.
+   If a CircuitPython device is specified with ``--device``, then we restart that
+   device into its UF2 bootloader and install the image onto it. If ``--device``
+   is not specified, we assume there is already a connected UF2 bootloader device.
 
 
 
@@ -278,99 +302,111 @@ is not specified, we assume there is already a connected UF2 bootloader device.
    Delete any downloaded UF2 images on exit.
 
 
+
+
+----
+
 ``uf2 mount``
 ========================================
 
-.. rubric:: Syntax
+Syntax
+   .. parsed-literal::
 
-.. parsed-literal::
+      circuitpython-tool uf2 mount
 
-   circuitpython-tool uf2 mount
+Description
+   Mount connected UF2 bootloader device if needed and print the mountpoint.
 
-.. rubric:: Description
 
-Mount connected UF2 bootloader device if needed and print the mountpoint.
 
+
+----
 
 ``uf2 nuke``
 ========================================
 
-.. rubric:: Syntax
+Syntax
+   .. parsed-literal::
 
-.. parsed-literal::
+      circuitpython-tool uf2 nuke
 
-   circuitpython-tool uf2 nuke
+Description
+   Clear out flash memory on UF2 bootloader device.
 
-.. rubric:: Description
 
-Clear out flash memory on UF2 bootloader device.
 
+
+----
 
 ``uf2 unmount``
 ========================================
 
-.. rubric:: Syntax
+Syntax
+   .. parsed-literal::
 
-.. parsed-literal::
+      circuitpython-tool uf2 unmount
 
-   circuitpython-tool uf2 unmount
+Description
+   Unmount connected UF2 bootloader device if needed.
 
-.. rubric:: Description
 
-Unmount connected UF2 bootloader device if needed.
 
+
+----
 
 ``uf2 versions``
 ========================================
 
-.. rubric:: Syntax
+Syntax
+   .. parsed-literal::
 
-.. parsed-literal::
+      circuitpython-tool uf2 versions
 
-   circuitpython-tool uf2 versions
+Description
+   List available CircuitPython boards.
 
-.. rubric:: Description
 
-List available CircuitPython boards.
 
+
+----
 
 ``unmount``
 ========================================
 
-.. rubric:: Syntax
+Syntax
+   .. parsed-literal::
 
-.. parsed-literal::
+      circuitpython-tool unmount DEVICE
 
-   circuitpython-tool unmount DEVICE
+Description
+   Unmounts the specified device if needed.
 
-.. rubric:: Description
 
-Unmounts the specified device if needed.
 
+
+----
 
 ``upload``
 ========================================
 
-.. rubric:: Syntax
+Syntax
+   .. parsed-literal::
 
-.. parsed-literal::
+      circuitpython-tool upload [OPTIONS] DEVICE
 
-   circuitpython-tool upload [OPTIONS] DEVICE
+Description
 
-.. rubric:: Description
+   Continuously upload code to device in response to source file changes.
 
+   The contents of the specified source directory will be copied onto the given
+   CircuitPython device.
 
-Continuously upload code to device in response to source file changes.
+   If ``--mode`` is ``single-shot``, then the code is uploaded and then the command exits.
 
-The contents of the specified source directory will be copied onto the given
-CircuitPython device.
-
-If ``--mode`` is ``single-shot``, then the code is uploaded and then the command exits.
-
-If ``--mode`` is ``watch``, then this commnd will perform one upload, and then
-will continue running. The command will wait for filesystem events from all
-paths and descendant paths of the source tree, and will re-upload code to
-the device on each event.
+   If ``--mode`` is ``watch``, then this commnd will perform one upload, and then
+   will continue running. The command will wait for filesystem events from all
+   paths and descendant paths of the source tree, and will re-upload code to
+   the device on each event.
 
 
 

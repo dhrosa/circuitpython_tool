@@ -258,7 +258,8 @@ def all_lines(root: Command) -> Lines:
     yield "#" * 40
     yield "Overview"
     yield "#" * 40
-    yield "TODO"
+    yield ""
+    yield ".. include:: cli_prolog.rst"
     yield ""
 
     def flattened(command: Command) -> Iterator[Command]:

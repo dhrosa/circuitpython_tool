@@ -9,6 +9,6 @@
 
 .. toctree::
    :maxdepth: 2
-   :caption: Commands:
+   :caption: Command Reference
 
    generated_cli_docs

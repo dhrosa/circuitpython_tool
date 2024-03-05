@@ -3,12 +3,7 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-..
-   Welcome to circuitpython-tool's documentation!
-   ==============================================
-
 .. toctree::
-   :maxdepth: 2
    :caption: Command Reference
 
    generated_cli_docs

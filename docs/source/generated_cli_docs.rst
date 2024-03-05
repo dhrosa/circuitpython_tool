@@ -42,6 +42,7 @@ Tool for interfacing with CircuitPython devices.
    *Optional*. Only display logs at or above ths level.
 
    :Aliases: ``-l``
+   :Environment Variable: ``LOG_LEVEL``
    :Choices: ``DEBUG``, ``INFO``, ``WARNING``, ``ERROR``
    :Default: ``INFO``
 
@@ -51,6 +52,7 @@ Tool for interfacing with CircuitPython devices.
    *Optional*. Path to TOML configuration file for fake devices. For use in tests and demos.
 
    :Aliases: ``-f``
+   :Environment Variable: ``FAKE_DEVICE_CONFIG``
    :Type: file
 
 

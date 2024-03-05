@@ -59,7 +59,6 @@ def set_log_level(context: click.Context, param: click.Parameter, level: str) ->
 @click.group(
     context_settings=dict(
         help_option_names=["-h", "--help"],
-        auto_envvar_prefix="CIRCUITPYTHON_TOOL",
     ),
     epilog=f"Version: {VERSION}",
 )
@@ -71,7 +70,7 @@ def set_log_level(context: click.Context, param: click.Parameter, level: str) ->
     callback=set_log_level,
     is_eager=True,
     expose_value=False,
-    show_envvar=True,
+    envvar="LOG_LEVEL",
     help="Only display logs at or above ths level.",
 )
 @option(
@@ -79,7 +78,7 @@ def set_log_level(context: click.Context, param: click.Parameter, level: str) ->
     "-f",
     type=FakeDeviceParam(),
     expose_value=False,
-    show_envvar=True,
+    envvar="FAKE_DEVICE_CONFIG",
     # Force evaluation of this paramter early so that later parameters can
     # assume the config has already been found.
     is_eager=True,

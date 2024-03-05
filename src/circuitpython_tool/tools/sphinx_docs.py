@@ -85,6 +85,7 @@ class Option(Parameter):
     opts: list[str]
     is_flag: bool
     negation: str | None
+    env_var: str | None
     default: Any
 
     @staticmethod
@@ -98,6 +99,7 @@ class Option(Parameter):
             opts=p["opts"],
             is_flag=p["is_flag"],
             negation=negations[0] if negations else None,
+            env_var=p["envvar"],
             default=p["default"],
         )
 
@@ -124,6 +126,8 @@ class Option(Parameter):
             yield ""
             if aliases := [f"``{o}``" for o in self.opts[1:]]:
                 yield f":Aliases: {', '.join(aliases)}"
+            if self.env_var:
+                yield f":Environment Variable: ``{self.env_var}``"
             if choices := [f"``{c}``" for c in self.type.choices]:
                 yield f":Choices: {', '.join(choices)}"
             elif not self.is_flag:

@@ -205,8 +205,18 @@ class Command:
 
     @property
     def label(self) -> str:
-        """RST label to refer to this command."""
+        """RST label for this command."""
         return ".".join(["command"] + self.command_path)
+
+    @property
+    def options_label(self) -> str:
+        """RST label for this command's options."""
+        return ".".join(["options"] + self.command_path)
+
+    @property
+    def children_label(self) -> str:
+        """RST label for this command's subcommand options."""
+        return ".".join(["children"] + self.command_path)
 
     def to_rst(self) -> Lines:
         yield f".. _{self.label}:"
@@ -221,6 +231,7 @@ class Command:
         yield from self.description()
         yield ""
         if self.options:
+            yield f".. _{self.options_label}:"
             yield ".. rubric:: Options"
             yield ""
             for option in self.options:
@@ -237,9 +248,9 @@ class Command:
             yield "circuitpython-tool"
             yield from self.command_path
             if self.options:
-                yield "[OPTIONS]"
+                yield f"[:ref:`OPTIONS <{self.options_label}>`]"
             if self.children:
-                yield "COMMAND"
+                yield f":ref:`COMMAND <{self.children_label}>`"
             for argument in self.arguments:
                 form = argument.name.upper()
                 if not argument.required:
@@ -261,6 +272,8 @@ class Command:
         if not self.children:
             return
         # Render subcommand info
+        yield f".. _{self.children_label}:"
+        yield ""
         yield "``COMMAND`` choices:"
         yield ""
         with indented():

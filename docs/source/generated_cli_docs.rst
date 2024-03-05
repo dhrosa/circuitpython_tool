@@ -16,11 +16,13 @@ Commands
 .. rubric:: Syntax
 .. parsed-literal::
 
-   circuitpython-tool [OPTIONS] COMMAND
+   circuitpython-tool [:ref:`OPTIONS <options>`] :ref:`COMMAND <children>`
 
 .. rubric:: Description
 
 Tool for interfacing with CircuitPython devices.
+
+.. _children:
 
 ``COMMAND`` choices:
 
@@ -36,6 +38,7 @@ Tool for interfacing with CircuitPython devices.
       * :ref:`upload<command.upload>`
 
 
+.. _options:
 .. rubric:: Options
 
 --log-level log_level
@@ -148,7 +151,7 @@ devices
 .. rubric:: Syntax
 .. parsed-literal::
 
-   circuitpython-tool devices [OPTIONS] [QUERY]
+   circuitpython-tool devices [:ref:`OPTIONS <options.devices>`] [QUERY]
 
 .. rubric:: Description
 
@@ -157,6 +160,7 @@ List all connected CircuitPython devices.
 If ``QUERY`` is specified, only devices matching that query are listed.
 
 
+.. _options.devices:
 .. rubric:: Options
 
 --save fake_device_save_path
@@ -201,11 +205,13 @@ uf2
 .. rubric:: Syntax
 .. parsed-literal::
 
-   circuitpython-tool uf2 COMMAND
+   circuitpython-tool uf2 :ref:`COMMAND <children.uf2>`
 
 .. rubric:: Description
 
 Search and download CircuitPython UF2 binaries.
+
+.. _children.uf2:
 
 ``COMMAND`` choices:
 
@@ -297,7 +303,7 @@ uf2 download
 .. rubric:: Syntax
 .. parsed-literal::
 
-   circuitpython-tool uf2 download [OPTIONS] BOARD [DESTINATION]
+   circuitpython-tool uf2 download [:ref:`OPTIONS <options.uf2.download>`] BOARD [DESTINATION]
 
 .. rubric:: Description
 
@@ -308,6 +314,7 @@ If ``DESTINATION`` is not provided, the file is downloaded to the current direct
 If ``DESTINATION`` is a directory, the filename is automatically generated.
 
 
+.. _options.uf2.download:
 .. rubric:: Options
 
 --locale locale
@@ -376,7 +383,7 @@ uf2 install
 .. rubric:: Syntax
 .. parsed-literal::
 
-   circuitpython-tool uf2 install [OPTIONS]
+   circuitpython-tool uf2 install [:ref:`OPTIONS <options.uf2.install>`]
 
 .. rubric:: Description
 
@@ -387,6 +394,7 @@ device into its UF2 bootloader and install the image onto it. If ``--device``
 is not specified, we assume there is already a connected UF2 bootloader device.
 
 
+.. _options.uf2.install:
 .. rubric:: Options
 
 --image_path image_path
@@ -538,7 +546,7 @@ upload
 .. rubric:: Syntax
 .. parsed-literal::
 
-   circuitpython-tool upload [OPTIONS] DEVICE
+   circuitpython-tool upload [:ref:`OPTIONS <options.upload>`] DEVICE
 
 .. rubric:: Description
 
@@ -555,6 +563,7 @@ paths and descendant paths of the source tree, and will re-upload code to
 the device on each event.
 
 
+.. _options.upload:
 .. rubric:: Options
 
 --dir source_dir

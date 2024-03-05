@@ -72,7 +72,7 @@ def versions() -> None:
 @option(
     "--offline/--no-offline",
     default=False,
-    help="If true, just print the download URL without actually downloading.",
+    help="If ``True``, just print the download URL without actually downloading.",
 )
 def download(board: Board, locale: str, destination: Path, offline: bool) -> Path:
     """

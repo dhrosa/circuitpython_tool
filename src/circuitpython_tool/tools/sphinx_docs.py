@@ -1,3 +1,7 @@
+"""
+Tool for generating Sphinx documentation for the circuitpython-tool CLI.
+"""
+
 from collections.abc import Iterable, Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass
@@ -11,8 +15,10 @@ from rich import print
 from ..cli import commands
 
 Lines: TypeAlias = Iterable[str]
+"""A collection of RST lines."""
 
 indent_level: int = 0
+"""Current RST indentation level."""
 
 
 @contextmanager
@@ -37,10 +43,31 @@ def render_lines(lines: Lines) -> str:
     return "\n".join(indented_lines())
 
 
+def section(title: str, level: int) -> Lines:
+    """
+    Render an RST section header.
+
+    Uses the convention from
+    https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html#sections
+    """
+    section_chars = '#*=-^"'
+    line = section_chars[level] * len(title)
+    if level < 2:
+        # Draw an overline
+        yield line
+    yield title
+    yield line
+
+
 @dataclass
 class Type:
+    """
+    A ``click`` parameter type.
+    """
+
     name: str
     choices: list[str]
+    """If this is a 'choice' type argument, the valid choices. Empty otherwise."""
 
     @staticmethod
     def from_dict(t: dict[str, Any]) -> "Type":
@@ -49,20 +76,14 @@ class Type:
 
 @dataclass
 class Parameter:
+    """
+    Superclass for arguments and options.
+    """
+
     name: str
     help: str
     required: bool
     type: Type
-
-    def canonical_form(self) -> str:
-        raise NotImplementedError
-
-    @property
-    def inline_form(self) -> str:
-        form = self.canonical_form()
-        if not self.required:
-            form = f"[{form}]"
-        return form
 
 
 @dataclass
@@ -76,55 +97,58 @@ class Argument(Parameter):
             type=Type.from_dict(p["type"]),
         )
 
-    def canonical_form(self) -> str:
-        return self.name.upper()
-
 
 @dataclass
 class Option(Parameter):
-    opts: list[str]
+    primary_form: str
+    """The primary option name for this command; i.e. the full version."""
+
+    aliases: list[str]
+
     is_flag: bool
+    """If true, this option doesn't need a value."""
+
     negation: str | None
+    """The negative version of this option. Only used for flags."""
+
     env_var: str | None
+    """Environment variable that this option can also get its value from."""
+
     default: Any
 
     @staticmethod
     def from_dict(p: dict[str, Any]) -> "Option":
+        opts = p["opts"]
         negations = p["secondary_opts"]
         return Option(
             name=p["name"],
             help=dedent(p["help"]).strip(),
             required=p["required"],
             type=Type.from_dict(p["type"]),
-            opts=p["opts"],
+            primary_form=opts[0],
+            aliases=opts[1:],
             is_flag=p["is_flag"],
             negation=negations[0] if negations else None,
             env_var=p["envvar"],
             default=p["default"],
         )
 
-    def forms(self) -> Iterator[str]:
-        for o in self.opts:
-            form = o
-            if not self.is_flag:
-                form = f"{o} {self.name}"
-            yield form
-
-    def canonical_form(self) -> str:
-        return next(self.forms())
-
-    def to_rst_lines(self) -> Lines:
-        title_forms = [self.canonical_form()]
+    def to_rst(self) -> Lines:
+        """Render as an RST ``option_list_item``"""
+        title_forms = [self.primary_form]
+        if not self.is_flag:
+            title_forms[0] += f" {self.name}"
         if self.negation:
             title_forms.append(self.negation)
         yield ", ".join(title_forms)
         yield ""
 
         with indented():
-            help_prefix = "Required" if self.required else "Optional"
-            yield f"*{help_prefix}*. {self.help}"
+            priority = "Required" if self.required else "Optional"
+            yield f"*{priority}*. {self.help}"
             yield ""
-            if aliases := [f"``{o}``" for o in self.opts[1:]]:
+            # Render following properties as an RST ``field_list``
+            if aliases := [f"``{a}``" for a in self.aliases]:
                 yield f":Aliases: {', '.join(aliases)}"
             if self.env_var:
                 yield f":Environment Variable: ``{self.env_var}``"
@@ -140,77 +164,87 @@ class Option(Parameter):
 @dataclass
 class Command:
     command_path: list[str]
+    """
+    Chain of subcommand argument values that identify this command.
+
+    e.g. [] for the top-level main function. ["uf2", "download"] for the "uf2 download" command.
+    """
+
     help: str
     arguments: list[Argument]
     options: list[Option]
     children: list["Command"]
-
-    @property
-    def name(self) -> str:
-        return " ".join(self.command_path)
 
     @staticmethod
     def from_dict(command: dict[str, Any], parent_path: list[str]) -> "Command":
         command_path = list[str]()
         if (name := command["name"]) != "main":
             command_path = parent_path + [name]
-        params = [p for p in command["params"] if p["name"] != "help"]
-        options = [
-            Option.from_dict(p) for p in params if p["param_type_name"] == "option"
-        ]
-        arguments = [
-            Argument.from_dict(p) for p in params if p["param_type_name"] == "argument"
-        ]
-        children = [
-            Command.from_dict(i, command_path)
-            for i in command.get("commands", {}).values()
-        ]
-        if children:
-            # Add "command" pseudo-argument
-            arguments.append(
-                Argument(
-                    name="command",
-                    help="",
-                    required=True,
-                    type=Type(
-                        name="command",
-                        choices=[],
-                    ),
-                )
-            )
+
+        arguments = list[Argument]()
+        options = list[Option]()
+        for param in command["params"]:
+            if param["name"] == "help":
+                continue
+            match param["param_type_name"]:
+                case "argument":
+                    arguments.append(Argument.from_dict(param))
+                case "option":
+                    options.append(Option.from_dict(param))
 
         return Command(
             command_path=command_path,
             help=dedent(command["help"]).strip(),
             options=options,
             arguments=arguments,
-            children=children,
+            children=[
+                Command.from_dict(i, command_path)
+                for i in command.get("commands", {}).values()
+            ],
         )
 
     @property
     def label(self) -> str:
-        return "command-" + "-".join(self.command_path)
+        """RST label to refer to this command."""
+        return ".".join(["command"] + self.command_path)
 
-    def section(self) -> Lines:
-        section_chars = '#*=-^"'
-        depth = len(self.command_path)
-        line = section_chars[depth] * 40
-
-        # Draw overline on levels 0 and 1
-        if depth < 2:
-            yield line
-        yield self.name or "Commands"
-        yield line
+    def to_rst(self) -> Lines:
+        yield f".. _{self.label}:"
+        yield ""
+        yield from section(
+            title=" ".join(self.command_path) or "Commands",
+            level=len(self.command_path),
+        )
+        yield ""
+        yield from self.syntax()
+        yield ""
+        yield from self.description()
+        yield ""
+        if self.options:
+            yield ".. rubric:: Options"
+            yield ""
+            for option in self.options:
+                yield from option.to_rst()
+                yield ""
+            yield ""
+        yield ""
 
     def syntax(self) -> Lines:
+        """Shows basic structure of command-line invocation."""
+
         def parts() -> Iterator[str]:
+            """Command-line components to be space-separated."""
             yield "circuitpython-tool"
-            if self.name:
-                yield self.name
+            yield from self.command_path
             if self.options:
                 yield "[OPTIONS]"
+            if self.children:
+                yield "COMMAND"
             for argument in self.arguments:
-                yield argument.inline_form
+                form = argument.name.upper()
+                if not argument.required:
+                    form = f"[{form}]"
+                yield form
 
         yield ".. rubric:: Syntax"
         yield ".. parsed-literal::"
@@ -219,12 +253,14 @@ class Command:
             yield " ".join(parts())
 
     def description(self) -> Lines:
+        """Detailed text description of command."""
         yield ".. rubric:: Description"
         yield ""
         yield self.help
         yield ""
         if not self.children:
             return
+        # Render subcommand info
         yield "``COMMAND`` choices:"
         yield ""
         with indented():
@@ -235,51 +271,38 @@ class Command:
                     yield f"* :ref:`{child.command_path[-1]}<{child.label}>`"
             yield ""
 
-    def to_rst_lines(self) -> Lines:
-        yield f".. _{self.label}:"
-        yield ""
-        yield from self.section()
-        yield ""
-        yield from self.syntax()
-        yield ""
-        yield from self.description()
-        yield ""
-        if self.options:
-            yield ".. rubric:: Options"
-            yield ""
-            for option in self.options:
-                yield from option.to_rst_lines()
-                yield ""
-            yield ""
-        yield ""
-
 
 def all_lines(root: Command) -> Lines:
-    yield "#" * 40
-    yield "Overview"
-    yield "#" * 40
+    """RST contents for the given root command."""
+    yield from section(title="Overview", level=0)
     yield ""
     yield ".. include:: cli_prolog.rst"
     yield ""
 
     def flattened(command: Command) -> Iterator[Command]:
+        """Recursively walk the command tree."""
         yield command
         for child in command.children:
             yield from flattened(child)
 
+    hrule = "\n----\n"
     for command in flattened(root):
-        yield "\n----\n"
-        yield from command.to_rst_lines()
+        yield hrule
+        yield from command.to_rst()
 
 
+@click.command
 def main() -> None:
+    """Render CLI documentation for circuitpython-tool to reStructuredText."""
     with click.Context(commands.main) as context:
         info = context.to_info_dict()["command"]
-    root = Command.from_dict(info, [])
+    root = Command.from_dict(info, parent_path=[])
     print(root)
     # TODO(dhrosa): There should be a better way to refer to the docs directory.
     docs_dir = Path(__file__).parent.parent.parent.parent / "docs"
     out_path = docs_dir / "source" / "generated_cli_docs.rst"
+
+    print(f"Writing to {out_path}")
     out_path.write_text(render_lines(all_lines(root)))
 
 

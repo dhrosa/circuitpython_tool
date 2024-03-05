@@ -212,7 +212,7 @@ def get_source_dir(source_dir: Path | None) -> Path:
 @option(
     "--circup/--no-circup",
     default=False,
-    help="If true, use `circup` to automatically install "
+    help="If ``True``, use ``circup`` to automatically install "
     "library dependencies on the target device.",
 )
 @option(

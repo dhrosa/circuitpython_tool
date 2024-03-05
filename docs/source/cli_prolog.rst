@@ -16,4 +16,4 @@ Parameter Types
 ``board_id``
    A string specifying Adafruit's identifier for a CircuitPython-supported board. This corresponds to the lowercase board names found in the URLs of the boards on the `CircuitPython Downloads <https://circuitpython.org/downloads>`_ page. For example, a ``board_id`` value of ``raspberry_pi_pico`` corresponds to the `Raspberry Pi Pico <https://circuitpython.org/board/raspberry_pi_pico/>`_ board.
 
-   A full list of possible values can be seen using the :ref:`uf2 versions <command-uf2-versions>` command.
+   A full list of possible values can be seen using the :ref:`uf2 versions <command.uf2.versions>` command.

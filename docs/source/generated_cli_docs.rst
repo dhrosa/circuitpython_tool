@@ -1,17 +1,17 @@
-########################################
+########
 Overview
-########################################
+########
 
 .. include:: cli_prolog.rst
 
 
 ----
 
-.. _command-:
+.. _command:
 
-########################################
+########
 Commands
-########################################
+########
 
 .. rubric:: Syntax
 .. parsed-literal::
@@ -26,14 +26,14 @@ Tool for interfacing with CircuitPython devices.
 
    .. hlist::
 
-      * :ref:`clean<command-clean>`
-      * :ref:`completion<command-completion>`
-      * :ref:`connect<command-connect>`
-      * :ref:`devices<command-devices>`
-      * :ref:`mount<command-mount>`
-      * :ref:`uf2<command-uf2>`
-      * :ref:`unmount<command-unmount>`
-      * :ref:`upload<command-upload>`
+      * :ref:`clean<command.clean>`
+      * :ref:`completion<command.completion>`
+      * :ref:`connect<command.connect>`
+      * :ref:`devices<command.devices>`
+      * :ref:`mount<command.mount>`
+      * :ref:`uf2<command.uf2>`
+      * :ref:`unmount<command.unmount>`
+      * :ref:`upload<command.upload>`
 
 
 .. rubric:: Options
@@ -70,11 +70,11 @@ Tool for interfacing with CircuitPython devices.
 
 ----
 
-.. _command-clean:
+.. _command.clean:
 
-****************************************
+*****
 clean
-****************************************
+*****
 
 .. rubric:: Syntax
 .. parsed-literal::
@@ -90,11 +90,11 @@ Deletes all files on the target device, and creates an empty boot.py and code.py
 
 ----
 
-.. _command-completion:
+.. _command.completion:
 
-****************************************
+**********
 completion
-****************************************
+**********
 
 .. rubric:: Syntax
 .. parsed-literal::
@@ -119,11 +119,11 @@ or by putting the following line in your shell config file (e.g. ``~/.bashrc``):
 
 ----
 
-.. _command-connect:
+.. _command.connect:
 
-****************************************
+*******
 connect
-****************************************
+*******
 
 .. rubric:: Syntax
 .. parsed-literal::
@@ -139,11 +139,11 @@ Connect to a device's serial terminal.
 
 ----
 
-.. _command-devices:
+.. _command.devices:
 
-****************************************
+*******
 devices
-****************************************
+*******
 
 .. rubric:: Syntax
 .. parsed-literal::
@@ -172,11 +172,11 @@ If ``QUERY`` is specified, only devices matching that query are listed.
 
 ----
 
-.. _command-mount:
+.. _command.mount:
 
-****************************************
+*****
 mount
-****************************************
+*****
 
 .. rubric:: Syntax
 .. parsed-literal::
@@ -192,11 +192,11 @@ Mounts the specified device if needed, and prints the mountpoint.
 
 ----
 
-.. _command-uf2:
+.. _command.uf2:
 
-****************************************
+***
 uf2
-****************************************
+***
 
 .. rubric:: Syntax
 .. parsed-literal::
@@ -211,27 +211,27 @@ Search and download CircuitPython UF2 binaries.
 
    .. hlist::
 
-      * :ref:`analyze<command-uf2-analyze>`
-      * :ref:`boot-info<command-uf2-boot-info>`
-      * :ref:`devices<command-uf2-devices>`
-      * :ref:`download<command-uf2-download>`
-      * :ref:`enter<command-uf2-enter>`
-      * :ref:`exit<command-uf2-exit>`
-      * :ref:`install<command-uf2-install>`
-      * :ref:`mount<command-uf2-mount>`
-      * :ref:`nuke<command-uf2-nuke>`
-      * :ref:`unmount<command-uf2-unmount>`
-      * :ref:`versions<command-uf2-versions>`
+      * :ref:`analyze<command.uf2.analyze>`
+      * :ref:`boot-info<command.uf2.boot-info>`
+      * :ref:`devices<command.uf2.devices>`
+      * :ref:`download<command.uf2.download>`
+      * :ref:`enter<command.uf2.enter>`
+      * :ref:`exit<command.uf2.exit>`
+      * :ref:`install<command.uf2.install>`
+      * :ref:`mount<command.uf2.mount>`
+      * :ref:`nuke<command.uf2.nuke>`
+      * :ref:`unmount<command.uf2.unmount>`
+      * :ref:`versions<command.uf2.versions>`
 
 
 
 
 ----
 
-.. _command-uf2-analyze:
+.. _command.uf2.analyze:
 
 uf2 analyze
-========================================
+===========
 
 .. rubric:: Syntax
 .. parsed-literal::
@@ -251,10 +251,10 @@ printed.
 
 ----
 
-.. _command-uf2-boot-info:
+.. _command.uf2.boot-info:
 
 uf2 boot-info
-========================================
+=============
 
 .. rubric:: Syntax
 .. parsed-literal::
@@ -270,10 +270,10 @@ Lookup UF2 bootloader info of the specified CircuitPython device.
 
 ----
 
-.. _command-uf2-devices:
+.. _command.uf2.devices:
 
 uf2 devices
-========================================
+===========
 
 .. rubric:: Syntax
 .. parsed-literal::
@@ -289,10 +289,10 @@ List connected devices that are in UF2 bootloader mode.
 
 ----
 
-.. _command-uf2-download:
+.. _command.uf2.download:
 
 uf2 download
-========================================
+============
 
 .. rubric:: Syntax
 .. parsed-literal::
@@ -320,7 +320,7 @@ If ``DESTINATION`` is a directory, the filename is automatically generated.
 
 --offline, --no-offline
 
-   *Optional*. If true, just print the download URL without actually downloading.
+   *Optional*. If ``True``, just print the download URL without actually downloading.
 
    :Default: ``False``
 
@@ -330,10 +330,10 @@ If ``DESTINATION`` is a directory, the filename is automatically generated.
 
 ----
 
-.. _command-uf2-enter:
+.. _command.uf2.enter:
 
 uf2 enter
-========================================
+=========
 
 .. rubric:: Syntax
 .. parsed-literal::
@@ -349,10 +349,10 @@ Restart selected device into UF2 bootloader.
 
 ----
 
-.. _command-uf2-exit:
+.. _command.uf2.exit:
 
 uf2 exit
-========================================
+========
 
 .. rubric:: Syntax
 .. parsed-literal::
@@ -368,10 +368,10 @@ Restart given UF2 bootloader device into normal application code.
 
 ----
 
-.. _command-uf2-install:
+.. _command.uf2.install:
 
 uf2 install
-========================================
+===========
 
 .. rubric:: Syntax
 .. parsed-literal::
@@ -433,10 +433,10 @@ is not specified, we assume there is already a connected UF2 bootloader device.
 
 ----
 
-.. _command-uf2-mount:
+.. _command.uf2.mount:
 
 uf2 mount
-========================================
+=========
 
 .. rubric:: Syntax
 .. parsed-literal::
@@ -452,10 +452,10 @@ Mount connected UF2 bootloader device if needed and print the mountpoint.
 
 ----
 
-.. _command-uf2-nuke:
+.. _command.uf2.nuke:
 
 uf2 nuke
-========================================
+========
 
 .. rubric:: Syntax
 .. parsed-literal::
@@ -471,10 +471,10 @@ Clear out flash memory on UF2 bootloader device.
 
 ----
 
-.. _command-uf2-unmount:
+.. _command.uf2.unmount:
 
 uf2 unmount
-========================================
+===========
 
 .. rubric:: Syntax
 .. parsed-literal::
@@ -490,10 +490,10 @@ Unmount connected UF2 bootloader device if needed.
 
 ----
 
-.. _command-uf2-versions:
+.. _command.uf2.versions:
 
 uf2 versions
-========================================
+============
 
 .. rubric:: Syntax
 .. parsed-literal::
@@ -509,11 +509,11 @@ List available CircuitPython boards.
 
 ----
 
-.. _command-unmount:
+.. _command.unmount:
 
-****************************************
+*******
 unmount
-****************************************
+*******
 
 .. rubric:: Syntax
 .. parsed-literal::
@@ -529,11 +529,11 @@ Unmounts the specified device if needed.
 
 ----
 
-.. _command-upload:
+.. _command.upload:
 
-****************************************
+******
 upload
-****************************************
+******
 
 .. rubric:: Syntax
 .. parsed-literal::
@@ -567,7 +567,7 @@ the device on each event.
 
 --circup, --no-circup
 
-   *Optional*. If true, use `circup` to automatically install library dependencies on the target device.
+   *Optional*. If ``True``, use ``circup`` to automatically install library dependencies on the target device.
 
    :Default: ``False``
 

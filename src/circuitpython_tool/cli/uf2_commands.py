@@ -60,9 +60,7 @@ def versions() -> None:
 
 @uf2.command
 @argument("board", type=BoardParam(), required=True)
-@argument(
-    "destination", type=click.Path(path_type=Path), required=False, default=Path.cwd()
-)
+@argument("destination", type=click.Path(path_type=Path), required=False)
 @option(
     "--locale",
     default="en_US",
@@ -74,7 +72,9 @@ def versions() -> None:
     default=False,
     help="If ``True``, just print the download URL without actually downloading.",
 )
-def download(board: Board, locale: str, destination: Path, offline: bool) -> Path:
+def download(
+    board: Board, locale: str, destination: Path | None, offline: bool
+) -> Path:
     """
     Download CircuitPython image for the requested board.
 
@@ -86,7 +86,7 @@ def download(board: Board, locale: str, destination: Path, offline: bool) -> Pat
     if offline:
         print(url)
         exit(0)
-    destination = download_path(url, destination)
+    destination = download_path(url, destination or Path.cwd())
     if destination.is_dir():
         destination /= url.split("/")[-1]
     print(f"Source: {url}")

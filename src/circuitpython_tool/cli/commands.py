@@ -26,7 +26,8 @@ from rich_click import argument, option
 from .. import VERSION, fs
 from ..async_iter import time_batched
 from ..hw import Device, Query, devices_to_toml
-from . import devices_table, pass_shared_state, uf2_commands
+from . import devices_table, uf2_commands
+from .decorators import linux_only, pass_shared_state
 from .params import DeviceParam, FakeDeviceParam, QueryParam
 from .shared_state import SharedState
 
@@ -158,6 +159,7 @@ def completion() -> None:
 
 
 @main.command()
+@linux_only
 @argument("query", type=QueryParam(), default=Query.any())
 @option(
     "--save",
@@ -198,6 +200,7 @@ def get_source_dir(source_dir: Path | None) -> Path:
 
 
 @main.command
+@linux_only
 @argument("device", type=DeviceParam(), required=True)
 @option(
     "--dir",
@@ -294,6 +297,7 @@ def upload(
 
 
 @main.command
+@linux_only
 @argument("device", type=DeviceParam(), required=True)
 def clean(device: Device) -> None:
     """Deletes all files on the target device, and creates an empty boot.py and code.py on it."""
@@ -324,6 +328,7 @@ def clean(device: Device) -> None:
 
 
 @main.command
+@linux_only
 @argument("device", type=DeviceParam(), required=True)
 def connect(device: Device) -> None:
     """Connect to a device's serial terminal."""
@@ -334,6 +339,7 @@ def connect(device: Device) -> None:
 
 
 @main.command
+@linux_only
 @argument("device", type=DeviceParam(), required=True)
 def mount(device: Device) -> None:
     """Mounts the specified device if needed, and prints the mountpoint."""
@@ -347,6 +353,7 @@ def mount(device: Device) -> None:
 
 
 @main.command
+@linux_only
 @argument("device", type=DeviceParam(), required=True)
 def unmount(device: Device) -> None:
     """Unmounts the specified device if needed."""

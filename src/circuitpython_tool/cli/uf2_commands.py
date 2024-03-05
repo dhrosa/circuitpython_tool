@@ -27,6 +27,7 @@ from ..hw import Device, Query, Uf2Device
 from ..request_cache import RequestCache
 from ..uf2 import Block, Board
 from . import distinct_device, distinct_uf2_device, uf2_devices_table
+from .decorators import linux_only
 from .params import BoardParam, DeviceParam, LocaleParam, QueryParam
 
 logger = getLogger(__name__)
@@ -214,6 +215,7 @@ def install(
 
 
 @uf2.command("enter")
+@linux_only
 @argument("device", type=DeviceParam(), required=True)
 def uf2_enter(device: Device) -> None:
     """Restart selected device into UF2 bootloader."""
@@ -227,6 +229,7 @@ def uf2_enter(device: Device) -> None:
 
 
 @uf2.command("exit")
+@linux_only
 @click.pass_context
 def uf2_exit(context: click.Context) -> None:
     """Restart given UF2 bootloader device into normal application code."""
@@ -235,6 +238,7 @@ def uf2_exit(context: click.Context) -> None:
 
 
 @uf2.command("devices")
+@linux_only
 def uf2_devices() -> None:
     """List connected devices that are in UF2 bootloader mode."""
     devices = Uf2Device.all()
@@ -245,6 +249,7 @@ def uf2_devices() -> None:
 
 
 @uf2.command("mount")
+@linux_only
 def uf2_mount() -> None:
     """Mount connected UF2 bootloader device if needed and print the mountpoint."""
     device = distinct_uf2_device()
@@ -258,6 +263,7 @@ def uf2_mount() -> None:
 
 
 @uf2.command("unmount")
+@linux_only
 def uf2_unmount() -> None:
     """Unmount connected UF2 bootloader device if needed."""
     device = distinct_uf2_device()
@@ -272,6 +278,7 @@ def uf2_unmount() -> None:
 
 
 @uf2.command
+@linux_only
 @argument("device", type=DeviceParam(), required=True)
 def boot_info(device: Device) -> None:
     """Lookup UF2 bootloader info of the specified CircuitPython device."""
@@ -345,6 +352,7 @@ def analyze(image_path: Path) -> None:
 
 
 @uf2.command
+@linux_only
 @click.pass_context
 def nuke(context: click.Context) -> None:
     """Clear out flash memory on UF2 bootloader device."""

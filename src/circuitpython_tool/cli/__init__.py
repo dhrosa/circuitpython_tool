@@ -1,7 +1,5 @@
 """Code common to modules in this package."""
 
-# TODO(dhrosa): This file feels like a 'utils' library; figure out a better way to organize this.
-
 from collections.abc import Iterable
 
 import rich_click as click
@@ -72,7 +70,3 @@ def distinct_uf2_device() -> Uf2Device:
                 uf2_devices_table(devices),
             )
             exit(1)
-
-
-pass_shared_state = click.make_pass_decorator(SharedState, ensure=True)
-"""Decorator for passing SharedState to a function."""

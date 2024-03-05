@@ -57,6 +57,7 @@ def section(title: str, level: int) -> Lines:
         yield line
     yield title
     yield line
+    yield ""
 
 
 @dataclass
@@ -72,6 +73,17 @@ class Type:
     @staticmethod
     def from_dict(t: dict[str, Any]) -> "Type":
         return Type(name=t["name"], choices=t.get("choices", []))
+
+    @property
+    def label(self) -> str | None:
+        """
+        RST label for this type's documentation.
+
+        Labels are defined in cli_prolog.rst
+        """
+        if self.name not in ("device", "query", "board_id"):
+            return None
+        return f"types.{self.name}"
 
 
 @dataclass
@@ -206,17 +218,21 @@ class Command:
     @property
     def label(self) -> str:
         """RST label for this command."""
-        return ".".join(["command"] + self.command_path)
+        return ".".join(self.command_path + ["command"])
 
     @property
     def options_label(self) -> str:
         """RST label for this command's options."""
-        return ".".join(["options"] + self.command_path)
+        return ".".join(self.command_path + ["options"])
 
     @property
     def children_label(self) -> str:
         """RST label for this command's subcommand options."""
-        return ".".join(["children"] + self.command_path)
+        return self.argument_label("command")
+
+    def argument_label(self, name: str) -> str:
+        """RST label for the given argument."""
+        return ".".join(self.command_path + ["arguments", name])
 
     def to_rst(self) -> Lines:
         yield f".. _{self.label}:"
@@ -225,11 +241,9 @@ class Command:
             title=" ".join(self.command_path) or "Commands",
             level=len(self.command_path),
         )
-        yield ""
         yield from self.syntax()
-        yield ""
         yield from self.description()
-        yield ""
+        yield from self.arguments_rst()
         if self.options:
             yield f".. _{self.options_label}:"
             yield ".. rubric:: Options"
@@ -252,7 +266,7 @@ class Command:
             if self.children:
                 yield f":ref:`COMMAND <{self.children_label}>`"
             for argument in self.arguments:
-                form = argument.name.upper()
+                form = f":ref:`{argument.name.upper()} <{self.argument_label(argument.name)}>`"
                 if not argument.required:
                     form = f"[{form}]"
                 yield form
@@ -271,24 +285,47 @@ class Command:
         yield ""
         if not self.children:
             return
-        # Render subcommand info
+
+    def arguments_rst(self) -> Lines:
+        if (not self.arguments) and (not self.children):
+            return
+        yield ".. rubric:: Arguments"
+        yield ""
+        yield from self.children_rst()
+        for argument in self.arguments:
+            yield f".. _{self.argument_label(argument.name)}:"
+            yield ""
+            yield f"``{argument.name.upper()}``"
+            with indented():
+                # Render following properties as an RST ``field_list``
+                yield f":Required: {argument.required}"
+                yield ""
+                type_text = argument.type.name
+                if type_label := argument.type.label:
+                    type_text = f":ref:`{type_label}`"
+                yield f":Type: {type_text}"
+                yield ""
+
+    def children_rst(self) -> Lines:
+        if not self.children:
+            return
         yield f".. _{self.children_label}:"
         yield ""
-        yield "``COMMAND`` choices:"
-        yield ""
+        yield "``COMMAND``"
         with indented():
+            yield "Valid values:"
+            yield ""
             yield ".. hlist::"
             yield ""
             for child in self.children:
                 with indented():
                     yield f"* :ref:`{child.command_path[-1]}<{child.label}>`"
-            yield ""
+        yield ""
 
 
 def all_lines(root: Command) -> Lines:
     """RST contents for the given root command."""
     yield from section(title="Overview", level=0)
-    yield ""
     yield ".. include:: cli_prolog.rst"
     yield ""
 

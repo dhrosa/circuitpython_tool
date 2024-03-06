@@ -15,7 +15,7 @@ import rich_click as click
 from humanize import naturaldelta
 from readchar import key, readkey
 from rich import get_console, print, progress
-from rich.console import Group
+from rich.console import Group as RichGroup
 from rich.live import Live
 from rich.pretty import Pretty
 from rich.prompt import Confirm
@@ -26,13 +26,13 @@ from .. import static
 from ..hw import Device, Query, Uf2Device
 from ..request_cache import RequestCache
 from ..uf2 import Block, Board
-from . import Command, distinct_device, distinct_uf2_device, uf2_devices_table
+from . import Command, Group, distinct_device, distinct_uf2_device, uf2_devices_table
 from .params import BoardParam, DeviceParam, LocaleParam, QueryParam
 
 logger = getLogger(__name__)
 
 
-@click.group
+@click.group(cls=Group)
 def uf2() -> None:
     """Search and download CircuitPython UF2 binaries."""
     pass
@@ -318,8 +318,8 @@ def analyze(image_path: Path) -> None:
         f"[blue]{key}[/]: {label}" for key, label in bindings.items()
     )
 
-    def renderable() -> Group:
-        return Group(
+    def renderable() -> RichGroup:
+        return RichGroup(
             Pretty(blocks[index]),
             help_text,
         )

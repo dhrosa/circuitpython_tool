@@ -30,14 +30,14 @@ Tool for interfacing with CircuitPython devices.
 
    .. hlist::
 
-      * :ref:`clean<clean.command>`
-      * :ref:`completion<completion.command>`
-      * :ref:`connect<connect.command>`
-      * :ref:`devices<devices.command>`
-      * :ref:`mount<mount.command>`
       * :ref:`uf2<uf2.command>`
-      * :ref:`unmount<unmount.command>`
+      * :ref:`completion<completion.command>`
+      * :ref:`devices<devices.command>`
       * :ref:`upload<upload.command>`
+      * :ref:`clean<clean.command>`
+      * :ref:`connect<connect.command>`
+      * :ref:`mount<mount.command>`
+      * :ref:`unmount<unmount.command>`
 
 .. _options:
 .. rubric:: Options
@@ -74,163 +74,6 @@ Tool for interfacing with CircuitPython devices.
 
 ----
 
-.. _clean.command:
-
-*****
-clean
-*****
-
-.. rubric:: Syntax
-.. parsed-literal::
-
-   circuitpython-tool clean :ref:`DEVICE <clean.arguments.device>`
-.. rubric:: Description
-
-Deletes all files on the target device, and creates an empty boot.py and code.py on it.
-
-*Linux-only*.
-
-.. rubric:: Arguments
-
-.. _clean.arguments.device:
-
-``DEVICE``
-   :Required: True
-
-   :Type: :ref:`types.device`
-
-
-
-----
-
-.. _completion.command:
-
-**********
-completion
-**********
-
-.. rubric:: Syntax
-.. parsed-literal::
-
-   circuitpython-tool completion
-.. rubric:: Description
-
-Output shell commands needed for auto-completion.
-
-Evaluating the output of this command will allow auto-completion of this
-program's arguments. This can be done as a one-off using::
-
-  eval "$(circuitpython-tool completion)"
-
-or by putting the following line in your shell config file (e.g. ``~/.bashrc``)::
-
-  source "$(circuitpython-tool completion)"
-
-
-
-----
-
-.. _connect.command:
-
-*******
-connect
-*******
-
-.. rubric:: Syntax
-.. parsed-literal::
-
-   circuitpython-tool connect :ref:`DEVICE <connect.arguments.device>`
-.. rubric:: Description
-
-Connect to a device's serial terminal.
-
-*Linux-only*.
-
-.. rubric:: Arguments
-
-.. _connect.arguments.device:
-
-``DEVICE``
-   :Required: True
-
-   :Type: :ref:`types.device`
-
-
-
-----
-
-.. _devices.command:
-
-*******
-devices
-*******
-
-.. rubric:: Syntax
-.. parsed-literal::
-
-   circuitpython-tool devices [:ref:`OPTIONS <devices.options>`] [:ref:`QUERY <devices.arguments.query>`]
-.. rubric:: Description
-
-List all connected CircuitPython devices.
-
-If ``QUERY`` is specified, only devices matching that query are listed.
-
-*Linux-only*.
-
-.. rubric:: Arguments
-
-.. _devices.arguments.query:
-
-``QUERY``
-   :Required: False
-
-   :Type: :ref:`types.query`
-
-.. _devices.options:
-.. rubric:: Options
-
---save fake_device_save_path
-
-   *Optional*. If set, save devices to a TOML file for later recall using the ``--fake-devices`` flag.
-
-   :Aliases: ``-s``
-   :Type: file
-
-
-
-
-
-----
-
-.. _mount.command:
-
-*****
-mount
-*****
-
-.. rubric:: Syntax
-.. parsed-literal::
-
-   circuitpython-tool mount :ref:`DEVICE <mount.arguments.device>`
-.. rubric:: Description
-
-Mounts the specified device if needed, and prints the mountpoint.
-
-*Linux-only*.
-
-.. rubric:: Arguments
-
-.. _mount.arguments.device:
-
-``DEVICE``
-   :Required: True
-
-   :Type: :ref:`types.device`
-
-
-
-----
-
 .. _uf2.command:
 
 ***
@@ -254,94 +97,34 @@ Search and download CircuitPython UF2 binaries.
 
    .. hlist::
 
-      * :ref:`analyze<uf2.analyze.command>`
-      * :ref:`boot-info<uf2.boot-info.command>`
-      * :ref:`devices<uf2.devices.command>`
+      * :ref:`versions<uf2.versions.command>`
       * :ref:`download<uf2.download.command>`
+      * :ref:`install<uf2.install.command>`
       * :ref:`enter<uf2.enter.command>`
       * :ref:`exit<uf2.exit.command>`
-      * :ref:`install<uf2.install.command>`
+      * :ref:`devices<uf2.devices.command>`
       * :ref:`mount<uf2.mount.command>`
-      * :ref:`nuke<uf2.nuke.command>`
       * :ref:`unmount<uf2.unmount.command>`
-      * :ref:`versions<uf2.versions.command>`
+      * :ref:`boot-info<uf2.boot-info.command>`
+      * :ref:`analyze<uf2.analyze.command>`
+      * :ref:`nuke<uf2.nuke.command>`
 
 
 
 ----
 
-.. _uf2.analyze.command:
+.. _uf2.versions.command:
 
-uf2 analyze
-===========
-
-.. rubric:: Syntax
-.. parsed-literal::
-
-   circuitpython-tool uf2 analyze :ref:`IMAGE_PATH <uf2.analyze.arguments.image_path>`
-.. rubric:: Description
-
-Print details of each block in a UF2 image.
-
-If run in an interactive terminal, you can use arrow keys to browse blocks.
-If not run in an interactive context, the information about every block is
-printed.
-
-.. rubric:: Arguments
-
-.. _uf2.analyze.arguments.image_path:
-
-``IMAGE_PATH``
-   :Required: True
-
-   :Type: file
-
-
-
-----
-
-.. _uf2.boot-info.command:
-
-uf2 boot-info
-=============
+uf2 versions
+============
 
 .. rubric:: Syntax
 .. parsed-literal::
 
-   circuitpython-tool uf2 boot-info :ref:`DEVICE <uf2.boot-info.arguments.device>`
+   circuitpython-tool uf2 versions
 .. rubric:: Description
 
-Lookup UF2 bootloader info of the specified CircuitPython device.
-
-*Linux-only*.
-
-.. rubric:: Arguments
-
-.. _uf2.boot-info.arguments.device:
-
-``DEVICE``
-   :Required: True
-
-   :Type: :ref:`types.device`
-
-
-
-----
-
-.. _uf2.devices.command:
-
-uf2 devices
-===========
-
-.. rubric:: Syntax
-.. parsed-literal::
-
-   circuitpython-tool uf2 devices
-.. rubric:: Description
-
-List connected devices that are in UF2 bootloader mode.
-
-*Linux-only*.
+List available CircuitPython boards.
 
 
 
@@ -398,53 +181,6 @@ If ``DESTINATION`` is a directory, the filename is automatically generated.
    :Default: ``False``
 
 
-
-
-
-----
-
-.. _uf2.enter.command:
-
-uf2 enter
-=========
-
-.. rubric:: Syntax
-.. parsed-literal::
-
-   circuitpython-tool uf2 enter :ref:`DEVICE <uf2.enter.arguments.device>`
-.. rubric:: Description
-
-Restart selected device into UF2 bootloader.
-
-*Linux-only*.
-
-.. rubric:: Arguments
-
-.. _uf2.enter.arguments.device:
-
-``DEVICE``
-   :Required: True
-
-   :Type: :ref:`types.device`
-
-
-
-----
-
-.. _uf2.exit.command:
-
-uf2 exit
-========
-
-.. rubric:: Syntax
-.. parsed-literal::
-
-   circuitpython-tool uf2 exit
-.. rubric:: Description
-
-Restart given UF2 bootloader device into normal application code.
-
-*Linux-only*.
 
 
 
@@ -514,6 +250,72 @@ is not specified, we assume there is already a connected UF2 bootloader device.
 
 ----
 
+.. _uf2.enter.command:
+
+uf2 enter
+=========
+
+.. rubric:: Syntax
+.. parsed-literal::
+
+   circuitpython-tool uf2 enter :ref:`DEVICE <uf2.enter.arguments.device>`
+.. rubric:: Description
+
+Restart selected device into UF2 bootloader.
+
+*Linux-only*.
+
+.. rubric:: Arguments
+
+.. _uf2.enter.arguments.device:
+
+``DEVICE``
+   :Required: True
+
+   :Type: :ref:`types.device`
+
+
+
+----
+
+.. _uf2.exit.command:
+
+uf2 exit
+========
+
+.. rubric:: Syntax
+.. parsed-literal::
+
+   circuitpython-tool uf2 exit
+.. rubric:: Description
+
+Restart given UF2 bootloader device into normal application code.
+
+*Linux-only*.
+
+
+
+----
+
+.. _uf2.devices.command:
+
+uf2 devices
+===========
+
+.. rubric:: Syntax
+.. parsed-literal::
+
+   circuitpython-tool uf2 devices
+.. rubric:: Description
+
+List connected devices that are in UF2 bootloader mode.
+
+*Linux-only*.
+
+
+
+----
+
 .. _uf2.mount.command:
 
 uf2 mount
@@ -526,25 +328,6 @@ uf2 mount
 .. rubric:: Description
 
 Mount connected UF2 bootloader device if needed and print the mountpoint.
-
-*Linux-only*.
-
-
-
-----
-
-.. _uf2.nuke.command:
-
-uf2 nuke
-========
-
-.. rubric:: Syntax
-.. parsed-literal::
-
-   circuitpython-tool uf2 nuke
-.. rubric:: Description
-
-Clear out flash memory on UF2 bootloader device.
 
 *Linux-only*.
 
@@ -571,47 +354,148 @@ Unmount connected UF2 bootloader device if needed.
 
 ----
 
-.. _uf2.versions.command:
+.. _uf2.boot-info.command:
 
-uf2 versions
-============
-
-.. rubric:: Syntax
-.. parsed-literal::
-
-   circuitpython-tool uf2 versions
-.. rubric:: Description
-
-List available CircuitPython boards.
-
-
-
-----
-
-.. _unmount.command:
-
-*******
-unmount
-*******
+uf2 boot-info
+=============
 
 .. rubric:: Syntax
 .. parsed-literal::
 
-   circuitpython-tool unmount :ref:`DEVICE <unmount.arguments.device>`
+   circuitpython-tool uf2 boot-info :ref:`DEVICE <uf2.boot-info.arguments.device>`
 .. rubric:: Description
 
-Unmounts the specified device if needed.
+Lookup UF2 bootloader info of the specified CircuitPython device.
 
 *Linux-only*.
 
 .. rubric:: Arguments
 
-.. _unmount.arguments.device:
+.. _uf2.boot-info.arguments.device:
 
 ``DEVICE``
    :Required: True
 
    :Type: :ref:`types.device`
+
+
+
+----
+
+.. _uf2.analyze.command:
+
+uf2 analyze
+===========
+
+.. rubric:: Syntax
+.. parsed-literal::
+
+   circuitpython-tool uf2 analyze :ref:`IMAGE_PATH <uf2.analyze.arguments.image_path>`
+.. rubric:: Description
+
+Print details of each block in a UF2 image.
+
+If run in an interactive terminal, you can use arrow keys to browse blocks.
+If not run in an interactive context, the information about every block is
+printed.
+
+.. rubric:: Arguments
+
+.. _uf2.analyze.arguments.image_path:
+
+``IMAGE_PATH``
+   :Required: True
+
+   :Type: file
+
+
+
+----
+
+.. _uf2.nuke.command:
+
+uf2 nuke
+========
+
+.. rubric:: Syntax
+.. parsed-literal::
+
+   circuitpython-tool uf2 nuke
+.. rubric:: Description
+
+Clear out flash memory on UF2 bootloader device.
+
+*Linux-only*.
+
+
+
+----
+
+.. _completion.command:
+
+**********
+completion
+**********
+
+.. rubric:: Syntax
+.. parsed-literal::
+
+   circuitpython-tool completion
+.. rubric:: Description
+
+Output shell commands needed for auto-completion.
+
+Evaluating the output of this command will allow auto-completion of this
+program's arguments. This can be done as a one-off using::
+
+  eval "$(circuitpython-tool completion)"
+
+or by putting the following line in your shell config file (e.g. ``~/.bashrc``)::
+
+  source "$(circuitpython-tool completion)"
+
+
+
+----
+
+.. _devices.command:
+
+*******
+devices
+*******
+
+.. rubric:: Syntax
+.. parsed-literal::
+
+   circuitpython-tool devices [:ref:`OPTIONS <devices.options>`] [:ref:`QUERY <devices.arguments.query>`]
+.. rubric:: Description
+
+List all connected CircuitPython devices.
+
+If ``QUERY`` is specified, only devices matching that query are listed.
+
+*Linux-only*.
+
+.. rubric:: Arguments
+
+.. _devices.arguments.query:
+
+``QUERY``
+   :Required: False
+
+   :Type: :ref:`types.query`
+
+.. _devices.options:
+.. rubric:: Options
+
+--save fake_device_save_path
+
+   *Optional*. If set, save devices to a TOML file for later recall using the ``--fake-devices`` flag.
+
+   :Aliases: ``-s``
+   :Type: file
+
+
 
 
 
@@ -686,4 +570,120 @@ the device on each event.
    :Default: ``0.25``
 
 
+
+
+
+----
+
+.. _clean.command:
+
+*****
+clean
+*****
+
+.. rubric:: Syntax
+.. parsed-literal::
+
+   circuitpython-tool clean :ref:`DEVICE <clean.arguments.device>`
+.. rubric:: Description
+
+Deletes all files on the target device, and creates an empty boot.py and code.py on it.
+
+*Linux-only*.
+
+.. rubric:: Arguments
+
+.. _clean.arguments.device:
+
+``DEVICE``
+   :Required: True
+
+   :Type: :ref:`types.device`
+
+
+
+----
+
+.. _connect.command:
+
+*******
+connect
+*******
+
+.. rubric:: Syntax
+.. parsed-literal::
+
+   circuitpython-tool connect :ref:`DEVICE <connect.arguments.device>`
+.. rubric:: Description
+
+Connect to a device's serial terminal.
+
+*Linux-only*.
+
+.. rubric:: Arguments
+
+.. _connect.arguments.device:
+
+``DEVICE``
+   :Required: True
+
+   :Type: :ref:`types.device`
+
+
+
+----
+
+.. _mount.command:
+
+*****
+mount
+*****
+
+.. rubric:: Syntax
+.. parsed-literal::
+
+   circuitpython-tool mount :ref:`DEVICE <mount.arguments.device>`
+.. rubric:: Description
+
+Mounts the specified device if needed, and prints the mountpoint.
+
+*Linux-only*.
+
+.. rubric:: Arguments
+
+.. _mount.arguments.device:
+
+``DEVICE``
+   :Required: True
+
+   :Type: :ref:`types.device`
+
+
+
+----
+
+.. _unmount.command:
+
+*******
+unmount
+*******
+
+.. rubric:: Syntax
+.. parsed-literal::
+
+   circuitpython-tool unmount :ref:`DEVICE <unmount.arguments.device>`
+.. rubric:: Description
+
+Unmounts the specified device if needed.
+
+*Linux-only*.
+
+.. rubric:: Arguments
+
+.. _unmount.arguments.device:
+
+``DEVICE``
+   :Required: True
+
+   :Type: :ref:`types.device`
 

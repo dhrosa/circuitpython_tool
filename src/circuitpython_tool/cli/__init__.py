@@ -77,7 +77,7 @@ def distinct_uf2_device() -> Uf2Device:
 
 class Command(click.RichCommand):
     """
-    click.Context subclass with custom features.
+    click.Command subclass with custom features.
 
     If ``linux_only=True`` is provided in __init__, this command will exit
     immediately when run on a non-Linux platform.
@@ -100,3 +100,13 @@ class Command(click.RichCommand):
         if self.linux_only and system() != "Linux":
             exit("This command is only supported on Linux currently.")
         return super().main(*args, **kwargs)
+
+
+class Group(click.RichGroup):
+    """click.Group subclass with custom ."""
+
+    command_class = Command
+
+    def list_commands(self, context: click.Context) -> list[str]:
+        """List commands in declaration order."""
+        return list(self.commands)

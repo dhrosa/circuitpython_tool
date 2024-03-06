@@ -26,7 +26,7 @@ from rich_click import argument, option
 from .. import VERSION, fs
 from ..async_iter import time_batched
 from ..hw import Device, Query, devices_to_toml
-from . import Command, devices_table, uf2_commands
+from . import Group, devices_table, uf2_commands
 from .decorators import pass_shared_state
 from .params import DeviceParam, FakeDeviceParam, QueryParam
 from .shared_state import SharedState
@@ -58,6 +58,7 @@ def set_log_level(context: click.Context, param: click.Parameter, level: str) ->
 
 @click.version_option(VERSION, "--version", "-v", prog_name=PROGRAM_NAME)
 @click.group(
+    cls=Group,
     context_settings=dict(
         help_option_names=["-h", "--help"],
     ),
@@ -105,7 +106,6 @@ def main() -> None:
     )
 
 
-main.command_class = Command
 main.add_command(uf2_commands.uf2)
 
 

@@ -30,7 +30,6 @@ Tool for interfacing with CircuitPython devices.
 
    .. hlist::
 
-      * :ref:`uf2<uf2.command>`
       * :ref:`completion<completion.command>`
       * :ref:`devices<devices.command>`
       * :ref:`upload<upload.command>`
@@ -38,6 +37,7 @@ Tool for interfacing with CircuitPython devices.
       * :ref:`connect<connect.command>`
       * :ref:`mount<mount.command>`
       * :ref:`unmount<unmount.command>`
+      * :ref:`uf2<uf2.command>`
 
 .. _options:
 .. rubric:: Options
@@ -69,363 +69,6 @@ Tool for interfacing with CircuitPython devices.
    :Default: ``False``
 
 
-
-
-
-----
-
-.. _uf2.command:
-
-***
-uf2
-***
-
-.. rubric:: Syntax
-.. parsed-literal::
-
-   circuitpython-tool uf2 :ref:`COMMAND <uf2.arguments.command>`
-.. rubric:: Description
-
-Search and download CircuitPython UF2 binaries.
-
-.. rubric:: Arguments
-
-.. _uf2.arguments.command:
-
-``COMMAND``
-   Valid values:
-
-   .. hlist::
-
-      * :ref:`versions<uf2.versions.command>`
-      * :ref:`download<uf2.download.command>`
-      * :ref:`install<uf2.install.command>`
-      * :ref:`enter<uf2.enter.command>`
-      * :ref:`exit<uf2.exit.command>`
-      * :ref:`devices<uf2.devices.command>`
-      * :ref:`mount<uf2.mount.command>`
-      * :ref:`unmount<uf2.unmount.command>`
-      * :ref:`boot-info<uf2.boot-info.command>`
-      * :ref:`analyze<uf2.analyze.command>`
-      * :ref:`nuke<uf2.nuke.command>`
-
-
-
-----
-
-.. _uf2.versions.command:
-
-uf2 versions
-============
-
-.. rubric:: Syntax
-.. parsed-literal::
-
-   circuitpython-tool uf2 versions
-.. rubric:: Description
-
-List available CircuitPython boards.
-
-
-
-----
-
-.. _uf2.download.command:
-
-uf2 download
-============
-
-.. rubric:: Syntax
-.. parsed-literal::
-
-   circuitpython-tool uf2 download [:ref:`OPTIONS <uf2.download.options>`] :ref:`BOARD <uf2.download.arguments.board>` [:ref:`DESTINATION <uf2.download.arguments.destination>`]
-.. rubric:: Description
-
-Download CircuitPython image for the requested board.
-
-If ``DESTINATION`` is not provided, the file is downloaded to the current directory.
-
-If ``DESTINATION`` is a directory, the filename is automatically generated.
-
-.. rubric:: Arguments
-
-.. _uf2.download.arguments.board:
-
-``BOARD``
-   :Required: True
-
-   :Type: :ref:`types.board_id`
-
-.. _uf2.download.arguments.destination:
-
-``DESTINATION``
-   :Required: False
-
-   :Type: path
-
-.. _uf2.download.options:
-.. rubric:: Options
-
---locale locale
-
-   *Optional*. Locale for CircuitPython install.
-
-   :Type: locale
-   :Default: ``en_US``
-
-
---offline, --no-offline
-
-   *Optional*. If ``True``, just print the download URL without actually downloading.
-
-   :Default: ``False``
-
-
-
-
-
-----
-
-.. _uf2.install.command:
-
-uf2 install
-===========
-
-.. rubric:: Syntax
-.. parsed-literal::
-
-   circuitpython-tool uf2 install [:ref:`OPTIONS <uf2.install.options>`]
-.. rubric:: Description
-
-Install a UF2 image onto a connected UF2 bootloader device.
-
-If a CircuitPython device is specified with ``--device``, then we restart that
-device into its UF2 bootloader and install the image onto it. If ``--device``
-is not specified, we assume there is already a connected UF2 bootloader device.
-
-.. _uf2.install.options:
-.. rubric:: Options
-
---image_path image_path
-
-   *Optional*. If specified, install this already-existing UF2 image.
-
-   :Aliases: ``-i``
-   :Type: file
-
-
---board board
-
-   *Optional*. If specified, automatically download and install appropriate CircuitPython UF2 image for this board ID.
-
-   :Aliases: ``-b``
-   :Type: board_id
-
-
---device query
-
-   *Optional*. If specified, this device will be restarted into its UF2 bootloader and be used as the target device for installing the image.
-
-   :Aliases: ``-d``
-   :Type: query
-
-
---locale locale
-
-   *Optional*. Locale for CircuitPython install. Not used if an explicit image is given using ``--image_path``.
-
-   :Type: locale
-   :Default: ``en_US``
-
-
---delete-download, --no-delete-download
-
-   *Optional*. Delete any downloaded UF2 images on exit.
-
-   :Default: ``True``
-
-
-
-
-
-----
-
-.. _uf2.enter.command:
-
-uf2 enter
-=========
-
-.. rubric:: Syntax
-.. parsed-literal::
-
-   circuitpython-tool uf2 enter :ref:`DEVICE <uf2.enter.arguments.device>`
-.. rubric:: Description
-
-Restart selected device into UF2 bootloader.
-
-*Linux-only*.
-
-.. rubric:: Arguments
-
-.. _uf2.enter.arguments.device:
-
-``DEVICE``
-   :Required: True
-
-   :Type: :ref:`types.device`
-
-
-
-----
-
-.. _uf2.exit.command:
-
-uf2 exit
-========
-
-.. rubric:: Syntax
-.. parsed-literal::
-
-   circuitpython-tool uf2 exit
-.. rubric:: Description
-
-Restart given UF2 bootloader device into normal application code.
-
-*Linux-only*.
-
-
-
-----
-
-.. _uf2.devices.command:
-
-uf2 devices
-===========
-
-.. rubric:: Syntax
-.. parsed-literal::
-
-   circuitpython-tool uf2 devices
-.. rubric:: Description
-
-List connected devices that are in UF2 bootloader mode.
-
-*Linux-only*.
-
-
-
-----
-
-.. _uf2.mount.command:
-
-uf2 mount
-=========
-
-.. rubric:: Syntax
-.. parsed-literal::
-
-   circuitpython-tool uf2 mount
-.. rubric:: Description
-
-Mount connected UF2 bootloader device if needed and print the mountpoint.
-
-*Linux-only*.
-
-
-
-----
-
-.. _uf2.unmount.command:
-
-uf2 unmount
-===========
-
-.. rubric:: Syntax
-.. parsed-literal::
-
-   circuitpython-tool uf2 unmount
-.. rubric:: Description
-
-Unmount connected UF2 bootloader device if needed.
-
-*Linux-only*.
-
-
-
-----
-
-.. _uf2.boot-info.command:
-
-uf2 boot-info
-=============
-
-.. rubric:: Syntax
-.. parsed-literal::
-
-   circuitpython-tool uf2 boot-info :ref:`DEVICE <uf2.boot-info.arguments.device>`
-.. rubric:: Description
-
-Lookup UF2 bootloader info of the specified CircuitPython device.
-
-*Linux-only*.
-
-.. rubric:: Arguments
-
-.. _uf2.boot-info.arguments.device:
-
-``DEVICE``
-   :Required: True
-
-   :Type: :ref:`types.device`
-
-
-
-----
-
-.. _uf2.analyze.command:
-
-uf2 analyze
-===========
-
-.. rubric:: Syntax
-.. parsed-literal::
-
-   circuitpython-tool uf2 analyze :ref:`IMAGE_PATH <uf2.analyze.arguments.image_path>`
-.. rubric:: Description
-
-Print details of each block in a UF2 image.
-
-If run in an interactive terminal, you can use arrow keys to browse blocks.
-If not run in an interactive context, the information about every block is
-printed.
-
-.. rubric:: Arguments
-
-.. _uf2.analyze.arguments.image_path:
-
-``IMAGE_PATH``
-   :Required: True
-
-   :Type: file
-
-
-
-----
-
-.. _uf2.nuke.command:
-
-uf2 nuke
-========
-
-.. rubric:: Syntax
-.. parsed-literal::
-
-   circuitpython-tool uf2 nuke
-.. rubric:: Description
-
-Clear out flash memory on UF2 bootloader device.
-
-*Linux-only*.
 
 
 
@@ -686,4 +329,361 @@ Unmounts the specified device if needed.
    :Required: True
 
    :Type: :ref:`types.device`
+
+
+
+----
+
+.. _uf2.command:
+
+***
+uf2
+***
+
+.. rubric:: Syntax
+.. parsed-literal::
+
+   circuitpython-tool uf2 :ref:`COMMAND <uf2.arguments.command>`
+.. rubric:: Description
+
+Search and download CircuitPython UF2 binaries.
+
+.. rubric:: Arguments
+
+.. _uf2.arguments.command:
+
+``COMMAND``
+   Valid values:
+
+   .. hlist::
+
+      * :ref:`versions<uf2.versions.command>`
+      * :ref:`download<uf2.download.command>`
+      * :ref:`devices<uf2.devices.command>`
+      * :ref:`install<uf2.install.command>`
+      * :ref:`enter<uf2.enter.command>`
+      * :ref:`exit<uf2.exit.command>`
+      * :ref:`boot-info<uf2.boot-info.command>`
+      * :ref:`mount<uf2.mount.command>`
+      * :ref:`unmount<uf2.unmount.command>`
+      * :ref:`nuke<uf2.nuke.command>`
+      * :ref:`analyze<uf2.analyze.command>`
+
+
+
+----
+
+.. _uf2.versions.command:
+
+uf2 versions
+============
+
+.. rubric:: Syntax
+.. parsed-literal::
+
+   circuitpython-tool uf2 versions
+.. rubric:: Description
+
+List available CircuitPython boards.
+
+
+
+----
+
+.. _uf2.download.command:
+
+uf2 download
+============
+
+.. rubric:: Syntax
+.. parsed-literal::
+
+   circuitpython-tool uf2 download [:ref:`OPTIONS <uf2.download.options>`] :ref:`BOARD <uf2.download.arguments.board>` [:ref:`DESTINATION <uf2.download.arguments.destination>`]
+.. rubric:: Description
+
+Download CircuitPython image for the requested board.
+
+If ``DESTINATION`` is not provided, the file is downloaded to the current directory.
+
+If ``DESTINATION`` is a directory, the filename is automatically generated.
+
+.. rubric:: Arguments
+
+.. _uf2.download.arguments.board:
+
+``BOARD``
+   :Required: True
+
+   :Type: :ref:`types.board_id`
+
+.. _uf2.download.arguments.destination:
+
+``DESTINATION``
+   :Required: False
+
+   :Type: path
+
+.. _uf2.download.options:
+.. rubric:: Options
+
+--locale locale
+
+   *Optional*. Locale for CircuitPython install.
+
+   :Type: locale
+   :Default: ``en_US``
+
+
+--offline, --no-offline
+
+   *Optional*. If ``True``, just print the download URL without actually downloading.
+
+   :Default: ``False``
+
+
+
+
+
+----
+
+.. _uf2.devices.command:
+
+uf2 devices
+===========
+
+.. rubric:: Syntax
+.. parsed-literal::
+
+   circuitpython-tool uf2 devices
+.. rubric:: Description
+
+List connected devices that are in UF2 bootloader mode.
+
+*Linux-only*.
+
+
+
+----
+
+.. _uf2.install.command:
+
+uf2 install
+===========
+
+.. rubric:: Syntax
+.. parsed-literal::
+
+   circuitpython-tool uf2 install [:ref:`OPTIONS <uf2.install.options>`]
+.. rubric:: Description
+
+Install a UF2 image onto a connected UF2 bootloader device.
+
+If a CircuitPython device is specified with ``--device``, then we restart that
+device into its UF2 bootloader and install the image onto it. If ``--device``
+is not specified, we assume there is already a connected UF2 bootloader device.
+
+.. _uf2.install.options:
+.. rubric:: Options
+
+--image_path image_path
+
+   *Optional*. If specified, install this already-existing UF2 image.
+
+   :Aliases: ``-i``
+   :Type: file
+
+
+--board board
+
+   *Optional*. If specified, automatically download and install appropriate CircuitPython UF2 image for this board ID.
+
+   :Aliases: ``-b``
+   :Type: board_id
+
+
+--device query
+
+   *Optional*. If specified, this device will be restarted into its UF2 bootloader and be used as the target device for installing the image.
+
+   :Aliases: ``-d``
+   :Type: query
+
+
+--locale locale
+
+   *Optional*. Locale for CircuitPython install. Not used if an explicit image is given using ``--image_path``.
+
+   :Type: locale
+   :Default: ``en_US``
+
+
+--delete-download, --no-delete-download
+
+   *Optional*. Delete any downloaded UF2 images on exit.
+
+   :Default: ``True``
+
+
+
+
+
+----
+
+.. _uf2.enter.command:
+
+uf2 enter
+=========
+
+.. rubric:: Syntax
+.. parsed-literal::
+
+   circuitpython-tool uf2 enter :ref:`DEVICE <uf2.enter.arguments.device>`
+.. rubric:: Description
+
+Restart selected device into UF2 bootloader.
+
+*Linux-only*.
+
+.. rubric:: Arguments
+
+.. _uf2.enter.arguments.device:
+
+``DEVICE``
+   :Required: True
+
+   :Type: :ref:`types.device`
+
+
+
+----
+
+.. _uf2.exit.command:
+
+uf2 exit
+========
+
+.. rubric:: Syntax
+.. parsed-literal::
+
+   circuitpython-tool uf2 exit
+.. rubric:: Description
+
+Restart given UF2 bootloader device into normal application code.
+
+*Linux-only*.
+
+
+
+----
+
+.. _uf2.boot-info.command:
+
+uf2 boot-info
+=============
+
+.. rubric:: Syntax
+.. parsed-literal::
+
+   circuitpython-tool uf2 boot-info :ref:`DEVICE <uf2.boot-info.arguments.device>`
+.. rubric:: Description
+
+Lookup UF2 bootloader info of the specified CircuitPython device.
+
+*Linux-only*.
+
+.. rubric:: Arguments
+
+.. _uf2.boot-info.arguments.device:
+
+``DEVICE``
+   :Required: True
+
+   :Type: :ref:`types.device`
+
+
+
+----
+
+.. _uf2.mount.command:
+
+uf2 mount
+=========
+
+.. rubric:: Syntax
+.. parsed-literal::
+
+   circuitpython-tool uf2 mount
+.. rubric:: Description
+
+Mount connected UF2 bootloader device if needed and print the mountpoint.
+
+*Linux-only*.
+
+
+
+----
+
+.. _uf2.unmount.command:
+
+uf2 unmount
+===========
+
+.. rubric:: Syntax
+.. parsed-literal::
+
+   circuitpython-tool uf2 unmount
+.. rubric:: Description
+
+Unmount connected UF2 bootloader device if needed.
+
+*Linux-only*.
+
+
+
+----
+
+.. _uf2.nuke.command:
+
+uf2 nuke
+========
+
+.. rubric:: Syntax
+.. parsed-literal::
+
+   circuitpython-tool uf2 nuke
+.. rubric:: Description
+
+Clear out flash memory on UF2 bootloader device.
+
+*Linux-only*.
+
+
+
+----
+
+.. _uf2.analyze.command:
+
+uf2 analyze
+===========
+
+.. rubric:: Syntax
+.. parsed-literal::
+
+   circuitpython-tool uf2 analyze :ref:`IMAGE_PATH <uf2.analyze.arguments.image_path>`
+.. rubric:: Description
+
+Print details of each block in a UF2 image.
+
+If run in an interactive terminal, you can use arrow keys to browse blocks.
+If not run in an interactive context, the information about every block is
+printed.
+
+.. rubric:: Arguments
+
+.. _uf2.analyze.arguments.image_path:
+
+``IMAGE_PATH``
+   :Required: True
+
+   :Type: file
 

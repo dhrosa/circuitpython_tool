@@ -106,9 +106,6 @@ def main() -> None:
     )
 
 
-main.add_command(uf2_commands.uf2)
-
-
 @main.command
 def completion() -> None:
     """
@@ -360,6 +357,9 @@ def unmount(device: Device) -> None:
     print(f"Device is currently mounted at {mountpoint}")
     device.unmount_if_needed()
     print("Device unmounted.")
+
+
+main.add_command(uf2_commands.uf2)
 
 
 def circup_sync(mountpoint: Path) -> None:

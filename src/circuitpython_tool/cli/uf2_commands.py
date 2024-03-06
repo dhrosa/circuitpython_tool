@@ -116,6 +116,16 @@ def download(
     return destination
 
 
+@uf2.command("devices", linux_only=True)
+def uf2_devices() -> None:
+    """List connected devices that are in UF2 bootloader mode."""
+    devices = Uf2Device.all()
+    if devices:
+        print("Connected UF2 bootloader devices:", uf2_devices_table(devices))
+    else:
+        print(":person_shrugging: [blue]No[/] connected UF2 bootloader devices found.")
+
+
 @uf2.command
 @click.pass_context
 @option(
@@ -237,14 +247,14 @@ def uf2_exit(context: click.Context) -> None:
         context.invoke(install, image_path=image_path)
 
 
-@uf2.command("devices", linux_only=True)
-def uf2_devices() -> None:
-    """List connected devices that are in UF2 bootloader mode."""
-    devices = Uf2Device.all()
-    if devices:
-        print("Connected UF2 bootloader devices:", uf2_devices_table(devices))
-    else:
-        print(":person_shrugging: [blue]No[/] connected UF2 bootloader devices found.")
+@uf2.command(linux_only=True)
+@argument("device", type=DeviceParam(), required=True)
+def boot_info(device: Device) -> None:
+    """Lookup UF2 bootloader info of the specified CircuitPython device."""
+    print("Selected CircuitPython device: ", device)
+    boot_info = device.get_boot_info()
+    print("Version: ", boot_info.version)
+    print("Board ID: ", boot_info.board_id)
 
 
 @uf2.command("mount", linux_only=True)
@@ -275,13 +285,19 @@ def uf2_unmount() -> None:
 
 
 @uf2.command(linux_only=True)
-@argument("device", type=DeviceParam(), required=True)
-def boot_info(device: Device) -> None:
-    """Lookup UF2 bootloader info of the specified CircuitPython device."""
-    print("Selected CircuitPython device: ", device)
-    boot_info = device.get_boot_info()
-    print("Version: ", boot_info.version)
-    print("Board ID: ", boot_info.board_id)
+@click.pass_context
+def nuke(context: click.Context) -> None:
+    """Clear out flash memory on UF2 bootloader device."""
+    if not Confirm.ask(
+        "This UF2 file will reset the flash storage on your device.\n"
+        "This UF2 likely works on most RP2040-based boards.\n"
+        "Do you want to continue?"
+    ):
+        print("[yellow]Cancelling[/]")
+        exit(1)
+
+    with static_uf2_image_path("flash_nuke.uf2") as image_path:
+        context.invoke(install, image_path=image_path)
 
 
 @uf2.command
@@ -345,22 +361,6 @@ def analyze(image_path: Path) -> None:
                     print(x)
             index %= len(blocks)
             live.update(renderable(), refresh=True)
-
-
-@uf2.command(linux_only=True)
-@click.pass_context
-def nuke(context: click.Context) -> None:
-    """Clear out flash memory on UF2 bootloader device."""
-    if not Confirm.ask(
-        "This UF2 file will reset the flash storage on your device.\n"
-        "This UF2 likely works on most RP2040-based boards.\n"
-        "Do you want to continue?"
-    ):
-        print("[yellow]Cancelling[/]")
-        exit(1)
-
-    with static_uf2_image_path("flash_nuke.uf2") as image_path:
-        context.invoke(install, image_path=image_path)
 
 
 def download_path(url: str, destination: Path) -> Path:

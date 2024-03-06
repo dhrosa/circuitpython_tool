@@ -21,7 +21,8 @@ from enum import Flag
 from errno import EINTR
 from functools import wraps
 from pathlib import Path
-from typing import ParamSpec
+from platform import system
+from typing import ParamSpec, cast
 
 P = ParamSpec("P")
 
@@ -40,9 +41,23 @@ def retry_on_eintr(f: Callable[P, int]) -> Callable[P, int]:
     return inner
 
 
-libc = CDLL(find_library("c") or "libc.so.6", use_errno=True)
-inotify_init1 = retry_on_eintr(libc.inotify_init1)
-inotify_add_watch = retry_on_eintr(libc.inotify_add_watch)
+def libc() -> CDLL:
+    """Standard C Library shared object."""
+    return CDLL(find_library("c"), use_errno=True)
+
+
+@retry_on_eintr
+def inotify_init1(flags: int) -> int:
+    if system() != "Linux":
+        raise NotImplementedError
+    return cast(int, libc().inotify_init1(flags))
+
+
+@retry_on_eintr
+def inotify_add_watch(flags: int, path: bytes, mask: int) -> int:
+    if system() != "Linux":
+        raise NotImplementedError
+    return cast(int, libc().inotify_add_watch(flags, path, mask))
 
 
 @dataclass

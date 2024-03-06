@@ -26,8 +26,8 @@ from rich_click import argument, option
 from .. import VERSION, fs
 from ..async_iter import time_batched
 from ..hw import Device, Query, devices_to_toml
-from . import devices_table, uf2_commands
-from .decorators import linux_only, pass_shared_state
+from . import Command, devices_table, uf2_commands
+from .decorators import pass_shared_state
 from .params import DeviceParam, FakeDeviceParam, QueryParam
 from .shared_state import SharedState
 
@@ -105,6 +105,7 @@ def main() -> None:
     )
 
 
+main.command_class = Command
 main.add_command(uf2_commands.uf2)
 
 
@@ -158,8 +159,7 @@ def completion() -> None:
         maybe_emit_tty_warning()
 
 
-@main.command()
-@linux_only
+@main.command(linux_only=True)
 @argument("query", type=QueryParam(), default=Query.any())
 @option(
     "--save",
@@ -199,8 +199,7 @@ def get_source_dir(source_dir: Path | None) -> Path:
     return source_dir
 
 
-@main.command
-@linux_only
+@main.command(linux_only=True)
 @argument("device", type=DeviceParam(), required=True)
 @option(
     "--dir",
@@ -296,8 +295,7 @@ def upload(
         print("Watch [magenta]cancelled[/magenta] by keyboard interrupt.")
 
 
-@main.command
-@linux_only
+@main.command(linux_only=True)
 @argument("device", type=DeviceParam(), required=True)
 def clean(device: Device) -> None:
     """Deletes all files on the target device, and creates an empty boot.py and code.py on it."""
@@ -327,8 +325,7 @@ def clean(device: Device) -> None:
     print("👍 Cleanup [green]complete[/].")
 
 
-@main.command
-@linux_only
+@main.command(linux_only=True)
 @argument("device", type=DeviceParam(), required=True)
 def connect(device: Device) -> None:
     """Connect to a device's serial terminal."""
@@ -338,8 +335,7 @@ def connect(device: Device) -> None:
     execlp("minicom", "minicom", "-D", str(device.serial_path))
 
 
-@main.command
-@linux_only
+@main.command(linux_only=True)
 @argument("device", type=DeviceParam(), required=True)
 def mount(device: Device) -> None:
     """Mounts the specified device if needed, and prints the mountpoint."""
@@ -352,8 +348,7 @@ def mount(device: Device) -> None:
     print(f"Device mounted at {mountpoint}")
 
 
-@main.command
-@linux_only
+@main.command(linux_only=True)
 @argument("device", type=DeviceParam(), required=True)
 def unmount(device: Device) -> None:
     """Unmounts the specified device if needed."""

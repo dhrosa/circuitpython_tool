@@ -1,6 +1,9 @@
 """Code common to modules in this package."""
 
 from collections.abc import Iterable
+from platform import system
+from sys import exit
+from typing import Any
 
 import rich_click as click
 from rich import print
@@ -70,3 +73,30 @@ def distinct_uf2_device() -> Uf2Device:
                 uf2_devices_table(devices),
             )
             exit(1)
+
+
+class Command(click.RichCommand):
+    """
+    click.Context subclass with custom features.
+
+    If ``linux_only=True`` is provided in __init__, this command will exit
+    immediately when run on a non-Linux platform.
+    """
+
+    linux_only: bool
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        self.linux_only = kwargs.pop("linux_only", False)
+        if self.linux_only:
+            kwargs["epilog"] = "This command is only supported on Linux"
+        super().__init__(*args, **kwargs)
+
+    def to_info_dict(self, context: click.Context) -> dict[str, Any]:
+        info_dict = super().to_info_dict(context)
+        info_dict["linux_only"] = self.linux_only
+        return info_dict
+
+    def main(self, *args: Any, **kwargs: Any) -> Any:
+        if self.linux_only and system() != "Linux":
+            exit("This command is only supported on Linux currently.")
+        return super().main(*args, **kwargs)

@@ -186,6 +186,7 @@ class Command:
     arguments: list[Argument]
     options: list[Option]
     children: list["Command"]
+    linux_only: bool
 
     @staticmethod
     def from_dict(command: dict[str, Any], parent_path: list[str]) -> "Command":
@@ -213,6 +214,7 @@ class Command:
                 Command.from_dict(i, command_path)
                 for i in command.get("commands", {}).values()
             ],
+            linux_only=command.get("linux_only", False),
         )
 
     @property
@@ -283,8 +285,9 @@ class Command:
         yield ""
         yield self.help
         yield ""
-        if not self.children:
-            return
+        if self.linux_only:
+            yield "*Linux-only*."
+            yield ""
 
     def arguments_rst(self) -> Lines:
         if (not self.arguments) and (not self.children):

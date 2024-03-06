@@ -88,6 +88,8 @@ clean
 
 Deletes all files on the target device, and creates an empty boot.py and code.py on it.
 
+*Linux-only*.
+
 .. rubric:: Arguments
 
 .. _clean.arguments.device:
@@ -142,6 +144,8 @@ connect
 
 Connect to a device's serial terminal.
 
+*Linux-only*.
+
 .. rubric:: Arguments
 
 .. _connect.arguments.device:
@@ -170,6 +174,8 @@ devices
 List all connected CircuitPython devices.
 
 If ``QUERY`` is specified, only devices matching that query are listed.
+
+*Linux-only*.
 
 .. rubric:: Arguments
 
@@ -209,6 +215,8 @@ mount
 .. rubric:: Description
 
 Mounts the specified device if needed, and prints the mountpoint.
+
+*Linux-only*.
 
 .. rubric:: Arguments
 
@@ -305,6 +313,8 @@ uf2 boot-info
 
 Lookup UF2 bootloader info of the specified CircuitPython device.
 
+*Linux-only*.
+
 .. rubric:: Arguments
 
 .. _uf2.boot-info.arguments.device:
@@ -330,6 +340,8 @@ uf2 devices
 .. rubric:: Description
 
 List connected devices that are in UF2 bootloader mode.
+
+*Linux-only*.
 
 
 
@@ -404,6 +416,8 @@ uf2 enter
 
 Restart selected device into UF2 bootloader.
 
+*Linux-only*.
+
 .. rubric:: Arguments
 
 .. _uf2.enter.arguments.device:
@@ -429,6 +443,8 @@ uf2 exit
 .. rubric:: Description
 
 Restart given UF2 bootloader device into normal application code.
+
+*Linux-only*.
 
 
 
@@ -511,6 +527,8 @@ uf2 mount
 
 Mount connected UF2 bootloader device if needed and print the mountpoint.
 
+*Linux-only*.
+
 
 
 ----
@@ -528,6 +546,8 @@ uf2 nuke
 
 Clear out flash memory on UF2 bootloader device.
 
+*Linux-only*.
+
 
 
 ----
@@ -544,6 +564,8 @@ uf2 unmount
 .. rubric:: Description
 
 Unmount connected UF2 bootloader device if needed.
+
+*Linux-only*.
 
 
 
@@ -579,6 +601,8 @@ unmount
 .. rubric:: Description
 
 Unmounts the specified device if needed.
+
+*Linux-only*.
 
 .. rubric:: Arguments
 
@@ -616,6 +640,8 @@ If ``--mode`` is ``watch``, then this commnd will perform one upload, and then
 will continue running. The command will wait for filesystem events from all
 paths and descendant paths of the source tree, and will re-upload code to
 the device on each event.
+
+*Linux-only*.
 
 .. rubric:: Arguments
 

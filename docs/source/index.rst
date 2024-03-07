@@ -4,6 +4,6 @@
    contain the root `toctree` directive.
 
 .. toctree::
-   :caption: Command Reference
+   :caption: circuitpython-tool
 
-   generated_cli_docs
+   cli/reference

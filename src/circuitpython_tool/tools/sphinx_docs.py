@@ -241,7 +241,7 @@ class Command:
         yield ""
         yield from section(
             title=" ".join(self.command_path) or "Commands",
-            level=len(self.command_path),
+            level=len(self.command_path) + 1,
         )
         yield from self.syntax()
         yield from self.description()
@@ -328,9 +328,6 @@ class Command:
 
 def all_lines(root: Command) -> Lines:
     """RST contents for the given root command."""
-    yield from section(title="Overview", level=0)
-    yield ".. include:: cli_prolog.rst"
-    yield ""
 
     def flattened(command: Command) -> Iterator[Command]:
         """Recursively walk the command tree."""
@@ -353,7 +350,7 @@ def main() -> None:
     print(root)
     # TODO(dhrosa): There should be a better way to refer to the docs directory.
     docs_dir = Path(__file__).parent.parent.parent.parent / "docs"
-    out_path = docs_dir / "source" / "generated_cli_docs.rst"
+    out_path = docs_dir / "source/cli/generated.rst"
 
     print(f"Writing to {out_path}")
     out_path.write_text(render_lines(all_lines(root)))

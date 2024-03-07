@@ -5,5 +5,7 @@
 
 .. toctree::
    :caption: circuitpython-tool
+   :glob:
 
    cli/reference
+   internal/workflows.rst

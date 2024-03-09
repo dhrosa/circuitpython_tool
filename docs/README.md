@@ -1,10 +1,13 @@
 # circuitpython-tool
 
 [![PyPI version](https://badge.fury.io/py/circuitpython-tool.svg)](https://badge.fury.io/py/circuitpython-tool)
+[![Documentation Status](https://readthedocs.org/projects/circuitpython-tool/badge/?version=latest)](https://circuitpython-tool.readthedocs.io/latest/?badge=latest)
+
 
 Links:
 - Github: https://github.com/dhrosa/circuitpython-tool
 - PyPI: https://pypi.org/project/circuitpython-tool
+- Documentation: https://circuitpython-tool.readthedocs.io/
 
 Installation:
 

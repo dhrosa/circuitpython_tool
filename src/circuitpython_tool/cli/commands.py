@@ -210,7 +210,7 @@ def get_source_dir(source_dir: Path | None) -> Path:
 )
 @option(
     "--circup/--no-circup",
-    default=False,
+    default=True,
     help="If ``True``, use ``circup`` to automatically install "
     "library dependencies on the target device.",
 )
@@ -369,7 +369,7 @@ def circup_sync(mountpoint: Path) -> None:
             "🤷 [i]circup[/] command [red]not found[/]. "
             "Install it using e.g.: `pip install circup`"
         )
-        exit(1)
+        return
     args = [
         circup,
         "--path",

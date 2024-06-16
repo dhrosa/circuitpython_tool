@@ -121,6 +121,24 @@ def test_upload_multiple_dirs(tmp_path: Path) -> None:
     )
 
 
+def test_upload_existing_dir(tmp_path: Path) -> None:
+    """Existing directories should be allowed; already existing file error should not occur."""
+    source_dir = tmp_path / "source"
+    source_dir.mkdir()
+
+    sub_dir = source_dir / "sub"
+    sub_dir.mkdir()
+
+    mountpoint = tmp_path / "mountpoint"
+    mountpoint.mkdir()
+
+    upload([source_dir], mountpoint)
+    upload([source_dir], mountpoint)
+
+    entries = [str(p.relative_to(mountpoint)) for p in walk(mountpoint)]
+    assert entries == [".", "sub"]
+
+
 def test_watch_all_file_modification(tmp_path: Path) -> None:
     root = tmp_path / "root"
     root.mkdir()

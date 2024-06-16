@@ -1,4 +1,5 @@
 """State passed through `click` commands."""
+
 from collections.abc import Callable, Set
 from dataclasses import dataclass
 

@@ -6,6 +6,7 @@ Any code directly interfacing with `rich` is housed here to avoid standalone
 parts of the code being tied up with console output.
 
 """
+
 import asyncio
 import logging
 import shlex

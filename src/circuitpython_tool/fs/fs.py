@@ -134,7 +134,9 @@ def upload(source_dirs: Iterable[Path], mountpoint: Path) -> None:
             rel_path = source.relative_to(source_dir)
             dest = mountpoint / rel_path
             if source.is_dir():
-                shutil.copytree(source, dest, copy_function=copy_file)
+                shutil.copytree(
+                    source, dest, copy_function=copy_file, dirs_exist_ok=True
+                )
                 continue
             copy_file(source, dest)
 
